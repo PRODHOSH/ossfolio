@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-export default function UsernameNotFound() {
+export default function GlobalNotFound() {
   return (
     <main
       style={{
@@ -33,7 +33,7 @@ export default function UsernameNotFound() {
             letterSpacing: "-0.42px",
           }}
         >
-          User not found
+          Page not found
         </h1>
         <p
           style={{
@@ -44,7 +44,7 @@ export default function UsernameNotFound() {
             lineHeight: 1.5,
           }}
         >
-          This username does not exist or has not signed up yet.
+          The page you are looking for does not exist or has been moved.
         </p>
         <div style={{ display: "flex", justifyContent: "center", gap: "16px" }}>
           <Link
