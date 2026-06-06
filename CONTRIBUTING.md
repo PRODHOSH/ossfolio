@@ -10,6 +10,7 @@ Thank you for taking the time to contribute. OSSfolio is built entirely by contr
 - [AI Policy](#ai-policy)
 - [How Can I Contribute?](#how-can-i-contribute)
 - [Design System](#design-system)
+- [How Key Systems Work](#how-key-systems-work)
 - [Local Setup](#local-setup)
   - [1. Fork and clone](#1-fork-and-clone)
   - [2. Install dependencies](#2-install-dependencies)
@@ -84,6 +85,168 @@ It covers:
 - What to do and what not to do
 
 Following it keeps the UI consistent across contributions. PRs that introduce new colors, fonts, or spacing outside the design system will be asked to revise.
+
+---
+
+## How Key Systems Work
+
+This section explains the two most important systems in OSSfolio: authentication and score synchronization. Understanding these flows will make it much easier to contribute to features related to login, profiles, GitHub integration, and scoring.
+
+### Authentication Flow
+
+OSSfolio uses Supabase Authentication with GitHub OAuth.
+
+#### End-to-End Login Flow
+
+```text
+User clicks "Sign in with GitHub"
+            ↓
+Supabase OAuth flow starts
+            ↓
+GitHub authentication
+            ↓
+Redirect to /auth/callback
+            ↓
+PKCE code exchange
+            ↓
+Session established
+            ↓
+Score sync runs
+            ↓
+Redirect to /{username}
+```
+
+The callback page responsible for handling authentication is:
+
+```text
+src/app/auth/callback/page.tsx
+```
+
+After a successful login, the callback page:
+
+1. Waits for a valid authenticated session.
+2. Extracts the GitHub username from the session.
+3. Triggers score synchronization.
+4. Redirects the user to their profile page.
+
+### Why We Use PKCE
+
+Supabase uses the PKCE (Proof Key for Code Exchange) OAuth flow.
+
+With PKCE, GitHub first returns a temporary authorization code. Supabase must then exchange that code for a user session.
+
+This exchange happens asynchronously during application initialization.
+
+Because of this, calling:
+
+```ts
+supabase.auth.getSession()
+```
+
+immediately after the OAuth redirect may return `null` even though authentication is still in progress.
+
+To avoid this race condition, OSSfolio listens for authentication state changes instead:
+
+```ts
+supabase.auth.onAuthStateChange(...)
+```
+
+The callback page waits for either:
+
+* `SIGNED_IN`
+* `INITIAL_SESSION`
+
+These events are emitted only after Supabase has successfully created and stored the session.
+
+This guarantees that score synchronization starts only when a valid session exists.
+
+---
+
+### Score Sync Pipeline
+
+OSSfolio calculates and stores contributor scores immediately after login.
+
+The score sync process starts inside:
+
+```text
+src/app/auth/callback/page.tsx
+```
+
+Once a session becomes available:
+
+1. The GitHub username is extracted.
+2. Contributor data is fetched.
+3. Repository and contribution statistics are normalized.
+4. The OSSfolio score is calculated.
+5. The profile record is updated in Supabase.
+6. The user is redirected to their profile.
+
+#### Score Sync Flow
+
+```text
+Authenticated Session
+          ↓
+Fetch GitHub Data
+          ↓
+Convert to Score Inputs
+          ↓
+Calculate Score
+          ↓
+Update Supabase Profile
+          ↓
+Redirect User
+```
+
+### GitHub Data Fetch Strategy
+
+OSSfolio uses two data sources.
+
+#### Primary Path: GitHub GraphQL
+
+The application first attempts to fetch contributor information using GitHub GraphQL APIs.
+
+#### Fallback Path: GitHub REST API
+
+If the GraphQL request fails for any reason, OSSfolio automatically falls back to GitHub REST APIs.
+
+```text
+GraphQL Request
+      ↓
+   Success
+      ↓
+Calculate Score
+
+      OR
+
+GraphQL Request
+      ↓
+   Failure
+      ↓
+GitHub REST API
+      ↓
+Calculate Score
+```
+
+### Profiles Table
+
+| Column          | Purpose                        |
+| --------------- | ------------------------------ |
+| `id`            | Supabase user identifier       |
+| `username`      | GitHub username                |
+| `score`         | Calculated OSSfolio score      |
+| `total_commits` | Total commits used for scoring |
+| `total_prs`     | Pull request count             |
+| `total_issues`  | Issue count                    |
+| `total_reviews` | Review count                   |
+| `updated_at`    | Last synchronization timestamp |
+
+### Reliability Features
+
+* PKCE-based secure authentication
+* Authentication event listeners to avoid session race conditions
+* GraphQL → REST fallback mechanism
+* Timeout protection during authentication
+* Best-effort score synchronization that never blocks login completion
 
 ---
 
