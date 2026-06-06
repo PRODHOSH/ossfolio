@@ -56,9 +56,21 @@ export async function generateMetadata({
   params,
 }: ProfilePageProps): Promise<Metadata> {
   const { username } = await params;
+
   return {
     title: `${username} — OSSfolio`,
     description: `View ${username}'s open-source profile on OSSfolio.`,
+
+    openGraph: {
+      title: `${username} — OSSfolio`,
+      description: `View ${username}'s open-source profile on OSSfolio.`,
+    },
+
+    twitter: {
+      card: "summary_large_image",
+      title: `${username} — OSSfolio`,
+      description: `View ${username}'s open-source profile on OSSfolio.`,
+    },
   };
 }
 
