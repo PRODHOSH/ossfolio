@@ -54,6 +54,7 @@ interface ProfileExtras {
   orgs: Org[];
   heatmap: HeatmapWeek[];
   score: number;
+  githubUnavailable?: boolean;
 }
 
 export function ProfileView({
@@ -64,6 +65,7 @@ export function ProfileView({
   orgs,
   heatmap,
   score,
+  githubUnavailable,
 }: { user: GitHubUser; repos: GitHubRepo[] } & ProfileExtras) {
   const displayName = user.name || user.login;
   const website = user.blog
@@ -74,7 +76,21 @@ export function ProfileView({
 
   return (
     <div style={{ maxWidth: "56rem", margin: "0 auto", padding: "48px 20px 80px" }}>
-
+{githubUnavailable && (
+  <div
+    style={{
+      marginBottom: "24px",
+      padding: "12px 16px",
+      border: "1px solid #fbbf24",
+      borderRadius: "8px",
+      backgroundColor: "#fffbeb",
+      color: "#92400e",
+      fontSize: "14px",
+    }}
+  >
+    GitHub data is temporarily unavailable. Please try again in a few minutes.
+  </div>
+)}
       {/* Profile header */}
       <div style={{ display: "flex", alignItems: "flex-start", gap: "24px", flexWrap: "wrap", paddingBottom: "40px", borderBottom: "1px solid #ededed" }}>
         <Image
