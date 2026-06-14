@@ -1,0 +1,24 @@
+# OSSfolio
+
+> OSSfolio is a free, open-source platform that gives every contributor a public profile page showing their full open-source journey — merged PRs, issues, commits, organizations, and program participation like GSoC or GSSoC, all in one shareable link.
+
+OSSfolio reads a contributor's public GitHub activity and turns it into a clean, shareable profile with a calculated contribution score. Profiles are public and require no login to view. The score is computed from commits, pull requests, issues, and reviews, with a transparent breakdown of how each metric is weighted.
+
+## Site
+
+- [Home](https://ossfolio.qzz.io/): Landing page explaining what OSSfolio is, its features, and how to get started
+- [Explore](https://ossfolio.qzz.io/explore): Leaderboard ranking top contributors by their OSSfolio score, with contributor search
+- [Profile pages](https://ossfolio.qzz.io/): Each contributor has a page at `/<github-username>` showing their stats, tech stack, organizations, repositories, and a contribution activity heatmap
+- [Score explained](https://ossfolio.qzz.io/score-explained): Plain-language breakdown of how the contribution score is calculated and how each metric is weighted
+
+## Docs
+
+- [README](https://github.com/PRODHOSH/ossfolio/blob/main/README.md): Project overview, feature list, tech stack, and local setup instructions
+- [CONTRIBUTING](https://github.com/PRODHOSH/ossfolio/blob/main/CONTRIBUTING.md): How to set up the project locally, the branch and PR workflow, and contribution guidelines
+
+## Optional
+
+- [Code of Conduct](https://github.com/PRODHOSH/ossfolio/blob/main/CODE_OF_CONDUCT.md): Community standards and expected behavior for contributors
+- [Design System](https://github.com/PRODHOSH/ossfolio/blob/main/DESIGN.md): Color tokens, spacing, typography, and component specs used across the UI
+- [Privacy Policy](https://ossfolio.qzz.io/privacy): How OSSfolio handles user data and GitHub information
+- [Terms of Service](https://ossfolio.qzz.io/terms): Terms governing use of the OSSfolio platform

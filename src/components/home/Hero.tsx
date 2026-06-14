@@ -1,6 +1,8 @@
-﻿"use client";
+"use client";
 
-import { ArrowRight } from "lucide-react";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { ArrowRight, Search } from "lucide-react";
 import { motion, type Variants } from "framer-motion";
 
 interface HeroProps {
@@ -22,6 +24,15 @@ const fadeUp: Variants = {
 };
 
 export function Hero({ onGetStarted }: HeroProps) {
+  const [query, setQuery] = useState("");
+  const router = useRouter();
+
+  function handleSearch(e: React.FormEvent) {
+    e.preventDefault();
+    const trimmed = query.trim();
+    if (trimmed) router.push(`/${trimmed}`);
+  }
+
   return (
     <section style={{ width: "100%", backgroundColor: "#ffffff" }}>
       <motion.div
@@ -100,6 +111,81 @@ export function Hero({ onGetStarted }: HeroProps) {
           showing your real open-source impact — merged PRs, streaks, orgs,
           badges, and more.
         </motion.p>
+
+        {/* Search bar */}
+        <motion.form
+          variants={fadeUp}
+          onSubmit={handleSearch}
+          style={{
+            marginTop: "28px",
+            display: "flex",
+            width: "100%",
+            maxWidth: "420px",
+            gap: "0",
+          }}
+        >
+          <div style={{ position: "relative", flex: 1 }}>
+            <Search
+              size={16}
+              style={{
+                position: "absolute",
+                left: "12px",
+                top: "50%",
+                transform: "translateY(-50%)",
+                color: "#9a9a9a",
+                pointerEvents: "none",
+              }}
+            />
+            <input
+              type="text"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Enter a GitHub username..."
+              style={{
+                width: "100%",
+                padding: "10px 12px 10px 36px",
+                fontSize: "16px",
+                fontWeight: 400,
+                lineHeight: 1.5,
+                color: "#171717",
+                backgroundColor: "#ffffff",
+                border: "1px solid #dfdfdf",
+                borderRadius: "6px 0 0 6px",
+                outline: "none",
+              }}
+              onFocus={(e) => (e.currentTarget.style.borderColor = "#c7c7c7")}
+              onBlur={(e) => (e.currentTarget.style.borderColor = "#dfdfdf")}
+            />
+          </div>
+          <button
+            type="submit"
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "6px",
+              padding: "10px 16px",
+              fontSize: "14px",
+              fontWeight: 500,
+              color: "#171717",
+              backgroundColor: "#ffffff",
+              border: "1px solid #dfdfdf",
+              borderLeft: "none",
+              borderRadius: "0 6px 6px 0",
+              cursor: "pointer",
+              whiteSpace: "nowrap",
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = "#fafafa";
+              e.currentTarget.style.borderColor = "#c7c7c7";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = "#ffffff";
+              e.currentTarget.style.borderColor = "#dfdfdf";
+            }}
+          >
+            View profile
+          </button>
+        </motion.form>
 
         {/* CTAs */}
         <motion.div

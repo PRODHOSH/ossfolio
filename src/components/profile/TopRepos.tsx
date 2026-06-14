@@ -21,6 +21,7 @@ export function TopRepos({ repos }: TopReposProps) {
             href={repo.url}
             target="_blank"
             rel="noopener noreferrer"
+            aria-label={`View ${repo.name} repository on GitHub (opens in a new tab)`}
             className="group rounded-lg border border-border p-3 hover:border-primary/50 transition-colors"
           >
             <div className="flex items-start justify-between">

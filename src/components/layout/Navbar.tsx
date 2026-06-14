@@ -218,6 +218,14 @@ export function Navbar({ onSignIn, onGetStarted }: NavbarProps) {
                 >
                   My Portfolio
                 </Link>
+                <div
+                  role="separator"
+                  style={{
+                    height: "1px",
+                    backgroundColor: "#ededed",
+                    margin: "4px 10px",
+                  }}
+                />
                 <button
                   role="menuitem"
                   onClick={handleLogout}
@@ -366,6 +374,14 @@ export function Navbar({ onSignIn, onGetStarted }: NavbarProps) {
                   >
                     My Portfolio
                   </Link>
+                  <div
+                    role="separator"
+                    style={{
+                      height: "1px",
+                      backgroundColor: "#ededed",
+                      margin: "8px 0",
+                    }}
+                  />
                   <button
                     onClick={handleLogout}
                     style={{

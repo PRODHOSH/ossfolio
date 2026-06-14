@@ -123,6 +123,7 @@ export interface GitHubContributor {
   };
 }
 
+/** Fetch a contributor's full GitHub profile and contributions via the GraphQL API using a bearer token. */
 export async function fetchContributorProfile(
   login: string,
   token: string

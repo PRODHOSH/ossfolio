@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { MapPin, Link2, Twitter, Github } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import type { ContributorProfile } from "@/types";
@@ -65,9 +66,11 @@ export function ProfileHeader({ profile }: ProfileHeaderProps) {
           <Badge variant="secondary">{profile.stats.totalPRs} PRs</Badge>
           <Badge variant="secondary">{profile.stats.totalIssues} Issues</Badge>
           <Badge variant="secondary">{profile.followers} followers</Badge>
-          <Badge className="bg-primary/10 text-primary border-primary/20">
-            Score: {profile.score}
-          </Badge>
+          <Link href="/score-explained" title="How is this calculated?">
+            <Badge className="bg-primary/10 text-primary border-primary/20 hover:bg-primary/20">
+              Score: {profile.score}
+            </Badge>
+          </Link>
         </div>
       </div>
     </div>

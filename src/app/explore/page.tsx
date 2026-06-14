@@ -5,6 +5,8 @@ import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { supabase } from "@/lib/supabase";
 
+export const runtime = "edge";
+
 export const metadata: Metadata = {
   title: "Explore Contributors - OSSfolio",
   description:

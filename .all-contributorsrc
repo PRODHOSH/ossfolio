@@ -64,6 +64,25 @@
       "contributions": [
         "doc"
       ]
+    },
+    {
+      "login": "iAwaisKhan",
+      "name": "Awais  Khan ",
+      "avatar_url": "https://avatars.githubusercontent.com/u/236069266?v=4",
+      "profile": "http://awaisxdevs.vercel.app",
+      "contributions": [
+        "code",
+        "design"
+      ]
+    },
+    {
+      "login": "Komal-Sharma03",
+      "name": "KOMALSHARMA",
+      "avatar_url": "https://avatars.githubusercontent.com/u/174271565?v=4",
+      "profile": "https://github.com/Komal-Sharma03",
+      "contributions": [
+        "code"
+      ]
     }
   ],
   "contributionTypes": [

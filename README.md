@@ -174,6 +174,8 @@ Everyone who has helped build OSSfolio — code, design, docs, ideas, all of it.
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/AnalShaju"><img src="https://avatars.githubusercontent.com/u/133645290?v=4?s=100" width="100px;" alt="Anal Shaju"/><br /><sub><b>Anal Shaju</b></sub></a><br /><a href="https://github.com/PRODHOSH/ossfolio/commits?author=AnalShaju" title="Code">💻</a> <a href="#design-AnalShaju" title="Design">🎨</a></td>
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/SakethSumanBathini"><img src="https://avatars.githubusercontent.com/u/178634012?v=4?s=100" width="100px;" alt="Saketh Suman Bathini"/><br /><sub><b>Saketh Suman Bathini</b></sub></a><br /><a href="https://github.com/PRODHOSH/ossfolio/commits?author=SakethSumanBathini" title="Code">💻</a> <a href="#design-SakethSumanBathini" title="Design">🎨</a></td>
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/cc-c122"><img src="https://avatars.githubusercontent.com/u/242877454?v=4?s=100" width="100px;" alt="cc-c122"/><br /><sub><b>cc-c122</b></sub></a><br /><a href="https://github.com/PRODHOSH/ossfolio/commits?author=cc-c122" title="Documentation">📖</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="http://awaisxdevs.vercel.app"><img src="https://avatars.githubusercontent.com/u/236069266?v=4?s=100" width="100px;" alt="Awais  Khan "/><br /><sub><b>Awais  Khan </b></sub></a><br /><a href="https://github.com/PRODHOSH/ossfolio/commits?author=iAwaisKhan" title="Code">💻</a> <a href="#design-iAwaisKhan" title="Design">🎨</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/Komal-Sharma03"><img src="https://avatars.githubusercontent.com/u/174271565?v=4?s=100" width="100px;" alt="KOMALSHARMA"/><br /><sub><b>KOMALSHARMA</b></sub></a><br /><a href="https://github.com/PRODHOSH/ossfolio/commits?author=Komal-Sharma03" title="Code">💻</a></td>
     </tr>
   </tbody>
 </table>
@@ -184,6 +186,16 @@ Everyone who has helped build OSSfolio — code, design, docs, ideas, all of it.
 <!-- ALL-CONTRIBUTORS-LIST:END -->
 
 ---
+
+## Star History
+
+<a href="https://www.star-history.com/?repos=PRODHOSH%2Fossfolio&type=date&legend=top-left">
+ <picture>
+   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=PRODHOSH/ossfolio&type=date&theme=dark&legend=top-left" />
+   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=PRODHOSH/ossfolio&type=date&legend=top-left" />
+   <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=PRODHOSH/ossfolio&type=date&legend=top-left" />
+ </picture>
+</a>
 
 
 ## License

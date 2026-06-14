@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import type { ContributorStats, Org, TechEntry, HeatmapWeek } from "@/types";
 
@@ -53,7 +54,25 @@ interface ProfileExtras {
   techStack: TechEntry[];
   orgs: Org[];
   heatmap: HeatmapWeek[];
+  currentStreak: number;
+  longestStreak: number;
   score: number;
+  /** ISO 8601 timestamp from Supabase profiles.updated_at — null if the user has never synced. */
+  updatedAt: string | null;
+}
+
+/** Format an ISO timestamp as a human-readable relative string for the profile header. */
+function formatUpdatedAt(iso: string): string {
+  const diffMs = Date.now() - new Date(iso).getTime();
+  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+  if (diffDays <= 0) return "today";
+  if (diffDays === 1) return "1 day ago";
+  if (diffDays < 30) return `${diffDays} days ago`;
+  const months = Math.floor(diffDays / 30);
+  if (months === 1) return "1 month ago";
+  if (months < 12) return `${months} months ago`;
+  const years = Math.floor(diffDays / 365);
+  return years === 1 ? "1 year ago" : `${years} years ago`;
 }
 
 export function ProfileView({
@@ -63,7 +82,10 @@ export function ProfileView({
   techStack,
   orgs,
   heatmap,
+  currentStreak,
+  longestStreak,
   score,
+  updatedAt,
 }: { user: GitHubUser; repos: GitHubRepo[] } & ProfileExtras) {
   const displayName = user.name || user.login;
   const website = user.blog
@@ -71,6 +93,37 @@ export function ProfileView({
       ? user.blog
       : `https://${user.blog}`
     : null;
+
+  const [copied, setCopied] = useState(false);
+
+  const handleCopyLink = async () => {
+    try {
+      await navigator.clipboard.writeText(window.location.href);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      console.error("Copy to clipboard failed:", err);
+    }
+  };
+
+  // Show a "Back to top" button once the visitor scrolls past 400px. The
+  // listener is passive (it never calls preventDefault) so it does not block
+  // scrolling, and it is cleaned up on unmount.
+  const [showBackToTop, setShowBackToTop] = useState(false);
+
+  useEffect(() => {
+    const onScroll = () => setShowBackToTop(window.scrollY > 400);
+    onScroll(); // set the initial state in case the page loads already scrolled
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  const scrollToTop = () =>
+    window.scrollTo({ top: 0, behavior: "smooth" });
+
+  // Total stars across the repos shown on this page (the top repos fetched for
+  // display). Derived from the `repos` prop already passed in.
+  const totalStars = repos.reduce((sum, r) => sum + (r.stargazers_count ?? 0), 0);
 
   return (
     <div style={{ maxWidth: "56rem", margin: "0 auto", padding: "48px 20px 80px" }}>
@@ -111,6 +164,7 @@ export function ProfileView({
                 href={website}
                 target="_blank"
                 rel="noopener noreferrer"
+                aria-label={`Personal website ${website.replace(/^https?:\/\//, "")} (opens in a new tab)`}
                 style={{ fontSize: "13px", color: "#707070", display: "flex", alignItems: "center", gap: "5px", textDecoration: "none" }}
                 onMouseEnter={(e) => (e.currentTarget.style.color = "#171717")}
                 onMouseLeave={(e) => (e.currentTarget.style.color = "#707070")}
@@ -127,6 +181,7 @@ export function ProfileView({
                 href={`https://twitter.com/${user.twitter_username}`}
                 target="_blank"
                 rel="noopener noreferrer"
+                aria-label={`Twitter profile of @${user.twitter_username} (opens in a new tab)`}
                 style={{ fontSize: "13px", color: "#707070", display: "flex", alignItems: "center", gap: "5px", textDecoration: "none" }}
                 onMouseEnter={(e) => (e.currentTarget.style.color = "#171717")}
                 onMouseLeave={(e) => (e.currentTarget.style.color = "#707070")}
@@ -141,6 +196,7 @@ export function ProfileView({
               href={user.html_url}
               target="_blank"
               rel="noopener noreferrer"
+              aria-label={`GitHub profile of ${displayName} (opens in a new tab)`}
               style={{ fontSize: "13px", color: "#707070", display: "flex", alignItems: "center", gap: "5px", textDecoration: "none" }}
               onMouseEnter={(e) => (e.currentTarget.style.color = "#171717")}
               onMouseLeave={(e) => (e.currentTarget.style.color = "#707070")}
@@ -150,6 +206,105 @@ export function ProfileView({
               </svg>
               GitHub
             </a>
+          </div>
+
+          {/* Action buttons — Share on X and Copy link, consistent with
+              DESIGN.md button-secondary-outline: white bg, ink border, 6px radius */}
+          <div style={{ marginTop: "14px", display: "flex", gap: "8px", flexWrap: "wrap" }}>
+            <button
+              type="button"
+              onClick={() => {
+                const profileUrl = `https://ossfolio.qzz.io/${user.login}`;
+                const text = `My open source contributor score is ${score} on OSSfolio: ${profileUrl} #opensource`;
+                window.open(
+                  `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`,
+                  "_blank",
+                  "noopener,noreferrer"
+                );
+              }}
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "6px",
+                padding: "7px 14px",
+                fontSize: "13px",
+                fontWeight: 500,
+                color: "#171717",
+                backgroundColor: "#ffffff",
+                border: "1px solid #c7c7c7",
+                borderRadius: "6px",
+                cursor: "pointer",
+                lineHeight: 1,
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.borderColor = "#171717";
+                e.currentTarget.style.backgroundColor = "#fafafa";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.borderColor = "#c7c7c7";
+                e.currentTarget.style.backgroundColor = "#ffffff";
+              }}
+              aria-label="Share profile on X (Twitter)"
+            >
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+              </svg>
+              Share on X
+            </button>
+
+            {/* Copy link button — copies window.location.href to clipboard,
+                shows "Copied!" with green accent for 2 s then resets.
+                Uses {colors.primary} (#3ecf8e) for the confirmed state to
+                signal success without adding a new chromatic event. */}
+            <button
+              type="button"
+              onClick={handleCopyLink}
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "6px",
+                padding: "7px 14px",
+                fontSize: "13px",
+                fontWeight: 500,
+                color: copied ? "#3ecf8e" : "#171717",
+                backgroundColor: "#ffffff",
+                border: `1px solid ${copied ? "#3ecf8e" : "#c7c7c7"}`,
+                borderRadius: "6px",
+                cursor: "pointer",
+                lineHeight: 1,
+                transition: "border-color 0.15s, color 0.15s",
+              }}
+              onMouseEnter={(e) => {
+                if (!copied) {
+                  e.currentTarget.style.borderColor = "#171717";
+                  e.currentTarget.style.backgroundColor = "#fafafa";
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (!copied) {
+                  e.currentTarget.style.borderColor = "#c7c7c7";
+                  e.currentTarget.style.backgroundColor = "#ffffff";
+                }
+              }}
+              aria-label="Copy profile link to clipboard"
+            >
+              {copied ? (
+                <>
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
+                    <polyline points="20 6 9 17 4 12" />
+                  </svg>
+                  Copied!
+                </>
+              ) : (
+                <>
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+                  </svg>
+                  Copy link
+                </>
+              )}
+            </button>
           </div>
 
           <div style={{ display: "flex", gap: "20px", marginTop: "14px" }}>
@@ -163,6 +318,16 @@ export function ProfileView({
               <strong style={{ color: "#171717", fontWeight: 600 }}>{user.public_repos}</strong> repos
             </span>
           </div>
+
+          {/* Last updated timestamp — shown only when a Supabase profile row exists.
+              Uses {typography.micro} (12px/1.45) and {colors.ink-mute-2} (#9a9a9a)
+              — the most subdued text tier in the design system, appropriate for
+              metadata that is helpful but never the focal point. */}
+          {updatedAt && (
+            <p style={{ fontSize: "12px", color: "#9a9a9a", margin: "10px 0 0 0", lineHeight: 1.45 }}>
+              Last updated {formatUpdatedAt(updatedAt)}
+            </p>
+          )}
         </div>
       </div>
 
@@ -235,6 +400,7 @@ export function ProfileView({
               href={`https://github.com/${user.login}?tab=repositories`}
               target="_blank"
               rel="noopener noreferrer"
+              aria-label="View all repositories on GitHub (opens in a new tab)"
               style={{ fontSize: "13px", color: "#707070", textDecoration: "none", display: "inline-flex", alignItems: "center", gap: "4px" }}
               onMouseEnter={(e) => (e.currentTarget.style.color = "#171717")}
               onMouseLeave={(e) => (e.currentTarget.style.color = "#707070")}
@@ -258,6 +424,7 @@ export function ProfileView({
             { label: "Commits", value: stats.totalCommits },
             { label: "Pull Requests", value: stats.totalPRs },
             { label: "Issues", value: stats.totalIssues },
+            { label: "Stars", value: totalStars },
             { label: "Contributor score", value: score },
           ].map((item) => (
             <div
@@ -327,6 +494,7 @@ export function ProfileView({
                 target="_blank"
                 rel="noopener noreferrer"
                 title={org.name ?? org.login}
+                aria-label={`Organization ${org.name ?? org.login} (opens in a new tab)`}
                 style={{ display: "inline-flex", borderRadius: "8px", overflow: "hidden", border: "1px solid #ededed", transition: "border-color 0.15s" }}
                 onMouseEnter={(e) => (e.currentTarget.style.borderColor = "#3ecf8e")}
                 onMouseLeave={(e) => (e.currentTarget.style.borderColor = "#ededed")}
@@ -344,6 +512,32 @@ export function ProfileView({
           <h2 style={{ fontSize: "16px", fontWeight: 600, color: "#171717", margin: "0 0 16px 0", letterSpacing: "-0.2px" }}>
             Contribution activity
           </h2>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", margin: "0 0 12px 0" }}>
+            {[
+              { label: "Current streak", value: currentStreak },
+              { label: "Longest streak", value: longestStreak },
+            ].map(({ label, value }) => (
+              <span
+                key={label}
+                style={{
+                  display: "inline-flex",
+                  alignItems: "baseline",
+                  gap: "6px",
+                  padding: "6px 12px",
+                  border: "1px solid #ededed",
+                  borderRadius: "9999px",
+                  fontSize: "13px",
+                  color: "#707070",
+                  backgroundColor: "#fafafa",
+                }}
+              >
+                <strong style={{ color: "#171717", fontWeight: 600 }}>
+                  {value} {value === 1 ? "day" : "days"}
+                </strong>
+                {label}
+              </span>
+            ))}
+          </div>
           <div
             style={{
               display: "flex",
@@ -368,9 +562,60 @@ export function ProfileView({
             ))}
           </div>
           <p style={{ fontSize: "12px", color: "#9a9a9a", margin: "10px 0 0 0" }}>
-            Activity graph is a representative placeholder &mdash; precise daily counts require GitHub&rsquo;s authenticated API.
+            This chart shows an estimate of contribution activity. Exact daily counts are not available for public profiles.
           </p>
         </div>
+      )}
+
+      {/* Back to top — fixed bottom-right, fades in past 400px of scroll.
+          Uses {colors.primary} (#3ecf8e) for the background, the only
+          chromatic accent in the design system, with white iconography. */}
+      {showBackToTop && (
+        <button
+          type="button"
+          onClick={scrollToTop}
+          aria-label="Back to top"
+          style={{
+            position: "fixed",
+            bottom: "24px",
+            right: "24px",
+            width: "44px",
+            height: "44px",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            backgroundColor: "#3ecf8e",
+            color: "#ffffff",
+            border: "none",
+            borderRadius: "10px",
+            cursor: "pointer",
+            boxShadow: "0 2px 8px rgba(0, 0, 0, 0.15)",
+            transition: "transform 0.15s, background-color 0.15s",
+            zIndex: 50,
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.transform = "translateY(-2px)";
+            e.currentTarget.style.backgroundColor = "#36b97e";
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.transform = "translateY(0)";
+            e.currentTarget.style.backgroundColor = "#3ecf8e";
+          }}
+        >
+          <svg
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden="true"
+          >
+            <polyline points="18 15 12 9 6 15" />
+          </svg>
+        </button>
       )}
     </div>
   );

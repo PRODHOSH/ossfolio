@@ -3,11 +3,12 @@
 import Image from "next/image";
 import Link from "next/link";
 
-const links = {
+const links: Record<string, { label: string; href: string; badge?: string }[]> = {
   Product: [
     { label: "Features", href: "#features" },
     { label: "How it works", href: "#how-it-works" },
-    { label: "Leaderboard", href: "/explore" },
+    { label: "Leaderboard", href: "/explore", badge: "New" },
+    { label: "How scoring works", href: "/score-explained" },
   ],
   Developers: [
     { label: "GitHub", href: "https://github.com/PRODHOSH/ossfolio" },
@@ -79,15 +80,38 @@ export function Footer() {
                 {section}
               </p>
               <ul style={{ listStyle: "none", display: "flex", flexDirection: "column", gap: "8px" }}>
-                {items.map(({ label, href }) => (
+                {items.map(({ label, href, badge }) => (
                   <li key={label}>
                     <Link
                       href={href}
-                      style={{ fontSize: "13px", color: "#707070", textDecoration: "none" }}
+                      style={{
+                        fontSize: "13px",
+                        color: "#707070",
+                        textDecoration: "none",
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: "6px",
+                      }}
                       onMouseEnter={(e) => (e.currentTarget.style.color = "#171717")}
                       onMouseLeave={(e) => (e.currentTarget.style.color = "#707070")}
                     >
                       {label}
+                      {badge && (
+                        <span
+                          style={{
+                            fontSize: "10px",
+                            fontWeight: 600,
+                            lineHeight: 1,
+                            color: "#171717",
+                            backgroundColor: "#3ecf8e",
+                            borderRadius: "4px",
+                            padding: "2px 5px",
+                            letterSpacing: "0.02em",
+                          }}
+                        >
+                          {badge}
+                        </span>
+                      )}
                     </Link>
                   </li>
                 ))}

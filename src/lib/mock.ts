@@ -92,3 +92,44 @@ export function generateMockHeatmap(username: string): MockHeatmap {
 
   return { weeks, totalContributions };
 }
+
+
+/**
+ * Contribution streaks derived from the heatmap calendar.
+ * - current: consecutive days with >=1 contribution ending at the most recent
+ *   (non-future) day.
+ * - longest: the longest consecutive run of contributing days anywhere in the
+ *   window.
+ * Future-dated padding days (the seeded calendar fills the final partial week)
+ * are excluded so they neither break nor pad a streak. YYYY-MM-DD strings sort
+ * lexicographically, so string comparison against today is safe.
+ *
+ * `todayKey` is injectable (defaults to the current UTC date) so the value is
+ * deterministic for tests and can be computed once on the server and reused,
+ * avoiding any SSR/hydration drift across a UTC day boundary.
+ */
+export function computeStreaks(
+  weeks: HeatmapWeek[],
+  todayKey: string = new Date().toISOString().slice(0, 10)
+): { current: number; longest: number } {
+  const days = weeks.flatMap((w) => w.days).filter((d) => d.date <= todayKey);
+
+  let longest = 0;
+  let run = 0;
+  for (const day of days) {
+    if (day.count > 0) {
+      run += 1;
+      if (run > longest) longest = run;
+    } else {
+      run = 0;
+    }
+  }
+
+  let current = 0;
+  for (let i = days.length - 1; i >= 0; i--) {
+    if (days[i].count > 0) current += 1;
+    else break;
+  }
+
+  return { current, longest };
+}

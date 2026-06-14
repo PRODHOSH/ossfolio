@@ -41,6 +41,7 @@ const LANG_COLORS: Record<string, string> = {
   Dockerfile: "#384d54",
 };
 
+/** Return the hex colour for a programming language name, or null if the language is not in the built-in map. */
 export function languageColor(language: string | null): string | null {
   if (!language) return null;
   return LANG_COLORS[language] ?? "#9a9a9a";
