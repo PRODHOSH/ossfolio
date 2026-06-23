@@ -109,17 +109,31 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
 
   let score = liveScore;
   let updatedAt: string | null = null;
+  let customLinks = [];
+  let isOwner = false;
+
   try {
+    // Fetch profile data including the new custom_links column
     const { data: profileRow } = await supabase
       .from("profiles")
-      .select("score, updated_at")
+      .select("score, updated_at, custom_links")
       .eq("username", username)
       .maybeSingle();
+
     if (profileRow && typeof profileRow.score === "number") {
       score = profileRow.score;
     }
     if (profileRow && typeof profileRow.updated_at === "string") {
       updatedAt = profileRow.updated_at;
+    }
+    if (profileRow && profileRow.custom_links) {
+      customLinks = profileRow.custom_links;
+    }
+
+    // Check if the current viewer is the profile owner
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session?.user?.user_metadata?.user_name === username) {
+      isOwner = true;
     }
   } catch {
     // Soft isolation fallback
@@ -137,18 +151,20 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
           transition: "background-color 0.2s ease, color 0.2s ease"
         }}
       >
-        <ProfileView
-          user={user}
-          repos={repos}
-          stats={stats}
-          techStack={techStack}
-          orgs={orgs}
-          heatmap={heatmap}
-          currentStreak={currentStreak}
-          longestStreak={longestStreak}
-          score={score}
-          updatedAt={updatedAt}
-        />
+       <ProfileView
+            user={user}
+            repos={repos}
+            stats={stats}
+            techStack={techStack}
+            orgs={orgs}
+            heatmap={heatmap}
+            currentStreak={currentStreak}
+            longestStreak={longestStreak}
+            score={score}
+            updatedAt={updatedAt}
+            isOwner={isOwner}
+            customLinks={customLinks}
+          />
       </main>
       <Footer />
     </>
