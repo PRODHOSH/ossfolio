@@ -336,8 +336,42 @@ export function ProfileView({
           </p>
         ) : (
           <>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", marginBottom: "20px" }}>
+            {availableLanguages.map((lang) => (
+              <button
+                key={lang}
+                onClick={() => setSelectedLang(lang)}
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  padding: "6px 12px",
+                  fontSize: "13px",
+                  fontWeight: 500,
+                  borderRadius: "9999px",
+                  cursor: "pointer",
+                  transition: "all 0.2s",
+                  border: selectedLang === lang ? "1px solid #3ecf8e" : "1px solid var(--color-hairline)",
+                  backgroundColor: selectedLang === lang ? "rgba(62, 207, 142, 0.1)" : "var(--color-canvas-soft)",
+                  color: selectedLang === lang ? "#3ecf8e" : "var(--color-ink-mute)",
+                }}
+              >
+                {lang !== "All" && LANG_COLORS[lang] && (
+                  <span
+                    style={{
+                      width: "8px",
+                      height: "8px",
+                      borderRadius: "50%",
+                      backgroundColor: LANG_COLORS[lang],
+                      marginRight: "6px",
+                    }}
+                  />
+                )}
+                {lang}
+              </button>
+            ))}
+          </div>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: "16px" }}>
-            {repos.map((repo) => (
+            {filteredRepos.map((repo) => (
               <a
                 key={repo.id}
                 href={repo.html_url}
