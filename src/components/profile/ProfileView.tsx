@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import type { ContributorStats, Org, TechEntry, HeatmapWeek } from "@/types";
+import { toPng } from "html-to-image";
 
 interface GitHubUser {
   login: string;
@@ -96,6 +97,8 @@ export function ProfileView({
     : null;
 
   const [copied, setCopied] = useState(false);
+  const [isDownloading, setIsDownloading] = useState(false);
+  const cardRef = useRef<HTMLDivElement>(null);
 
   const handleCopyLink = async () => {
     try {
@@ -104,6 +107,32 @@ export function ProfileView({
       setTimeout(() => setCopied(false), 2000);
     } catch (err) {
       console.error("Copy to clipboard failed:", err);
+    }
+  };
+
+  const handleDownloadCard = async () => {
+    if (!cardRef.current) return;
+    setIsDownloading(true);
+    try {
+      // Small delay to ensure images have finished rendering
+      await new Promise((resolve) => setTimeout(resolve, 100));
+
+      const dataUrl = await toPng(cardRef.current, {
+        cacheBust: true,
+        pixelRatio: 2,
+        style: {
+          transform: "scale(1)",
+          transformOrigin: "top left",
+        },
+      });
+      const link = document.createElement("a");
+      link.download = `${user.login}-ossfolio-card.png`;
+      link.href = dataUrl;
+      link.click();
+    } catch (err) {
+      console.error("Failed to download profile card:", err);
+    } finally {
+      setIsDownloading(false);
     }
   };
 
@@ -299,6 +328,58 @@ export function ProfileView({
                     <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
                   </svg>
                   Copy link
+                </>
+              )}
+            </button>
+
+            <button
+              type="button"
+              onClick={handleDownloadCard}
+              disabled={isDownloading}
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "6px",
+                padding: "7px 14px",
+                fontSize: "13px",
+                fontWeight: 500,
+                color: isDownloading ? "var(--color-ink-mute)" : "var(--color-ink)",
+                backgroundColor: "var(--color-canvas-soft)",
+                border: "1px solid var(--color-hairline-strong)",
+                borderRadius: "6px",
+                cursor: isDownloading ? "not-allowed" : "pointer",
+                lineHeight: 1,
+              }}
+              onMouseEnter={(e) => {
+                if (!isDownloading) {
+                  e.currentTarget.style.borderColor = "var(--color-ink)";
+                  e.currentTarget.style.backgroundColor = "var(--color-hairline)";
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (!isDownloading) {
+                  e.currentTarget.style.borderColor = "var(--color-hairline-strong)";
+                  e.currentTarget.style.backgroundColor = "var(--color-canvas-soft)";
+                }
+              }}
+              aria-label="Download profile card as PNG"
+            >
+              {isDownloading ? (
+                <>
+                  <svg className="animate-spin" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+                    <circle cx="12" cy="12" r="10" stroke="var(--color-hairline-strong)" strokeWidth="4" style={{ opacity: 0.25 }} />
+                    <path fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                  </svg>
+                  Generating...
+                </>
+              ) : (
+                <>
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                    <polyline points="7 10 12 15 17 10" />
+                    <line x1="12" y1="15" x2="12" y2="3" />
+                  </svg>
+                  Download card
                 </>
               )}
             </button>
@@ -672,6 +753,109 @@ export function ProfileView({
           </svg>
         </button>
       )}
+
+      {/* Hidden profile card for download */}
+      <div style={{ position: "fixed", left: "-9999px", top: "-9999px", overflow: "hidden", pointerEvents: "none" }}>
+        <div
+          ref={cardRef}
+          style={{
+            width: "600px",
+            height: "300px",
+            padding: "32px",
+            backgroundColor: "#1c1c1c",
+            border: "1px solid rgba(255, 255, 255, 0.1)",
+            borderRadius: "12px",
+            display: "flex",
+            flexDirection: "column",
+            justifyContent: "space-between",
+            boxSizing: "border-box",
+            fontFamily: "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+          }}
+        >
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "24px" }}>
+            {/* Left section: user & score */}
+            <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
+              {/* User */}
+              <div style={{ display: "flex", gap: "16px", alignItems: "center" }}>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={user.avatar_url}
+                  alt={displayName}
+                  style={{ width: "64px", height: "64px", borderRadius: "9999px", border: "1px solid rgba(255, 255, 255, 0.15)", objectFit: "cover" }}
+                  crossOrigin="anonymous"
+                />
+                <div>
+                  <div style={{ fontSize: "18px", fontWeight: 600, color: "#ffffff", letterSpacing: "-0.3px", lineHeight: 1.2 }}>
+                    {displayName}
+                  </div>
+                  <div style={{ fontSize: "13px", color: "#9a9a9a", marginTop: "2px" }}>
+                    @{user.login}
+                  </div>
+                </div>
+              </div>
+              {/* Score */}
+              <div>
+                <div style={{ fontSize: "10px", textTransform: "uppercase", letterSpacing: "1px", color: "#9a9a9a", fontWeight: 600 }}>
+                  Contributor Score
+                </div>
+                <div style={{ fontSize: "44px", fontWeight: 700, color: "#3ecf8e", marginTop: "4px", lineHeight: 1 }}>
+                  {score}
+                </div>
+              </div>
+            </div>
+
+            {/* Right section: stats grid */}
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", width: "260px" }}>
+              {[
+                { label: "Commits", value: stats.totalCommits },
+                { label: "PRs", value: stats.totalPRs },
+                { label: "Issues", value: stats.totalIssues },
+                { label: "Reviews", value: stats.totalReviews },
+              ].map((stat) => (
+                <div
+                  key={stat.label}
+                  style={{
+                    border: "1px solid rgba(255, 255, 255, 0.08)",
+                    borderRadius: "8px",
+                    padding: "12px 14px",
+                    backgroundColor: "#202020",
+                    display: "flex",
+                    flexDirection: "column",
+                    justifyContent: "center",
+                  }}
+                >
+                  <div style={{ fontSize: "20px", fontWeight: 600, color: "#ffffff", lineHeight: 1.1 }}>
+                    {stat.value.toLocaleString("en-US")}
+                  </div>
+                  <div style={{ fontSize: "11px", color: "#9a9a9a", marginTop: "4px", fontWeight: 500 }}>
+                    {stat.label}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Footer branding */}
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              borderTop: "1px solid rgba(255, 255, 255, 0.08)",
+              paddingTop: "16px",
+              marginTop: "16px",
+            }}
+          >
+            <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+              <span style={{ width: "8px", height: "8px", borderRadius: "50%", backgroundColor: "#3ecf8e" }} />
+              <span style={{ fontSize: "14px", fontWeight: 600, color: "#ffffff", letterSpacing: "-0.2px" }}>OSSfolio</span>
+            </div>
+            <span style={{ fontSize: "11px", fontFamily: "ui-monospace, Menlo, Monaco, Consolas, monospace", color: "#707070" }}>
+              ossfolio.qzz.io
+            </span>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
