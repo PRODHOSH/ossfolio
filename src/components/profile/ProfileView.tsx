@@ -240,12 +240,13 @@ const handleSaveLinks = async () => {
               GitHub
             </a>
             {/* Custom Links */}
-        {customLinks && customLinks.map((link, idx) => (
+       {customLinks && customLinks.map((link) => (
           <a
-            key={idx}
+            key={link.url}
             href={link.url}
             target="_blank"
             rel="noopener noreferrer"
+            aria-label={`${link.label} (opens in a new tab)`}
             style={{
               fontSize: "13px",
               color: "var(--color-ink-mute)",
