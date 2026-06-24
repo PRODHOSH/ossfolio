@@ -1,6 +1,5 @@
 "use client";
-
-import { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import type { ContributorStats, Org, TechEntry, HeatmapWeek } from "@/types";
@@ -338,8 +337,10 @@ export function ProfileView({
           <>
             <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", marginBottom: "20px" }}>
             {availableLanguages.map((lang) => (
-              <button
+             <button
                 key={lang}
+                type="button"
+                aria-pressed={selectedLang === lang}
                 onClick={() => setSelectedLang(lang)}
                 style={{
                   display: "inline-flex",
