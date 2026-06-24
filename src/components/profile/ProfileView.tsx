@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import type { ContributorStats, Org, TechEntry, HeatmapWeek } from "@/types";
-import { createClient } from "@/utils/supabase/client";
+import { supabase } from "@/lib/supabase";
 
 interface GitHubUser {
   login: string;
@@ -61,10 +61,7 @@ interface ProfileExtras {
   score: number;
   /** ISO 8601 timestamp from Supabase profiles.updated_at — null if the user has never synced. */
   updatedAt: string | null;
-  isOwner?: boolean;
-  customLinks?: { url: string; label: string }[];
-}
-  updatedAt: string | null;
+
 }
 
 /** Format an ISO timestamp as a human-readable relative string for the profile header. */
@@ -116,6 +113,7 @@ export function ProfileView({
 
   // Show a "Back to top" button once the visitor scrolls past 400px.
   const [showBackToTop, setShowBackToTop] = useState(false);
+  const [isEditLinksOpen, setIsEditLinksOpen] = useState(false);
 
   useEffect(() => {
     const onScroll = () => setShowBackToTop(window.scrollY > 400);

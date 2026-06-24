@@ -124,7 +124,17 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
   } catch {
     // Soft isolation fallback
   }
-
+// Fetch custom links and check ownership
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('custom_links')
+    .eq('username', params.username)
+    .single();
+  
+  const customLinks = profile?.custom_links || [];
+  
+  const { data: authData } = await supabase.auth.getUser();
+  const isOwner = authData?.user?.user_metadata?.user_name === params.username;
   return (
     <>
       <Navbar />
@@ -148,6 +158,8 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
           longestStreak={longestStreak}
           score={score}
           updatedAt={updatedAt}
+          isOwner={isOwner}
+          customLinks={customLinks}
         />
       </main>
       <Footer />
