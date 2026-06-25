@@ -121,16 +121,13 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
   ]);
 
   if (userResult.status === "not_found") notFound();
-
-  const rateLimited = userResult.status === "error" && userResult.code === 429;
-  if (userResult.status === "error" && !rateLimited) {
+  if (userResult.status === "error") {
     const msg = userResult.code === 0
       ? `Network error while fetching profile for ${username}`
       : `GitHub API returned ${userResult.code} for ${username}`;
     throw new Error(msg);
   }
-
-  const user = userResult.status === "ok" ? userResult.data : null;
+  const user = userResult.data;
 
   const mappedRepos = mapRepos(repos);
   const techStack = deriveTechStack(repos);
@@ -184,7 +181,6 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
           longestStreak={longestStreak}
           score={score}
           updatedAt={updatedAt}
-          rateLimited={rateLimited}
         />
       </main>
       <Footer />
