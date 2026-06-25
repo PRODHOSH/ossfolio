@@ -1,4 +1,5 @@
 import type { ContributorStats, Org, Repo, TechEntry } from "@/types";
+import { LANG_COLORS } from "@/lib/languages";
 
 /**
  * Live profile "extras" derived from the public (unauthenticated) GitHub REST
@@ -17,29 +18,7 @@ import type { ContributorStats, Org, Repo, TechEntry } from "@/types";
  * 0 rather than guessed.
  */
 
-const LANG_COLORS: Record<string, string> = {
-  TypeScript: "#3178c6",
-  JavaScript: "#f1e05a",
-  Python: "#3572A5",
-  Go: "#00ADD8",
-  Rust: "#dea584",
-  Java: "#b07219",
-  "C++": "#f34b7d",
-  C: "#555555",
-  "C#": "#178600",
-  HTML: "#e34c26",
-  CSS: "#563d7c",
-  Ruby: "#701516",
-  Swift: "#F05138",
-  Kotlin: "#A97BFF",
-  Dart: "#00B4AB",
-  Shell: "#89e051",
-  Vue: "#41b883",
-  Svelte: "#ff3e00",
-  PHP: "#4F5D95",
-  "Jupyter Notebook": "#DA5B0B",
-  Dockerfile: "#384d54",
-};
+
 
 /** Return the hex colour for a programming language name, or null if the language is not in the built-in map. */
 export function languageColor(language: string | null): string | null {

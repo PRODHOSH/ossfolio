@@ -10,6 +10,7 @@
  */
 
 import type { CSSProperties } from "react";
+import Link from "next/link";
 
 const primaryButton: CSSProperties = {
   display: "inline-flex",
@@ -80,18 +81,9 @@ export default function GlobalError({
           <button onClick={reset} style={primaryButton}>
             Try again
           </button>
-          <a
-            href="/"
-            style={{
-              ...primaryButton,
-              backgroundColor: "transparent",
-              border: "1px solid #e2e2e2",
-              color: "#171717",
-              textDecoration: "none",
-            }}
-          >
+          <Link href="/" style={{...primaryButton, backgroundColor: "transparent", border: "1px solid #e2e2e2", color: "#171717", textDecoration: "none"}}>
             Back to home
-          </a>
+          </Link>
         </div>
       </div>
     </main>

@@ -211,7 +211,7 @@ export function Navbar({ onSignIn, onGetStarted }: NavbarProps) {
           <button
             type="button"
             onClick={toggleTheme}
-            aria-label="Toggle theme mode"
+            aria-label={isDarkMode ? "Switch to light mode" : "Switch to dark mode"}
             style={{ background: "none", border: "none", cursor: "pointer", color: "var(--color-ink-mute)", display: "flex", alignItems: "center", justifyContent: "center", padding: "6px", borderRadius: "6px" }}
           >
             <Moon size={18} className="nav-theme-moon" />

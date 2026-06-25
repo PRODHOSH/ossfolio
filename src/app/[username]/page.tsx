@@ -57,7 +57,7 @@ async function fetchGitHubUser(username: string): Promise<UserFetchResult> {
 async function fetchGitHubRepos(username: string) {
   try {
     const res = await fetch(
-      `https://api.github.com/users/${username}/repos?sort=stars&per_page=12&type=owner`,
+      `https://api.github.com/users/${username}/repos?sort=stars&per_page=100&type=owner`,
       {
         headers: { Accept: "application/vnd.github.v3+json" },
         next: { revalidate: 3600 },
@@ -85,7 +85,6 @@ export async function generateMetadata({ params }: ProfilePageProps): Promise<Me
   const bio = user.bio || "";
   const publicRepos = user.public_repos;
   const followers = user.followers;
-  const avatarUrl = user.avatar_url;
 
   const description = bio
     ? `${bio} | ${publicRepos} repos, ${followers} followers`
@@ -97,15 +96,15 @@ export async function generateMetadata({ params }: ProfilePageProps): Promise<Me
     openGraph: {
       title: `${displayName} - OSSfolio`,
       description,
-      images: [{ url: avatarUrl, width: 400, height: 400, alt: `${displayName}'s avatar` }],
+      // og:image is auto-injected by opengraph-image.tsx
       type: "profile",
       siteName: "OSSfolio",
     },
     twitter: {
-      card: "summary",
+      card: "summary_large_image",
       title: `${displayName} - OSSfolio`,
       description,
-      images: [avatarUrl],
+      // twitter:image is auto-injected by twitter-image.tsx
     },
   };
 }
@@ -113,7 +112,6 @@ export async function generateMetadata({ params }: ProfilePageProps): Promise<Me
 export default async function ProfilePage({ params }: ProfilePageProps) {
   const { username } = await params;
 
-  // Base profile + repos (already-working live data) plus the new live extras.
   const [userResult, repos, liveStats, orgs, contributionCalendar] = await Promise.all([
     fetchGitHubUser(username),
     fetchGitHubRepos(username),
@@ -123,25 +121,24 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
   ]);
 
   if (userResult.status === "not_found") notFound();
-  if (userResult.status === "error") {
+
+  const rateLimited = userResult.status === "error" && userResult.code === 429;
+  if (userResult.status === "error" && !rateLimited) {
     const msg = userResult.code === 0
       ? `Network error while fetching profile for ${username}`
       : `GitHub API returned ${userResult.code} for ${username}`;
     throw new Error(msg);
   }
-  const user = userResult.data;
+
+  const user = userResult.status === "ok" ? userResult.data : null;
 
   const mappedRepos = mapRepos(repos);
   const techStack = deriveTechStack(repos);
 
-  // Heatmap calculation — use the user's real contribution calendar parsed from
-  // GitHub's public endpoint. If that request failed (network error, rate limit,
-  // markup change), fall back to the seeded placeholder so the page still renders.
   const { weeks: heatmap, totalContributions } = contributionCalendar
     ? contributionCalendar
     : generateMockHeatmap(username);
 
-  // Streaks computation
   const { current: currentStreak, longest: longestStreak } = computeStreaks(heatmap);
 
   const stats = { ...liveStats, totalContributions };
@@ -168,7 +165,6 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
   return (
     <>
       <Navbar />
-      {/* 💡 Fixed: Linked layout to design tokens and added transition curves */}
       <main 
         style={{ 
           backgroundColor: "var(--color-canvas)", 
@@ -188,6 +184,7 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
           longestStreak={longestStreak}
           score={score}
           updatedAt={updatedAt}
+          rateLimited={rateLimited}
         />
       </main>
       <Footer />

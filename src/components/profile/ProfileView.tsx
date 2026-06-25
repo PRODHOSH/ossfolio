@@ -3,8 +3,10 @@
 import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { HeatmapWithYearNav } from "@/components/profile/HeatmapWithYearNav";
 import type { ContributorStats, Org, TechEntry, HeatmapWeek } from "@/types";
 import { toPng } from "html-to-image";
+import { LANG_COLORS } from "@/lib/languages";
 
 interface GitHubUser {
   login: string;
@@ -30,26 +32,6 @@ interface GitHubRepo {
   language: string | null;
 }
 
-const LANG_COLORS: Record<string, string> = {
-  TypeScript: "#3178c6",
-  JavaScript: "#f1e05a",
-  Python: "#3572A5",
-  Go: "#00ADD8",
-  Rust: "#dea584",
-  Java: "#b07219",
-  "C++": "#f34b7d",
-  C: "#555555",
-  HTML: "#e34c26",
-  CSS: "#563d7c",
-  Ruby: "#701516",
-  Swift: "#F05138",
-  Kotlin: "#A97BFF",
-  Dart: "#00B4AB",
-  Shell: "#89e051",
-  Vue: "#41b883",
-  Svelte: "#ff3e00",
-  PHP: "#4F5D95",
-};
 
 interface ProfileExtras {
   stats: ContributorStats;
@@ -88,7 +70,28 @@ export function ProfileView({
   longestStreak,
   score,
   updatedAt,
-}: { user: GitHubUser; repos: GitHubRepo[] } & ProfileExtras) {
+  rateLimited,
+
+}: { user: GitHubUser; repos: GitHubRepo[] } & ProfileExtras & { rateLimited?: boolean }) {
+  const [copied, setCopied] = useState(false);
+  const [isDownloading, setIsDownloading] = useState(false);
+  const cardRef = useRef<HTMLDivElement>(null);
+  const [showBackToTop, setShowBackToTop] = useState(false);
+
+  useEffect(() => {
+    const onScroll = () => setShowBackToTop(window.scrollY > 400);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  if (rateLimited) {
+    return (
+      <div style={{ color: 'var(--color-ink-mute)', backgroundColor: 'var(--color-canvas-soft)', padding: '16px', borderRadius: '8px', textAlign: 'center', marginBottom: '24px' }}>
+        GitHub data is temporarily unavailable. Please try again later.
+      </div>
+    );
+  }
   const displayName = user.name || user.login;
   const website = user.blog
     ? user.blog.startsWith("http")
@@ -96,9 +99,7 @@ export function ProfileView({
       : `https://${user.blog}`
     : null;
 
-  const [copied, setCopied] = useState(false);
-  const [isDownloading, setIsDownloading] = useState(false);
-  const cardRef = useRef<HTMLDivElement>(null);
+  
 
   const handleCopyLink = async () => {
     try {
@@ -137,14 +138,7 @@ export function ProfileView({
   };
 
   // Show a "Back to top" button once the visitor scrolls past 400px.
-  const [showBackToTop, setShowBackToTop] = useState(false);
-
-  useEffect(() => {
-    const onScroll = () => setShowBackToTop(window.scrollY > 400);
-    onScroll();
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
+  
 
 
   const scrollToTop = () =>
@@ -675,7 +669,7 @@ export function ProfileView({
                   backgroundColor: "var(--color-canvas-soft)",
                 }}
               >
-                {language}
+                <span style={{ width: "10px", height: "10px", backgroundColor: LANG_COLORS[language] ?? "#9a9aa", borderRadius: "9999px", flexShrink: 0, display: "inline-block" }}></span>{language}
                 <span style={{ color: "var(--color-ink-mute)", fontSize: "12px" }}>×{repoCount}</span>
               </span>
             ))}
@@ -709,7 +703,7 @@ export function ProfileView({
         </div>
       )}
 
-      {/* Contribution heatmap */}
+      {/* Contribution heatmap with year navigation */}
       {heatmap.length > 0 && (
         <div style={{ marginTop: "44px" }}>
           <h2 style={{ fontSize: "16px", fontWeight: 600, color: "var(--color-ink)", margin: "0 0 16px 0", letterSpacing: "-0.2px" }}>
@@ -752,6 +746,16 @@ export function ProfileView({
               backgroundColor: "var(--color-canvas-soft)",
             }}
           >
+            {/* Month labels */}
+            <div style={{ display: "flex", gap: "3px", marginBottom: "4px", fontSize: "11px", color: "var(--color-ink-mute)" }}>
+              {heatmap.map((week, wi) => {
+                const month = new Date(week.days[0].date).toLocaleString('en-US', { month: 'short' });
+                const show = wi === 0 || month !== new Date(heatmap[wi - 1].days[0].date).toLocaleString('en-US', { month: 'short' });
+                return (
+                  <span key={wi} style={{ width: "11px", textAlign: "center" }}>{show ? month : ""}</span>
+                );
+              })}
+            </div>
             {heatmap.map((week, wi) => (
               <div key={wi} style={{ display: "flex", flexDirection: "column", gap: "3px" }}>
                 {week.days.map((day, di) => (

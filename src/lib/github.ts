@@ -220,11 +220,16 @@ export interface ContributionCalendar {
  * fall back gracefully without crashing the page.
  */
 export async function fetchContributionCalendar(
-  username: string
+  username: string,
+  from?: string
 ): Promise<ContributionCalendar | null> {
   try {
+    let url = `https://github.com/users/${encodeURIComponent(username)}/contributions`;
+    if (from) {
+      url += `?from=${encodeURIComponent(from)}`;
+    }
     const res = await fetch(
-      `https://github.com/users/${encodeURIComponent(username)}/contributions`,
+      url,
       {
         headers: {
           // GitHub returns the calendar fragment for a normal browser Accept.
