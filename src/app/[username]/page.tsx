@@ -42,7 +42,7 @@ async function fetchGitHubRepos(username: string) {
   const res = await fetch(
     `https://api.github.com/users/${username}/repos?sort=stars&per_page=100&type=owner`,
     {
-      headers: { Accept: "application/vnd.github.v3+json" },
+      headers: { Accept: "application/vnd.github.mercy-preview+json" },
       next: { revalidate: 3600 },
     }
   );
@@ -53,19 +53,23 @@ async function fetchGitHubRepos(username: string) {
 
 export async function generateMetadata({ params }: ProfilePageProps): Promise<Metadata> {
   const { username } = await params;
-
-  const user = await fetchGitHubUser(username);
-  if (!user) {
+  const result = await fetchGitHubUser(username);
+  if (result.status !== "ok") {
     return {
       title: `${username} - OSSfolio`,
       description: `Open-source profile for ${username}.`,
     };
   }
-
+  const user = result.data;
   const displayName = user.name || username;
-  const description = user.bio
-    ? `${user.bio} | ${user.public_repos} repos, ${user.followers} followers`
-    : `${displayName} has ${user.public_repos} public repos and ${user.followers} followers on GitHub.`;
+  const bio = user.bio || "";
+  const publicRepos = user.public_repos;
+  const followers = user.followers;
+  const avatarUrl = user.avatar_url;
+
+  const description = bio
+    ? `${bio} | ${publicRepos} repos, ${followers} followers`
+    : `${displayName} has ${publicRepos} public repos and ${followers} followers on GitHub.`;
 
   return {
     title: `${displayName} - OSSfolio`,
@@ -129,17 +133,38 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
 
   let score = liveScore;
   let updatedAt: string | null = null;
+  let badges: any[] = [];
+  let profileId: string | null = null;
   try {
     const { data: profileRow } = await supabase
       .from("profiles")
-      .select("score, updated_at")
+      .select("id, score, updated_at, badges")
       .eq("username", username)
       .maybeSingle();
-    if (profileRow && typeof profileRow.score === "number") {
-      score = profileRow.score;
-    }
-    if (profileRow && typeof profileRow.updated_at === "string") {
-      updatedAt = profileRow.updated_at;
+    if (profileRow) {
+      profileId = profileRow.id;
+      if (typeof profileRow.score === "number") {
+        score = profileRow.score;
+      }
+      if (typeof profileRow.updated_at === "string") {
+        updatedAt = profileRow.updated_at;
+      }
+      if (Array.isArray(profileRow.badges)) {
+        badges = profileRow.badges
+          .filter(
+            (b: any) =>
+              b &&
+              typeof b.program === "string" &&
+              b.program.trim() !== "" &&
+              Array.isArray(b.years)
+          )
+          .map((b: any) => ({
+            program: b.program,
+            years: b.years
+              .map((y: any) => Number(y))
+              .filter((y: number) => !isNaN(y)),
+          }));
+      }
     }
   } catch {
     // Soft isolation fallback
@@ -168,6 +193,8 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
           longestStreak={longestStreak}
           score={score}
           updatedAt={updatedAt}
+          badges={badges}
+          profileId={profileId}
           rateLimited={rateLimited}
         />
       </main>

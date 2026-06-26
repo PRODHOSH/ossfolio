@@ -137,6 +137,7 @@ export default async function OGImage({ params }: OGImageProps) {
             {/* Avatar — circular */}
             <img
               src={avatarUrl}
+              alt={`${displayName} avatar`}
               width={120}
               height={120}
               style={{

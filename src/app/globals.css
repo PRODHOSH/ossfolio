@@ -89,3 +89,8 @@ body {
   line-height: 1.5;
   transition: background-color 0.2s ease, color 0.2s ease;
 }
+
+dialog::backdrop {
+  background-color: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+}

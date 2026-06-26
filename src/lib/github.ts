@@ -162,6 +162,7 @@ export function contributorToScoreInputs(
     language: n.primaryLanguage?.name ?? null,
     languageColor: n.primaryLanguage?.color ?? null,
     url: n.url,
+    topics: [],
   }));
   return { stats, repos };
 }

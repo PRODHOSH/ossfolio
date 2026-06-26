@@ -33,6 +33,7 @@ export interface Repo {
   language: string | null;
   languageColor: string | null;
   url: string;
+  topics: string[];
 }
 
 export interface Org {
@@ -55,4 +56,9 @@ export interface HeatmapWeek {
 export interface TechEntry {
   language: string;
   repoCount: number;
+}
+
+export interface BadgeItem {
+  program: string;
+  years: number[];
 }

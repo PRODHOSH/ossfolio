@@ -19,6 +19,7 @@ create table public.profiles (
   total_prs      integer not null default 0,
   total_issues   integer not null default 0,
   total_reviews  integer not null default 0,
+  badges         jsonb not null default '[]'::jsonb,
   created_at timestamptz default now(),
   updated_at timestamptz default now()
 );

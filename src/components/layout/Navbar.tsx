@@ -84,6 +84,13 @@ export function Navbar({ onSignIn, onGetStarted }: NavbarProps) {
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setMounted(true);
+  }, []);
+
   // Theme state drives only the toggle glyph (Sun/Moon). All navbar colours are
   // CSS-variable driven (see styles below), so the bar follows the `.dark` class
   // on <html> from the very first paint - no SSR/hydration colour mismatch.
@@ -227,33 +234,39 @@ export function Navbar({ onSignIn, onGetStarted }: NavbarProps) {
 
         <div style={{ display: "flex", alignItems: "center", gap: "16px" }} className="hide-on-mobile">
           <button
-                type="button"
-                onClick={toggleTheme}
-                aria-label={isDarkMode ? "Switch to light mode" : "Switch to dark mode"}
-                style={{
-                  background: "none",
-                  border: "none",
-                  cursor: "pointer",
-                  color: "var(--color-ink-mute)",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  padding: "6px",
-                  borderRadius: "6px",
-                  transition: "all 0.3s ease"
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.background = "rgba(255,255,255,0.1)";
-                  e.currentTarget.style.transform = "scale(1.1)";
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.background = "none";
-                  e.currentTarget.style.transform = "scale(1)";
-                }}
-              >
-                <Moon size={18} className="nav-theme-moon" />
-                <Sun size={18} className="nav-theme-sun" />
-              </button>
+  type="button"
+  onClick={toggleTheme}
+  aria-label={
+    !mounted
+      ? "Toggle theme"
+      : isDarkMode
+      ? "Switch to light mode"
+      : "Switch to dark mode"
+  }
+  style={{
+    background: "none",
+    border: "none",
+    cursor: "pointer",
+    color: "var(--color-ink-mute)",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    padding: "6px",
+    borderRadius: "6px",
+    transition: "all 0.3s ease",
+  }}
+  onMouseEnter={(e) => {
+    e.currentTarget.style.background = "rgba(255,255,255,0.1)";
+    e.currentTarget.style.transform = "scale(1.1)";
+  }}
+  onMouseLeave={(e) => {
+    e.currentTarget.style.background = "none";
+    e.currentTarget.style.transform = "scale(1)";
+  }}
+>
+  <Moon size={18} className="nav-theme-moon" />
+  <Sun size={18} className="nav-theme-sun" />
+</button>
 
           {user ? (
             <div ref={menuRef} style={{ position: "relative", display: "flex", alignItems: "center" }}>

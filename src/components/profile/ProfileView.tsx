@@ -1,11 +1,13 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
 import { HeatmapWithYearNav } from "@/components/profile/HeatmapWithYearNav";
-import type { ContributorStats, Org, TechEntry, HeatmapWeek } from "@/types";
+import type { ContributorStats, Org, TechEntry, HeatmapWeek, BadgeItem } from "@/types";
 import { toPng } from "html-to-image";
+import { supabase } from "@/lib/supabase";
 import { LANG_COLORS } from "@/lib/languages";
 
 interface GitHubUser {
@@ -30,8 +32,43 @@ interface GitHubRepo {
   stargazers_count: number;
   forks_count: number;
   language: string | null;
+  topics?: string[];
+  pushed_at?: string;
 }
 
+
+const PROGRAM_STYLING: Record<string, { gradient: string; text: string; bg: string }> = {
+  GSSoC: {
+    gradient: "linear-gradient(135deg, #FF9900 0%, #FF5E36 100%)",
+    text: "#ffffff",
+    bg: "rgba(255, 153, 0, 0.1)",
+  },
+  Hacktoberfest: {
+    gradient: "linear-gradient(135deg, #FF2201 0%, #FF007A 100%)",
+    text: "#ffffff",
+    bg: "rgba(255, 34, 1, 0.1)",
+  },
+  EluSoC: {
+    gradient: "linear-gradient(135deg, #6b01c2 0%, #00d2ff 100%)",
+    text: "#ffffff",
+    bg: "rgba(107, 1, 194, 0.1)",
+  },
+  GSoC: {
+    gradient: "linear-gradient(135deg, #34A853 0%, #4285F4 100%)",
+    text: "#ffffff",
+    bg: "rgba(66, 133, 244, 0.1)",
+  },
+  "MLH Fellowship": {
+    gradient: "linear-gradient(135deg, #004B87 0%, #00A3E0 100%)",
+    text: "#ffffff",
+    bg: "rgba(0, 75, 135, 0.1)",
+  },
+  SWoC: {
+    gradient: "linear-gradient(135deg, #00b4ab 0%, #3ecf8e 100%)",
+    text: "#ffffff",
+    bg: "rgba(0, 180, 171, 0.1)",
+  },
+};
 
 interface ProfileExtras {
   stats: ContributorStats;
@@ -43,6 +80,8 @@ interface ProfileExtras {
   score: number;
   /** ISO 8601 timestamp from Supabase profiles.updated_at — null if the user has never synced. */
   updatedAt: string | null;
+  badges: BadgeItem[];
+  profileId: string | null;
 }
 
 /** Format an ISO timestamp as a human-readable relative string for the profile header. */
@@ -70,14 +109,63 @@ export function ProfileView({
   longestStreak,
   score,
   updatedAt,
+  badges = [],
+  profileId,
   rateLimited,
-
 }: { user: GitHubUser; repos: GitHubRepo[] } & ProfileExtras & { rateLimited?: boolean }) {
   const [copied, setCopied] = useState(false);
+  const [repoSort, setRepoSort] = useState<"stars" | "forks" | "updated">("stars");
   const [isDownloading, setIsDownloading] = useState(false);
+  const searchRef = useRef<HTMLInputElement>(null);
+  const [repoFilter, setRepoFilter] = useState("");
+
+  const focusSearch = useCallback(() => searchRef.current?.focus(), []);
+  useKeyboardShortcuts({ onSlash: focusSearch });
   const cardRef = useRef<HTMLDivElement>(null);
   const [showBackToTop, setShowBackToTop] = useState(false);
 
+  // Program Badges State
+  const sanitizeBadges = (raw: any[]): BadgeItem[] => {
+    if (!Array.isArray(raw)) return [];
+    return raw
+      .filter(
+        (b) =>
+          b &&
+          typeof b.program === "string" &&
+          b.program.trim() !== "" &&
+          Array.isArray(b.years)
+      )
+      .map((b) => ({
+        program: b.program,
+        years: b.years
+          .map((y: any) => Number(y))
+          .filter((y: number) => !isNaN(y)),
+      }));
+  };
+
+  const [badgesList, setBadgesList] = useState<BadgeItem[]>(() => sanitizeBadges(badges));
+  const [authUser, setAuthUser] = useState<any>(null);
+  const [isBadgeModalOpen, setIsBadgeModalOpen] = useState(false);
+  const [selectedProgram, setSelectedProgram] = useState("GSSoC");
+  const currentYear = new Date().getFullYear();
+  const [selectedYear, setSelectedYear] = useState(currentYear);
+  const [isSavingBadge, setIsSavingBadge] = useState(false);
+  const dialogRef = useRef<HTMLDialogElement>(null);
+
+  const isOwner = !!(
+    authUser && (
+      (profileId && authUser.id === profileId) ||
+      (!profileId && authUser.user_metadata?.user_name?.toLowerCase() === user.login?.toLowerCase())
+    )
+  );
+
+  // Sync badges from props in effect (instead of setState during render)
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setBadgesList(sanitizeBadges(badges));
+  }, [badges]);
+
+  // Scroll visibility effect
   useEffect(() => {
     const onScroll = () => setShowBackToTop(window.scrollY > 400);
     onScroll();
@@ -85,6 +173,59 @@ export function ProfileView({
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
+  // Resolve the current session on mount and keep it in sync with auth changes
+  useEffect(() => {
+    let active = true;
+    supabase.auth.getSession().then(({ data }) => {
+      if (active) setAuthUser(data.session?.user ?? null);
+    });
+    const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (active) setAuthUser(session?.user ?? null);
+    });
+    return () => {
+      active = false;
+      sub.subscription.unsubscribe();
+    };
+  }, []);
+
+  // Sync native dialog element with state and setup event listeners
+  useEffect(() => {
+    const dialog = dialogRef.current;
+    if (!dialog) return;
+
+    if (isBadgeModalOpen) {
+      if (!dialog.open) dialog.showModal();
+    } else {
+      if (dialog.open) dialog.close();
+    }
+
+    const handleClose = () => {
+      setIsBadgeModalOpen(false);
+    };
+
+    const handleClick = (e: MouseEvent) => {
+      if (e.target === dialog) {
+        const rect = dialog.getBoundingClientRect();
+        const clickInside =
+          rect.top <= e.clientY &&
+          e.clientY <= rect.top + rect.height &&
+          rect.left <= e.clientX &&
+          e.clientX <= rect.left + rect.width;
+        if (!clickInside) {
+          setIsBadgeModalOpen(false);
+        }
+      }
+    };
+
+    dialog.addEventListener("close", handleClose);
+    dialog.addEventListener("click", handleClick);
+    return () => {
+      dialog.removeEventListener("close", handleClose);
+      dialog.removeEventListener("click", handleClick);
+    };
+  }, [isBadgeModalOpen, isOwner]);
+
+  // Conditional rendering
   if (rateLimited) {
     return (
       <div style={{ color: 'var(--color-ink-mute)', backgroundColor: 'var(--color-canvas-soft)', padding: '16px', borderRadius: '8px', textAlign: 'center', marginBottom: '24px' }}>
@@ -92,14 +233,97 @@ export function ProfileView({
       </div>
     );
   }
-  const displayName = user.name || user.login;
-  const website = user.blog
+
+  const displayName = user?.name || user?.login;
+  const website = user?.blog
     ? user.blog.startsWith("http")
       ? user.blog
       : `https://${user.blog}`
     : null;
 
-  
+  const handleAddBadge = async () => {
+    if (!profileId) {
+      alert("Please sync your profile first before adding badges.");
+      return;
+    }
+    const targetProfileId = profileId;
+    setIsSavingBadge(true);
+    try {
+      // Create new list of badges
+      const existingBadgeIndex = badgesList.findIndex(
+        (b) => b.program === selectedProgram
+      );
+      let updatedList: BadgeItem[] = [];
+      if (existingBadgeIndex > -1) {
+        // Append year if not already present, sort desc
+        const currentYears = badgesList[existingBadgeIndex].years;
+        const updatedYears = currentYears.includes(selectedYear)
+          ? currentYears
+          : [...currentYears, selectedYear].sort((a, b) => b - a);
+        updatedList = badgesList.map((b, idx) =>
+          idx === existingBadgeIndex ? { ...b, years: updatedYears } : b
+        );
+      } else {
+        // Add new badge
+        updatedList = [
+          ...badgesList,
+          { program: selectedProgram, years: [selectedYear] },
+        ];
+      }
+
+      const { error } = await supabase
+        .from("profiles")
+        .upsert({
+          id: targetProfileId,
+          username: user.login,
+          badges: updatedList,
+          updated_at: new Date().toISOString(),
+        });
+
+      if (error) {
+        console.error("Failed to save badge to database:", error.message);
+        alert(`Failed to save badge: ${error.message}`);
+      } else {
+        setBadgesList(updatedList);
+        setIsBadgeModalOpen(false);
+      }
+    } catch (err) {
+      console.error("Error saving badge:", err);
+    } finally {
+      setIsSavingBadge(false);
+    }
+  };
+
+  const handleRemoveBadge = async (program: string) => {
+    if (!profileId) {
+      alert("Please sync your profile first before removing badges.");
+      return;
+    }
+    const targetProfileId = profileId;
+    const confirmRemove = confirm(`Are you sure you want to remove the ${program} badge?`);
+    if (!confirmRemove) return;
+
+    try {
+      const updatedList = badgesList.filter((b) => b.program !== program);
+      const { error } = await supabase
+        .from("profiles")
+        .upsert({
+          id: targetProfileId,
+          username: user.login,
+          badges: updatedList,
+          updated_at: new Date().toISOString(),
+        });
+
+      if (error) {
+        console.error("Failed to remove badge from database:", error.message);
+        alert(`Failed to remove badge: ${error.message}`);
+      } else {
+        setBadgesList(updatedList);
+      }
+    } catch (err) {
+      console.error("Error removing badge:", err);
+    }
+  };
 
   const handleCopyLink = async () => {
     try {
@@ -475,11 +699,145 @@ export function ProfileView({
         </div>
       </div>
 
+      {/* Badges section */}
+      {(badgesList.length > 0 || isOwner) && (
+        <div style={{ marginTop: "32px", borderBottom: "1px solid var(--color-hairline)", paddingBottom: "32px" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
+            <h2 style={{ fontSize: "16px", fontWeight: 600, color: "var(--color-ink)", margin: 0, letterSpacing: "-0.2px" }}>
+              Badges
+            </h2>
+            {isOwner && (
+              <button
+                type="button"
+                onClick={() => setIsBadgeModalOpen(true)}
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "4px",
+                  padding: "6px 12px",
+                  fontSize: "13px",
+                  fontWeight: 500,
+                  color: "#ffffff",
+                  backgroundColor: "#3ecf8e",
+                  border: "none",
+                  borderRadius: "6px",
+                  cursor: "pointer",
+                  lineHeight: 1,
+                  transition: "background-color 0.15s",
+                }}
+                onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#24b47e")}
+                onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "#3ecf8e")}
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                  <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
+                </svg>
+                Add badge
+              </button>
+            )}
+          </div>
+          {badgesList.length === 0 ? (
+            <p style={{ fontSize: "13px", color: "var(--color-ink-mute)", margin: 0 }}>
+              No badges claimed yet. Click &quot;Add badge&quot; to show your participation.
+            </p>
+          ) : (
+            <div style={{ display: "flex", flexWrap: "wrap", gap: "10px" }}>
+              {badgesList.map((badge) => {
+                if (!badge || !badge.program || !Array.isArray(badge.years)) return null;
+                const style = PROGRAM_STYLING[badge.program] || {
+                  gradient: "linear-gradient(135deg, #707070 0%, #9a9a9a 100%)",
+                  text: "#ffffff",
+                  bg: "rgba(128, 128, 128, 0.1)",
+                };
+                return (
+                  <div
+                    key={badge.program}
+                    style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: "8px",
+                      padding: "6px 14px",
+                      borderRadius: "9999px",
+                      background: style.gradient,
+                      color: style.text,
+                      fontSize: "13px",
+                      fontWeight: 600,
+                      boxShadow: "0 2px 4px rgba(0,0,0,0.08)",
+                      transition: "transform 0.15s",
+                    }}
+                  >
+                    <span>{badge.program}</span>
+                    <span
+                      style={{
+                        backgroundColor: "rgba(255, 255, 255, 0.25)",
+                        padding: "2px 6px",
+                        borderRadius: "9999px",
+                        fontSize: "11px",
+                        fontWeight: 500,
+                      }}
+                    >
+                      {badge.years.join(", ")}
+                    </span>
+                    {isOwner && (
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveBadge(badge.program)}
+                        title={`Remove ${badge.program} badge`}
+                        aria-label={`Remove ${badge.program} badge`}
+                        style={{
+                          background: "none",
+                          border: "none",
+                          color: "rgba(255, 255, 255, 0.8)",
+                          cursor: "pointer",
+                          padding: 0,
+                          display: "flex",
+                          alignItems: "center",
+                          fontSize: "16px",
+                          marginLeft: "4px",
+                          lineHeight: 1,
+                        }}
+                        onMouseEnter={(e) => (e.currentTarget.style.color = "#ffffff")}
+                        onMouseLeave={(e) => (e.currentTarget.style.color = "rgba(255, 255, 255, 0.8)")}
+                      >
+                        &times;
+                      </button>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Repos */}
       <div style={{ marginTop: "40px" }}>
-        <h2 style={{ fontSize: "16px", fontWeight: 600, color: "var(--color-ink)", margin: "0 0 20px 0", letterSpacing: "-0.2px" }}>
-          Popular repositories
-        </h2>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", margin: "0 0 12px 0", flexWrap: "wrap", gap: "12px" }}>
+          <h2 style={{ fontSize: "16px", fontWeight: 600, color: "var(--color-ink)", margin: 0, letterSpacing: "-0.2px" }}>
+            Popular repositories
+          </h2>
+          <div role="group" aria-label="Sort popular repositories" style={{ display: "flex", gap: "6px" }}>
+            {(["stars", "forks", "updated"] as const).map((option) => (
+              <button
+                key={option}
+                type="button"
+                aria-pressed={repoSort === option}
+                onClick={() => setRepoSort(option)}
+                style={{
+                  padding: "4px 10px",
+                  fontSize: "12px",
+                  fontWeight: repoSort === option ? 600 : 400,
+                  color: repoSort === option ? "#171717" : "var(--color-ink-mute)",
+                  backgroundColor: repoSort === option ? "#3ecf8e" : "var(--color-canvas-soft)",
+                  border: repoSort === option ? "none" : "1px solid var(--color-hairline)",
+                  borderRadius: "9999px",
+                  cursor: "pointer",
+                }}
+              >
+                {option === "stars" ? "Stars" : option === "forks" ? "Forks" : "Recent"}
+              </button>
+            ))}
+          </div>
+        </div>
 
         {repos.length === 0 ? (
           <p style={{ fontSize: "13px", color: "var(--color-ink-mute)", margin: 0 }}>
@@ -488,7 +846,11 @@ export function ProfileView({
         ) : (
           <>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: "16px" }}>
-            {repos.map((repo) => (
+            {[...repos].sort((a, b) => {
+              if (repoSort === "forks") return b.forks_count - a.forks_count;
+              if (repoSort === "updated") return (b.pushed_at || "").localeCompare(a.pushed_at || "");
+              return b.stargazers_count - a.stargazers_count;
+            }).filter((repo) => !repoFilter || repo.name.toLowerCase().includes(repoFilter.toLowerCase()) || (repo.description || "").toLowerCase().includes(repoFilter.toLowerCase())).map((repo) => (
               <a
                 key={repo.id}
                 href={repo.html_url}
@@ -519,6 +881,30 @@ export function ProfileView({
                 <p style={{ fontSize: "13px", color: "var(--color-ink-mute)", margin: 0, lineHeight: 1.45, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" as const, overflow: "hidden", minHeight: "38px" }}>
                   {repo.description || "No description"}
                 </p>
+                {repo.topics && repo.topics.length > 0 && (
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: "4px", marginTop: "8px" }}>
+                    {repo.topics.slice(0, 3).map((topic) => (
+                      <span
+                        key={topic}
+                        style={{
+                          fontSize: "11px",
+                          padding: "2px 8px",
+                          borderRadius: "9999px",
+                          backgroundColor: "var(--color-canvas-soft)",
+                          color: "var(--color-ink-mute)",
+                          border: "1px solid var(--color-hairline)",
+                        }}
+                      >
+                        {topic}
+                      </span>
+                    ))}
+                    {repo.topics.length > 3 && (
+                      <span style={{ fontSize: "11px", padding: "2px 6px", color: "var(--color-ink-mute)" }}>
+                        +{repo.topics.length - 3} more
+                      </span>
+                    )}
+                  </div>
+                )}
                 <div style={{ display: "flex", alignItems: "center", gap: "16px", marginTop: "auto", paddingTop: "8px" }}>
                   {repo.language && (
                     <span style={{ display: "flex", alignItems: "center", gap: "5px", fontSize: "12px", color: "var(--color-ink-mute)" }}>
@@ -669,7 +1055,7 @@ export function ProfileView({
                   backgroundColor: "var(--color-canvas-soft)",
                 }}
               >
-                <span style={{ width: "10px", height: "10px", backgroundColor: LANG_COLORS[language] ?? "#9a9aa", borderRadius: "9999px", flexShrink: 0, display: "inline-block" }}></span>{language}
+                <span style={{ width: "10px", height: "10px", backgroundColor: LANG_COLORS[language] ?? "#9a9a9a", borderRadius: "9999px", flexShrink: 0, display: "inline-block" }}></span>{language}
                 <span style={{ color: "var(--color-ink-mute)", fontSize: "12px" }}>×{repoCount}</span>
               </span>
             ))}
@@ -737,8 +1123,6 @@ export function ProfileView({
           </div>
           <div
             style={{
-              display: "flex",
-              gap: "3px",
               overflowX: "auto",
               padding: "16px",
               border: "1px solid var(--color-hairline)",
@@ -746,27 +1130,32 @@ export function ProfileView({
               backgroundColor: "var(--color-canvas-soft)",
             }}
           >
-            {/* Month labels */}
-            <div style={{ display: "flex", gap: "3px", marginBottom: "4px", fontSize: "11px", color: "var(--color-ink-mute)" }}>
-              {heatmap.map((week, wi) => {
-                const month = new Date(week.days[0].date).toLocaleString('en-US', { month: 'short' });
-                const show = wi === 0 || month !== new Date(heatmap[wi - 1].days[0].date).toLocaleString('en-US', { month: 'short' });
-                return (
-                  <span key={wi} style={{ width: "11px", textAlign: "center" }}>{show ? month : ""}</span>
-                );
-              })}
-            </div>
-            {heatmap.map((week, wi) => (
-              <div key={wi} style={{ display: "flex", flexDirection: "column", gap: "3px" }}>
-                {week.days.map((day, di) => (
-                  <div
-                    key={di}
-                    title={`${day.count} contributions on ${day.date}`}
-                    style={{ width: "11px", height: "11px", borderRadius: "2px", backgroundColor: day.color, flexShrink: 0 }}
-                  />
+            <div style={{ display: "flex", flexDirection: "column", minWidth: "max-content" }}>
+              {/* Month labels */}
+              <div style={{ display: "flex", gap: "3px", marginBottom: "4px", fontSize: "12px", color: "var(--color-ink-mute)" }}>
+                {heatmap.map((week, wi) => {
+                  const month = new Date(week.days[0].date).toLocaleString('en-US', { month: 'short' });
+                  const show = wi === 0 || month !== new Date(heatmap[wi - 1].days[0].date).toLocaleString('en-US', { month: 'short' });
+                  return (
+                    <span key={wi} style={{ width: "11px", textAlign: "center", flexShrink: 0 }}>{show ? month : ""}</span>
+                  );
+                })}
+              </div>
+              {/* Weeks grid */}
+              <div style={{ display: "flex", gap: "3px" }}>
+                {heatmap.map((week, wi) => (
+                  <div key={wi} style={{ display: "flex", flexDirection: "column", gap: "3px" }}>
+                    {week.days.map((day, di) => (
+                      <div
+                        key={di}
+                        title={`${day.count} contributions on ${day.date}`}
+                        style={{ width: "11px", height: "11px", borderRadius: "2px", backgroundColor: day.color, flexShrink: 0 }}
+                      />
+                    ))}
+                  </div>
                 ))}
               </div>
-            ))}
+            </div>
           </div>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: "4px", margin: "10px 0 0 0" }}>
             <span style={{ fontSize: "12px", color: "var(--color-ink-mute)", marginRight: "2px" }}>Less</span>
@@ -936,6 +1325,118 @@ export function ProfileView({
           </div>
         </div>
       </div>
+
+      {/* Add Badge Modal */}
+      {isOwner && (
+        <dialog
+          ref={dialogRef}
+          style={{
+            position: "fixed",
+            top: "50%",
+            left: "50%",
+            transform: "translate(-50%, -50%)",
+            margin: 0,
+            border: "1px solid var(--color-hairline)",
+            borderRadius: "12px",
+            padding: "24px",
+            backgroundColor: "var(--color-canvas)",
+            color: "var(--color-ink)",
+            maxWidth: "400px",
+            width: "calc(100% - 32px)",
+            boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)",
+          }}
+        >
+          <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+            <h3 style={{ fontSize: "18px", fontWeight: 600, margin: 0, color: "var(--color-ink)", letterSpacing: "-0.2px" }}>
+              Add Program Badge
+            </h3>
+
+            <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+              <label htmlFor="program-select" style={{ fontSize: "13px", fontWeight: 500, color: "var(--color-ink-mute)" }}>
+                Program
+              </label>
+              <select
+                id="program-select"
+                value={selectedProgram}
+                onChange={(e) => setSelectedProgram(e.target.value)}
+                style={{
+                  padding: "8px 12px",
+                  borderRadius: "6px",
+                  border: "1px solid var(--color-hairline-strong)",
+                  backgroundColor: "var(--color-canvas)",
+                  color: "var(--color-ink)",
+                  fontSize: "14px",
+                  width: "100%",
+                }}
+              >
+                {["GSSoC", "Hacktoberfest", "EluSoC", "GSoC", "MLH Fellowship", "SWoC"].map((p) => (
+                  <option key={p} value={p}>{p}</option>
+                ))}
+              </select>
+            </div>
+
+            <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+              <label htmlFor="year-select" style={{ fontSize: "13px", fontWeight: 500, color: "var(--color-ink-mute)" }}>
+                Year
+              </label>
+              <select
+                id="year-select"
+                value={selectedYear}
+                onChange={(e) => setSelectedYear(Number(e.target.value))}
+                style={{
+                  padding: "8px 12px",
+                  borderRadius: "6px",
+                  border: "1px solid var(--color-hairline-strong)",
+                  backgroundColor: "var(--color-canvas)",
+                  color: "var(--color-ink)",
+                  fontSize: "14px",
+                  width: "100%",
+                }}
+              >
+                {Array.from({ length: currentYear - 2000 + 1 }, (_, i) => currentYear - i).map((y) => (
+                  <option key={y} value={y}>{y}</option>
+                ))}
+              </select>
+            </div>
+
+            <div style={{ display: "flex", justifyContent: "flex-end", gap: "8px", marginTop: "8px" }}>
+              <button
+                type="button"
+                onClick={() => setIsBadgeModalOpen(false)}
+                style={{
+                  padding: "8px 14px",
+                  fontSize: "13px",
+                  fontWeight: 500,
+                  color: "var(--color-ink)",
+                  backgroundColor: "var(--color-canvas)",
+                  border: "1px solid var(--color-hairline-strong)",
+                  borderRadius: "6px",
+                  cursor: "pointer",
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleAddBadge}
+                disabled={isSavingBadge}
+                style={{
+                  padding: "8px 14px",
+                  fontSize: "13px",
+                  fontWeight: 500,
+                  color: "#ffffff",
+                  backgroundColor: "#3ecf8e",
+                  border: "none",
+                  borderRadius: "6px",
+                  cursor: isSavingBadge ? "not-allowed" : "pointer",
+                }}
+              >
+                {isSavingBadge ? "Saving..." : "Add"}
+              </button>
+            </div>
+          </div>
+        </dialog>
+      )}
     </div>
   );
 }
