@@ -73,20 +73,36 @@ const rowTwo = testimonials.slice(4);
 function TestimonialCard({ quote, name, username, role }: Testimonial) {
   return (
     <div
-      style={{
-        flex: "0 0 auto",
-        width: "340px",
-        backgroundColor: "var(--color-canvas)",
-        border: "1px solid var(--color-hairline)",
-        borderRadius: "12px",
-        padding: "24px",
-        display: "flex",
-        flexDirection: "column",
-        gap: "16px",
-        whiteSpace: "normal",
-        transition: "background-color 0.2s ease, border-color 0.2s ease",
-      }}
-    >
+  onMouseEnter={(e) => {
+    e.currentTarget.style.transform =
+      "translateY(-6px) scale(1.02)";
+    e.currentTarget.style.boxShadow =
+      "0 10px 24px rgba(0,0,0,0.12)";
+    e.currentTarget.style.borderColor =
+      "var(--color-hairline-strong)";
+  }}
+  onMouseLeave={(e) => {
+    e.currentTarget.style.transform =
+      "translateY(0) scale(1)";
+    e.currentTarget.style.boxShadow = "none";
+    e.currentTarget.style.borderColor =
+      "var(--color-hairline)";
+  }}
+  style={{
+    flex: "0 0 auto",
+    width: "340px",
+    backgroundColor: "var(--color-canvas)",
+    border: "1px solid var(--color-hairline)",
+    borderRadius: "12px",
+    padding: "24px",
+    display: "flex",
+    flexDirection: "column",
+    gap: "16px",
+    whiteSpace: "normal",
+    cursor: "pointer",
+    transition: "all 0.3s ease",
+  }}
+>
       <p
         style={{
           fontSize: "14px",
@@ -226,31 +242,33 @@ export function Testimonials() {
 
       <style>{`
         .ossfolio-marquee {
-          display: flex;
-          overflow: hidden;
-          width: 100%;
-          -webkit-mask-image: linear-gradient(
-            to right,
-            transparent 0,
-            #000 8%,
-            #000 92%,
-            transparent 100%
-          );
-          mask-image: linear-gradient(
-            to right,
-            transparent 0,
-            #000 8%,
-            #000 92%,
-            transparent 100%
-          );
-        }
+  display: flex;
+  overflow-x: hidden;
+  overflow-y: visible;
+  width: 100%;
+  padding: 10px 0;
+  -webkit-mask-image: linear-gradient(
+    to right,
+    transparent 0,
+    #000 8%,
+    #000 92%,
+    transparent 100%
+  );
+  mask-image: linear-gradient(
+    to right,
+    transparent 0,
+    #000 8%,
+    #000 92%,
+    transparent 100%
+  );
+}
         .ossfolio-marquee-track {
-          display: flex;
-          gap: 16px;
-          padding-right: 16px;
-          width: max-content;
-          will-change: transform;
-        }
+  display: flex;
+  gap: 16px;
+  padding: 8px 16px;
+  width: max-content;
+  will-change: transform;
+}
         .ossfolio-marquee-left {
           animation: ossfolio-scroll-left 40s linear infinite;
         }

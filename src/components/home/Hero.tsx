@@ -216,90 +216,129 @@ export function Hero({ onGetStarted }: HeroProps) {
           }}
         >
           <button
-            onClick={onGetStarted}
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: "8px",
-              backgroundColor: "var(--color-primary)",
-              color: "var(--color-on-primary)", 
-              padding: "10px 20px",
-              borderRadius: "var(--radius-sm)",
-              fontSize: "14px",
-              fontWeight: 600,
-              border: "none",
-              cursor: "pointer",
-              transition: "background-color 0.2s ease",
-              WebkitFontSmoothing: "antialiased",
-            }}
-            onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "var(--color-primary-deep)")}
-            onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "var(--color-primary)")}
-          >
-            Get your profile free
-            <ArrowRight size={15} style={{ color: "var(--color-on-primary)" }} />
-          </button>
+  onClick={onGetStarted}
+  style={{
+    display: "inline-flex",
+    alignItems: "center",
+    gap: "8px",
+    backgroundColor: "var(--color-primary)",
+    color: "var(--color-on-primary)",
+    padding: "10px 20px",
+    borderRadius: "var(--radius-sm)",
+    fontSize: "14px",
+    fontWeight: 600,
+    border: "none",
+    cursor: "pointer",
+    transition: "all 0.3s ease",
+    WebkitFontSmoothing: "antialiased",
+  }}
+  onMouseEnter={(e) => {
+    e.currentTarget.style.transform = "translateY(-2px) scale(1.03)";
+    e.currentTarget.style.boxShadow = "0 6px 14px rgba(0,0,0,0.15)";
+  }}
+  onMouseLeave={(e) => {
+    e.currentTarget.style.transform = "translateY(0) scale(1)";
+    e.currentTarget.style.boxShadow = "none";
+  }}
+>
+  Get your profile free
+  <ArrowRight
+    size={15}
+    style={{
+      color: "var(--color-on-primary)",
+      transition: "transform 0.3s ease",
+    }}
+  />
+</button>
           <a
-            href="#how-it-works"
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: "8px",
-              backgroundColor: "var(--color-canvas)",
-              color: "var(--color-ink)",
-              padding: "10px 20px",
-              borderRadius: "var(--radius-sm)",
-              fontSize: "14px",
-              fontWeight: 500,
-              border: "1px solid var(--color-hairline-strong)",
-              textDecoration: "none",
-              transition: "background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease",
-            }}
-            onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "var(--color-canvas-soft)")}
-            onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "var(--color-canvas)")}
-          >
-            See how it works
-          </a>
+  href="#how-it-works"
+  style={{
+    display: "inline-flex",
+    alignItems: "center",
+    gap: "8px",
+    backgroundColor: "var(--color-canvas)",
+    color: "var(--color-ink)",
+    padding: "10px 20px",
+    borderRadius: "var(--radius-sm)",
+    fontSize: "14px",
+    fontWeight: 500,
+    border: "1px solid var(--color-hairline-strong)",
+    textDecoration: "none",
+    transition: "all 0.3s ease",
+  }}
+  onMouseEnter={(e) => {
+    e.currentTarget.style.backgroundColor = "var(--color-canvas-soft)";
+    e.currentTarget.style.transform = "translateY(-2px)";
+    e.currentTarget.style.boxShadow = "0 4px 12px rgba(0,0,0,0.1)";
+  }}
+  onMouseLeave={(e) => {
+    e.currentTarget.style.backgroundColor = "var(--color-canvas)";
+    e.currentTarget.style.transform = "translateY(0)";
+    e.currentTarget.style.boxShadow = "none";
+  }}
+>
+  See how it works
+</a>
         </motion.div>
 
         {/* Stats */}
         <motion.div
-          variants={fadeUp}
-          style={{
-            marginTop: "56px",
-            paddingTop: "32px",
-            borderTop: "1px solid var(--color-hairline-cool)",
-            display: "flex",
-            flexWrap: "wrap",
-            justifyContent: "center",
-            gap: "48px",
-            width: "100%",
-            maxWidth: "480px",
-            transition: "border-color 0.2s ease",
-          }}
-        >
-          {[
-            { value: "10K+", label: "Contributors" },
-            { value: "500K+", label: "PRs tracked" },
-            { value: "100%", label: "Free & open source" },
-          ].map(({ value, label }) => (
-            <div key={label} style={{ textAlign: "center" }}>
-              <p
-                style={{
-                  fontSize: "22px",
-                  fontWeight: 600,
-                  color: "var(--color-ink)",
-                  letterSpacing: "-0.4px",
-                  transition: "color 0.2s ease",
-                }}
-              >
-                {value}
-              </p>
-              <p style={{ marginTop: "2px", fontSize: "13px", color: "var(--color-ink-mute)", transition: "color 0.2s ease" }}>
-                {label}
-              </p>
-            </div>
-          ))}
-        </motion.div>
+  variants={fadeUp}
+  style={{
+    marginTop: "56px",
+    paddingTop: "32px",
+    borderTop: "1px solid var(--color-hairline-cool)",
+    display: "flex",
+    flexWrap: "wrap",
+    justifyContent: "center",
+    gap: "48px",
+    width: "100%",
+    maxWidth: "480px",
+    transition: "border-color 0.2s ease",
+  }}
+>
+  {[
+    { value: "10K+", label: "Contributors" },
+    { value: "500K+", label: "PRs tracked" },
+    { value: "100%", label: "Free & open source" },
+  ].map(({ value, label }) => (
+    <motion.div
+      key={label}
+      whileHover={{
+        y: -4,
+        scale: 1.05,
+      }}
+      transition={{ duration: 0.25 }}
+      style={{
+        textAlign: "center",
+        cursor: "pointer",
+      }}
+    >
+      <p
+        style={{
+          fontSize: "22px",
+          fontWeight: 600,
+          color: "var(--color-ink)",
+          letterSpacing: "-0.4px",
+          transition: "color 0.2s ease",
+        }}
+      >
+        {value}
+      </p>
+
+      <p
+        style={{
+          marginTop: "2px",
+          fontSize: "13px",
+          color: "var(--color-ink-mute)",
+          transition: "color 0.2s ease",
+        }}
+      >
+        {label}
+      </p>
+    </motion.div>
+  ))}
+</motion.div>
       </motion.div>
     </section>
   );

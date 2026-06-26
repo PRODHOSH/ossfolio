@@ -195,28 +195,65 @@ export function Navbar({ onSignIn, onGetStarted }: NavbarProps) {
           </span>
         </Link>
 
-        <nav style={{ display: "flex", alignItems: "center", gap: "28px" }} className="hide-on-mobile">
-          {navLinks.map((item) => (
-            <Link
-              key={item.label}
-              href={item.href}
-              style={{ fontSize: "14px", fontWeight: 500, color: "var(--color-ink-mute)", textDecoration: "none" }}
-            >
-              {item.label}
-            </Link>
-          ))}
-        </nav>
+        <nav
+  style={{ display: "flex", alignItems: "center", gap: "28px" }}
+  className="hide-on-mobile"
+>
+  {navLinks.map((item) => (
+    <Link
+      key={item.label}
+      href={item.href}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.transform = "translateY(-2px)";
+        e.currentTarget.style.opacity = "0.7";
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.transform = "translateY(0)";
+        e.currentTarget.style.opacity = "1";
+      }}
+      style={{
+        fontSize: "14px",
+        fontWeight: 500,
+        color: "var(--color-ink-mute)",
+        textDecoration: "none",
+        transition: "all 0.3s ease",
+        display: "inline-block",
+      }}
+    >
+      {item.label}
+    </Link>
+  ))}
+</nav>
 
         <div style={{ display: "flex", alignItems: "center", gap: "16px" }} className="hide-on-mobile">
           <button
-            type="button"
-            onClick={toggleTheme}
-            aria-label={isDarkMode ? "Switch to light mode" : "Switch to dark mode"}
-            style={{ background: "none", border: "none", cursor: "pointer", color: "var(--color-ink-mute)", display: "flex", alignItems: "center", justifyContent: "center", padding: "6px", borderRadius: "6px" }}
-          >
-            <Moon size={18} className="nav-theme-moon" />
-            <Sun size={18} className="nav-theme-sun" />
-          </button>
+                type="button"
+                onClick={toggleTheme}
+                aria-label={isDarkMode ? "Switch to light mode" : "Switch to dark mode"}
+                style={{
+                  background: "none",
+                  border: "none",
+                  cursor: "pointer",
+                  color: "var(--color-ink-mute)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  padding: "6px",
+                  borderRadius: "6px",
+                  transition: "all 0.3s ease"
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = "rgba(255,255,255,0.1)";
+                  e.currentTarget.style.transform = "scale(1.1)";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = "none";
+                  e.currentTarget.style.transform = "scale(1)";
+                }}
+              >
+                <Moon size={18} className="nav-theme-moon" />
+                <Sun size={18} className="nav-theme-sun" />
+              </button>
 
           {user ? (
             <div ref={menuRef} style={{ position: "relative", display: "flex", alignItems: "center" }}>
@@ -238,8 +275,56 @@ export function Navbar({ onSignIn, onGetStarted }: NavbarProps) {
             </div>
           ) : (
             <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-              <button type="button" onClick={() => onSignIn?.()} style={{ fontSize: "14px", fontWeight: 500, color: "var(--color-ink)", background: "transparent", border: "1px solid var(--color-hairline-strong)", cursor: "pointer", padding: "7px 16px", borderRadius: "6px" }}>Sign in</button>
-              <button onClick={() => onGetStarted?.()} style={{ fontSize: "14px", fontWeight: 500, backgroundColor: tokens.primary, color: tokens.ink, padding: "7px 16px", borderRadius: "6px", border: "none", cursor: "pointer" }}>Get started</button>
+              <button
+  type="button"
+  onClick={() => onSignIn?.()}
+  onMouseEnter={(e) => {
+    e.target.style.backgroundColor = "var(--color-canvas-soft)";
+    e.target.style.transform = "translateY(-2px)";
+  }}
+  onMouseLeave={(e) => {
+    e.target.style.backgroundColor = "transparent";
+    e.target.style.transform = "translateY(0)";
+  }}
+  style={{
+    fontSize: "14px",
+    fontWeight: 500,
+    color: "var(--color-ink)",
+    background: "transparent",
+    border: "1px solid var(--color-hairline-strong)",
+    cursor: "pointer",
+    padding: "7px 16px",
+    borderRadius: "6px",
+    transition: "all 0.3s ease",
+  }}
+>
+  Sign in
+</button>
+
+<button
+  onClick={() => onGetStarted?.()}
+  onMouseEnter={(e) => {
+    e.target.style.transform = "translateY(-2px) scale(1.03)";
+    e.target.style.opacity = "0.9";
+  }}
+  onMouseLeave={(e) => {
+    e.target.style.transform = "translateY(0) scale(1)";
+    e.target.style.opacity = "1";
+  }}
+  style={{
+    fontSize: "14px",
+    fontWeight: 500,
+    backgroundColor: tokens.primary,
+    color: tokens.ink,
+    padding: "7px 16px",
+    borderRadius: "6px",
+    border: "none",
+    cursor: "pointer",
+    transition: "all 0.3s ease",
+  }}
+>
+  Get started
+</button>
             </div>
           )}
         </div>

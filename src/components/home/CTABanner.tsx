@@ -68,56 +68,81 @@ export function CTABanner({ onGetStarted }: CTABannerProps) {
           }}
         >
           <button
-            onClick={onGetStarted}
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: "8px",
-              backgroundColor: "var(--color-primary)",
-              color: "var(--color-on-primary)",
-              padding: "10px 20px",
-              borderRadius: "6px",
-              fontSize: "14px",
-              fontWeight: 500,
-              border: "none",
-              cursor: "pointer",
-              transition: "background-color 0.2s ease",
-            }}
-            onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "var(--color-primary-deep)")}
-            onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "var(--color-primary)")}
-          >
-            Get started for free
-            <ArrowRight size={15} />
-          </button>
+  onClick={onGetStarted}
+  style={{
+    display: "inline-flex",
+    alignItems: "center",
+    gap: "8px",
+    backgroundColor: "var(--color-primary)",
+    color: "var(--color-on-primary)",
+    padding: "10px 20px",
+    borderRadius: "6px",
+    fontSize: "14px",
+    fontWeight: 500,
+    border: "none",
+    cursor: "pointer",
+    transition: "all 0.3s ease",
+  }}
+  onMouseEnter={(e) => {
+    e.currentTarget.style.transform = "translateY(-3px) scale(1.03)";
+    e.currentTarget.style.boxShadow =
+      "0 8px 20px rgba(0,0,0,0.15)";
+  }}
+  onMouseLeave={(e) => {
+    e.currentTarget.style.transform = "translateY(0) scale(1)";
+    e.currentTarget.style.boxShadow = "none";
+  }}
+>
+  Get started for free
+
+  <ArrowRight
+    size={15}
+    style={{
+      transition: "transform 0.3s ease",
+    }}
+  />
+</button>
           <a
-            href="https://github.com/PRODHOSH/ossfolio"
-            target="_blank"
-            rel="noopener noreferrer"
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: "8px",
-              backgroundColor: "var(--color-canvas)",
-              color: "var(--color-ink)",
-              padding: "10px 20px",
-              borderRadius: "6px",
-              fontSize: "14px",
-              fontWeight: 500,
-              border: "1px solid var(--color-hairline)",
-              textDecoration: "none",
-              transition: "background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease",
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = "var(--color-canvas-soft)";
-              e.currentTarget.style.borderColor = "var(--color-hairline-strong)";
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = "var(--color-canvas)";
-              e.currentTarget.style.borderColor = "var(--color-hairline)";
-            }}
-          >
-            Star on GitHub
-          </a>
+  href="https://github.com/PRODHOSH/ossfolio"
+  target="_blank"
+  rel="noopener noreferrer"
+  style={{
+    display: "inline-flex",
+    alignItems: "center",
+    gap: "8px",
+    backgroundColor: "var(--color-canvas)",
+    color: "var(--color-ink)",
+    padding: "10px 20px",
+    borderRadius: "6px",
+    fontSize: "14px",
+    fontWeight: 500,
+    border: "1px solid var(--color-hairline)",
+    textDecoration: "none",
+    cursor: "pointer",
+    transition: "all 0.3s ease",
+  }}
+  onMouseEnter={(e) => {
+    e.currentTarget.style.backgroundColor =
+      "var(--color-canvas-soft)";
+    e.currentTarget.style.borderColor =
+      "var(--color-hairline-strong)";
+    e.currentTarget.style.transform =
+      "translateY(-3px) scale(1.03)";
+    e.currentTarget.style.boxShadow =
+      "0 8px 20px rgba(0,0,0,0.12)";
+  }}
+  onMouseLeave={(e) => {
+    e.currentTarget.style.backgroundColor =
+      "var(--color-canvas)";
+    e.currentTarget.style.borderColor =
+      "var(--color-hairline)";
+    e.currentTarget.style.transform =
+      "translateY(0) scale(1)";
+    e.currentTarget.style.boxShadow = "none";
+  }}
+>
+  Star on GitHub
+</a>
         </div>
       </motion.div>
     </section>

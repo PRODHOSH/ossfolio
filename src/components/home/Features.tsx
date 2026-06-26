@@ -149,19 +149,27 @@ export function Features() {
         >
           {features.map(({ icon: Icon, title, description }) => (
             <motion.div
-              key={title}
-              variants={cardVariants}
-              style={{
-                backgroundColor: "var(--color-canvas)", // Switches back to default crisp base background per theme
-                border: "1px solid var(--color-hairline)",
-                borderRadius: "12px",
-                padding: "24px",
-                display: "flex",
-                flexDirection: "column",
-                gap: "12px",
-                transition: "background-color 0.2s ease, border-color 0.2s ease",
-              }}
-            >
+  key={title}
+  variants={cardVariants}
+  whileHover={{
+    y: -6,
+    scale: 1.02,
+    boxShadow: "0 10px 24px rgba(0,0,0,0.12)",
+  }}
+  transition={{ duration: 0.25 }}
+  style={{
+    backgroundColor: "var(--color-canvas)",
+    border: "1px solid var(--color-hairline)",
+    borderRadius: "12px",
+    padding: "24px",
+    display: "flex",
+    flexDirection: "column",
+    gap: "12px",
+    cursor: "pointer",
+    transition:
+      "background-color 0.3s ease, border-color 0.3s ease",
+  }}
+>
               <div
                 style={{
                   display: "flex",

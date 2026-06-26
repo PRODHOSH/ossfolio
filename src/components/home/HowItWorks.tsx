@@ -93,10 +93,27 @@ export function HowItWorks() {
         >
           {steps.map(({ number, title, description }) => (
             <motion.div
-              key={number}
-              variants={stepVariants}
-              style={{ display: "flex", flexDirection: "column", gap: "16px" }}
-            >
+  key={number}
+  variants={stepVariants}
+  whileHover={{
+    y: -6,
+    scale: 1.02,
+    boxShadow: "0 10px 24px rgba(0,0,0,0.10)",
+  }}
+  transition={{ duration: 0.25 }}
+  style={{
+    display: "flex",
+    flexDirection: "column",
+    gap: "16px",
+    padding: "24px",
+    borderRadius: "16px",
+    border: "1px solid var(--color-hairline)",
+    backgroundColor: "var(--color-canvas)",
+    cursor: "pointer",
+    transition:
+      "background-color 0.3s ease, border-color 0.3s ease",
+  }}
+>
               <div
                 style={{
                   display: "flex",
