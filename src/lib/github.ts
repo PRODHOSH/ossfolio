@@ -1,4 +1,5 @@
 import type { ContributorStats, Repo } from "@/types";
+import { createGitHubApiError } from "@/lib/errors";
 
 const GITHUB_GRAPHQL_URL = "https://api.github.com/graphql";
 
@@ -216,9 +217,9 @@ export interface ContributionCalendar {
 /**
  * Fetch and parse a user's real contribution calendar from GitHub's public
  * (unauthenticated) HTML endpoint. Returns weeks ordered oldest → newest, each
- * with seven days ordered Sunday → Saturday, plus the year's total. Returns
- * `null` if the request fails or the markup cannot be parsed, so callers can
- * fall back gracefully without crashing the page.
+ * with seven days ordered Sunday → Saturday, plus the year's total. Request
+ * failures are promoted to typed GitHub API errors; malformed markup still
+ * returns `null` so callers can fall back gracefully without crashing.
  */
 export async function fetchContributionCalendar(
   username: string,
@@ -240,7 +241,7 @@ export async function fetchContributionCalendar(
         next: { revalidate: 3600 }, // cache for 1 hour, like the other GitHub calls
       }
     );
-    if (!res.ok) return null;
+    if (!res.ok) throw await createGitHubApiError(res);
 
     const html = await res.text();
 

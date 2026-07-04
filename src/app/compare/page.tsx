@@ -15,6 +15,7 @@ import { calculateScore } from "@/lib/score";
 import { supabase } from "@/lib/supabase";
 import type { ContributorStats, Repo } from "@/types";
 import { CompareForm } from "@/components/profile/CompareForm";
+import { createGitHubApiError } from "@/lib/errors";
 
 export const runtime = "edge";
 
@@ -42,9 +43,7 @@ async function fetchGitHubUser(username: string) {
     next: { revalidate: 3600 },
   });
   if (res.status === 404) return null;
-  if (!res.ok) {
-    throw new Error(`GitHub user lookup failed (${res.status})`);
-  }
+  if (!res.ok) throw await createGitHubApiError(res);
   return res.json();
 }
 
@@ -59,9 +58,7 @@ async function fetchGitHubRepos(username: string) {
       next: { revalidate: 3600 },
     }
   );
-  if (!res.ok) {
-    throw new Error(`GitHub repositories lookup failed (${res.status})`);
-  }
+  if (!res.ok) throw await createGitHubApiError(res);
   const repos = await res.json();
   return repos
     .filter((r: { fork: boolean }) => !r.fork)
@@ -73,14 +70,15 @@ async function fetchGitHubRepos(username: string) {
 }
 
 async function fetchProfile(username: string): Promise<ProfileData> {
-  const [user, repos, liveStats, contributionCalendar] = await Promise.all([
-    fetchGitHubUser(username),
+  const user = await fetchGitHubUser(username);
+
+  if (!user) throw new Error(`GitHub user "${username}" not found`);
+
+  const [repos, liveStats, contributionCalendar] = await Promise.all([
     fetchGitHubRepos(username),
     fetchLiveStats(username),
     fetchContributionCalendar(username),
   ]);
-
-  if (!user) throw new Error(`GitHub user "${username}" not found`);
 
   const mappedRepos = mapRepos(repos);
 

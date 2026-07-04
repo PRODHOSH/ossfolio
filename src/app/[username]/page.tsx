@@ -14,6 +14,7 @@ import { generateMockHeatmap, computeStreaks } from "@/lib/mock";
 import { fetchContributionCalendar } from "@/lib/github";
 import { calculateScore } from "@/lib/score";
 import { supabase } from "@/lib/supabase";
+import { createGitHubApiError, RateLimitError } from "@/lib/errors";
 
 export const runtime = "edge";
 
@@ -41,17 +42,8 @@ async function fetchGitHubUser(username: string): Promise<GitHubUser | null> {
     next: { revalidate: 3600 },
     signal: AbortSignal.timeout(10000),
   });
-  if (!res.ok) {
-    try {
-      const err = await res.json();
-      if (err.message && err.message.toLowerCase().includes("rate limit")) {
-        throw new Error("RateLimit");
-      }
-    } catch (e) {
-      if (e instanceof Error && e.message === "RateLimit") throw e;
-    }
-    return null;
-  }
+  if (res.status === 404) return null;
+  if (!res.ok) throw await createGitHubApiError(res);
   return res.json() as Promise<GitHubUser>;
 }
 
@@ -63,7 +55,7 @@ async function fetchGitHubRepos(username: string) {
       next: { revalidate: 3600 },
     }
   );
-  if (!res.ok) return [];
+  if (!res.ok) throw await createGitHubApiError(res);
   const repos = await res.json();
   return repos.filter((r: { fork: boolean }) => !r.fork).slice(0, 6);
 }
@@ -122,16 +114,16 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
   try {
     user = await fetchGitHubUser(username);
   } catch (e) {
-    if (e instanceof Error && e.message === "RateLimit") rateLimited = true;
+    if (e instanceof RateLimitError) rateLimited = true;
     user = null;
   }
   // Other fetches can also error on rate limit; we treat them similarly.
-  try { repos = await fetchGitHubRepos(username); } catch (e) { if (e instanceof Error && e.message === "RateLimit") rateLimited = true; }
-  try { liveStats = await fetchLiveStats(username); } catch (e) { if (e instanceof Error && e.message === "RateLimit") rateLimited = true; }
+  try { repos = await fetchGitHubRepos(username); } catch (e) { if (e instanceof RateLimitError) rateLimited = true; }
+  try { liveStats = await fetchLiveStats(username); } catch (e) { if (e instanceof RateLimitError) rateLimited = true; }
   let mergedPRs: any[] = [];
-  try { mergedPRs = await fetchMergedPRs(username, 10); } catch (e) { if (e instanceof Error && e.message === "RateLimit") rateLimited = true; }
-  try { orgs = await fetchOrganizations(username); } catch (e) { if (e instanceof Error && e.message === "RateLimit") rateLimited = true; }
-  try { contributionCalendar = await fetchContributionCalendar(username); } catch (e) { if (e instanceof Error && e.message === "RateLimit") rateLimited = true; }
+  try { mergedPRs = await fetchMergedPRs(username, 10); } catch (e) { if (e instanceof RateLimitError) rateLimited = true; }
+  try { orgs = await fetchOrganizations(username); } catch (e) { if (e instanceof RateLimitError) rateLimited = true; }
+  try { contributionCalendar = await fetchContributionCalendar(username); } catch (e) { if (e instanceof RateLimitError) rateLimited = true; }
 
   if (!user && !rateLimited) return notFound();
 
