@@ -225,26 +225,35 @@ export async function fetchContributionCalendar(
   username: string,
   from?: string
 ): Promise<ContributionCalendar | null> {
+  let url = `https://github.com/users/${encodeURIComponent(username)}/contributions`;
+  if (from) {
+    url += `?from=${encodeURIComponent(from)}`;
+  }
+
+  let res: Response;
   try {
-    let url = `https://github.com/users/${encodeURIComponent(username)}/contributions`;
-    if (from) {
-      url += `?from=${encodeURIComponent(from)}`;
-    }
-    const res = await fetch(
-      url,
-      {
-        headers: {
-          // GitHub returns the calendar fragment for a normal browser Accept.
-          Accept: "text/html",
-          "User-Agent": "ossfolio (+https://ossfolio.qzz.io)",
-        },
-        next: { revalidate: 3600 }, // cache for 1 hour, like the other GitHub calls
-      }
-    );
-    if (!res.ok) throw await createGitHubApiError(res);
+    res = await fetch(url, {
+      headers: {
+        // GitHub returns the calendar fragment for a normal browser Accept.
+        Accept: "text/html",
+        "User-Agent": "ossfolio (+https://ossfolio.qzz.io)",
+      },
+      next: { revalidate: 3600 }, // cache for 1 hour, like the other GitHub calls
+    });
+  } catch {
+    return null;
+  }
 
-    const html = await res.text();
+  if (!res.ok) throw await createGitHubApiError(res);
 
+  let html: string;
+  try {
+    html = await res.text();
+  } catch {
+    return null;
+  }
+
+  try {
     // Step 1: build a map of cell id → exact contribution count from the
     // accessible tool-tip labels. "No contributions" labels stay at 0.
     const countById = new Map<string, number>();

@@ -117,13 +117,45 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
     if (e instanceof RateLimitError) rateLimited = true;
     user = null;
   }
-  // Other fetches can also error on rate limit; we treat them similarly.
-  try { repos = await fetchGitHubRepos(username); } catch (e) { if (e instanceof RateLimitError) rateLimited = true; }
-  try { liveStats = await fetchLiveStats(username); } catch (e) { if (e instanceof RateLimitError) rateLimited = true; }
+  const [reposResult, liveStatsResult, mergedPRsResult, orgsResult, contributionCalendarResult] =
+    await Promise.allSettled([
+      fetchGitHubRepos(username),
+      fetchLiveStats(username),
+      fetchMergedPRs(username, 10),
+      fetchOrganizations(username),
+      fetchContributionCalendar(username),
+    ]);
+
+  if (reposResult.status === "fulfilled") {
+    repos = reposResult.value;
+  } else if (reposResult.reason instanceof RateLimitError) {
+    rateLimited = true;
+  }
+
+  if (liveStatsResult.status === "fulfilled") {
+    liveStats = liveStatsResult.value;
+  } else if (liveStatsResult.reason instanceof RateLimitError) {
+    rateLimited = true;
+  }
+
   let mergedPRs: any[] = [];
-  try { mergedPRs = await fetchMergedPRs(username, 10); } catch (e) { if (e instanceof RateLimitError) rateLimited = true; }
-  try { orgs = await fetchOrganizations(username); } catch (e) { if (e instanceof RateLimitError) rateLimited = true; }
-  try { contributionCalendar = await fetchContributionCalendar(username); } catch (e) { if (e instanceof RateLimitError) rateLimited = true; }
+  if (mergedPRsResult.status === "fulfilled") {
+    mergedPRs = mergedPRsResult.value;
+  } else if (mergedPRsResult.reason instanceof RateLimitError) {
+    rateLimited = true;
+  }
+
+  if (orgsResult.status === "fulfilled") {
+    orgs = orgsResult.value;
+  } else if (orgsResult.reason instanceof RateLimitError) {
+    rateLimited = true;
+  }
+
+  if (contributionCalendarResult.status === "fulfilled") {
+    contributionCalendar = contributionCalendarResult.value;
+  } else if (contributionCalendarResult.reason instanceof RateLimitError) {
+    rateLimited = true;
+  }
 
   if (!user && !rateLimited) return notFound();
 
