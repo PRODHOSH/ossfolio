@@ -34,9 +34,11 @@ const YearButton = memo(function YearButton({
         padding: "4px 10px",
         fontSize: "12px",
         fontWeight: selectedYear === year ? 600 : 400,
-        color: selectedYear === year ? "#171717" : "var(--color-ink-mute)",
-        backgroundColor: selectedYear === year ? "#3ecf8e" : "var(--color-canvas-soft)",
-        border: selectedYear === year ? "none" : "1px solid var(--color-hairline)",
+        color: selectedYear === year ? "#171717" : "var(--color-nav-mute)",
+        backgroundColor:
+          selectedYear === year ? "#3ecf8e" : "var(--color-canvas-soft)",
+        border:
+          selectedYear === year ? "none" : "1px solid var(--color-hairline)",
         borderRadius: "9999px",
         cursor: loading ? "wait" : "pointer",
         transition: "background-color 0.15s, color 0.15s",
@@ -102,7 +104,9 @@ function HeatmapWithYearNavInner({
       setLoading(true);
       setSelectedYear(year);
       try {
-        const res = await fetch(`/api/${encodeURIComponent(username)}/contributions?year=${year}`);
+        const res = await fetch(
+          `/api/${encodeURIComponent(username)}/contributions?year=${year}`,
+        );
         if (!res.ok) throw new Error("fetch failed");
         const data = await res.json();
         setWeeks(data.weeks);
@@ -117,15 +121,37 @@ function HeatmapWithYearNavInner({
         setLoading(false);
       }
     },
-    [username, selectedYear, weeks.length, initialWeeks, initialCurrentStreak, initialLongestStreak]
+    [
+      username,
+      selectedYear,
+      weeks.length,
+      initialWeeks,
+      initialCurrentStreak,
+      initialLongestStreak,
+    ],
   );
 
   if (initialWeeks.length === 0 && weeks.length === 0) return null;
 
   return (
     <div style={{ marginTop: "44px" }}>
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", margin: "0 0 16px 0" }}>
-        <h2 style={{ fontSize: "16px", fontWeight: 600, color: "var(--color-ink)", margin: 0, letterSpacing: "-0.2px" }}>
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          margin: "0 0 16px 0",
+        }}
+      >
+        <h2
+          style={{
+            fontSize: "16px",
+            fontWeight: 600,
+            color: "var(--color-ink)",
+            margin: 0,
+            letterSpacing: "-0.2px",
+          }}
+        >
           Contribution activity
         </h2>
         <div style={{ display: "flex", gap: "6px" }}>
@@ -141,7 +167,14 @@ function HeatmapWithYearNavInner({
         </div>
       </div>
 
-      <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", margin: "0 0 12px 0" }}>
+      <div
+        style={{
+          display: "flex",
+          flexWrap: "wrap",
+          gap: "8px",
+          margin: "0 0 12px 0",
+        }}
+      >
         <StreakBadge label="Current streak" value={currentStreak} />
         <StreakBadge label="Longest streak" value={longestStreak} />
       </div>
@@ -160,36 +193,96 @@ function HeatmapWithYearNavInner({
         }}
       >
         {weeks.map((week, wi) => (
-          <div key={wi} style={{ display: "flex", flexDirection: "column", gap: "3px" }}>
+          <div
+            key={wi}
+            style={{ display: "flex", flexDirection: "column", gap: "3px" }}
+          >
             {week.days.map((day, di) => (
               <div
                 key={di}
                 title={`${day.count} contributions on ${day.date}`}
-                style={{ width: "11px", height: "11px", borderRadius: "2px", backgroundColor: day.color, flexShrink: 0 }}
+                style={{
+                  width: "11px",
+                  height: "11px",
+                  borderRadius: "2px",
+                  backgroundColor: day.color,
+                  flexShrink: 0,
+                }}
               />
             ))}
           </div>
         ))}
         {weeks.length === 0 && !loading && (
-          <p style={{ fontSize: "13px", color: "var(--color-ink-mute)", margin: "12px auto" }}>
+          <p
+            style={{
+              fontSize: "13px",
+              color: "var(--color-ink-mute)",
+              margin: "12px auto",
+            }}
+          >
             No contribution data available for {selectedYear}.
           </p>
         )}
       </div>
 
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: "4px", margin: "10px 0 0 0" }}>
-        <span style={{ fontSize: "12px", color: "var(--color-ink-mute)", marginRight: "2px" }}>Less</span>
-        {["var(--color-hairline)", "#9be9a8", "#40c463", "#30a14e", "#216e39"].map((shade) => (
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "flex-end",
+          gap: "4px",
+          margin: "10px 0 0 0",
+        }}
+      >
+        <span
+          style={{
+            fontSize: "12px",
+            color: "var(--color-ink-mute)",
+            marginRight: "2px",
+          }}
+        >
+          Less
+        </span>
+        {[
+          "var(--color-hairline)",
+          "#9be9a8",
+          "#40c463",
+          "#30a14e",
+          "#216e39",
+        ].map((shade) => (
           <span
             key={shade}
             aria-hidden="true"
-            style={{ width: "11px", height: "11px", borderRadius: "2px", backgroundColor: shade.startsWith("var") ? "rgba(128, 128, 128, 0.1)" : shade, flexShrink: 0 }}
+            style={{
+              width: "11px",
+              height: "11px",
+              borderRadius: "2px",
+              backgroundColor: shade.startsWith("var")
+                ? "rgba(128, 128, 128, 0.1)"
+                : shade,
+              flexShrink: 0,
+            }}
           />
         ))}
-        <span style={{ fontSize: "12px", color: "var(--color-ink-mute)", marginLeft: "2px" }}>More</span>
+        <span
+          style={{
+            fontSize: "12px",
+            color: "var(--color-ink-mute)",
+            marginLeft: "2px",
+          }}
+        >
+          More
+        </span>
       </div>
-      <p style={{ fontSize: "12px", color: "var(--color-ink-mute)", margin: "10px 0 0 0" }}>
-        This chart shows an estimate of contribution activity. Exact daily counts are not available for public profiles.
+      <p
+        style={{
+          fontSize: "12px",
+          color: "var(--color-ink-mute)",
+          margin: "10px 0 0 0",
+        }}
+      >
+        This chart shows an estimate of contribution activity. Exact daily
+        counts are not available for public profiles.
       </p>
     </div>
   );
