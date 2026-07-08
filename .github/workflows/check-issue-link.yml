@@ -1,0 +1,34 @@
+name: Verify PR Issue Link
+
+on:
+  pull_request:
+    types: [opened, edited, synchronize]
+
+jobs:
+  verify-link:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Validate PR Description for Issue Key phrases
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const prBody = context.payload.pull_request.body || "";
+            
+            // Regex to look for GitHub linking keywords followed by an issue number (e.g., Closes #123, Fixes #45)
+            const regex = /(close|closes|closed|fix|fixes|fixed|resolve|resolves|resolved)\s+#\d+/i;
+            const hasLink = regex.test(prBody);
+
+            if (!hasLink) {
+              // Leave an educational comment on the PR
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.payload.pull_request.number,
+                body: "⚠️ **Action Required:** Please update your PR description to link the issue you are solving (e.g., write `Closes #issue-number` or `Fixes #issue-number`). This is required to pass automated validation status checks."
+              });
+
+              // Fail the workflow check explicitly
+              core.setFailed("PR description does not contain an issue linking keyword expression.");
+            } else {
+              console.log("Validation Passed: Found a qualifying issue link keyword.");
+            }
