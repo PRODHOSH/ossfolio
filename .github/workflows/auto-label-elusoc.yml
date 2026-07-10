@@ -1,45 +1,42 @@
-name: Auto Label ELUSOC
+name: Label Multi-Commit PR
 
 on:
-  issues:
-    types:
-      - opened
-
   pull_request:
     types:
       - opened
+      - synchronize
 
 permissions:
-  issues: write
   pull-requests: write
 
 jobs:
-  add-elusoc-label:
+  label-pr:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Add ELUSOC label
+      - name: Label PR with multiple commits
         uses: actions/github-script@v7
         with:
           script: |
-            const label = "ELUSOC";
+            const label = "multiple-commits";
 
-            if (context.eventName === "issues") {
-              await github.rest.issues.addLabels({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                issue_number: context.payload.issue.number,
-                labels: [label]
-              });
-            }
+            const { data: pr } = await github.rest.pulls.get({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: context.payload.pull_request.number,
+            });
 
-            if (context.eventName === "pull_request") {
+            core.info(`Commit count: ${pr.commits}`);
+
+            if (pr.commits > 1) {
               await github.rest.issues.addLabels({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
                 issue_number: context.payload.pull_request.number,
-                labels: [label]
+                labels: [label],
               });
-            }
 
-            core.info(`Added "${label}" label successfully.`);
+              core.info(`Added "${label}" label.`);
+            } else {
+              core.info("PR has only one commit. No label added.");
+            }
