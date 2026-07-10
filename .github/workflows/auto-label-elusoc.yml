@@ -1,57 +1,45 @@
-name: Auto-label new ELUSOC
+name: Auto Label ELUSOC
 
 on:
   issues:
-    types: [opened]
+    types:
+      - opened
+
   pull_request:
-    types: [opened]
+    types:
+      - opened
+
+permissions:
+  issues: write
+  pull-requests: write
 
 jobs:
-  label:
-    name: Add elusoc label
+  add-elusoc-label:
     runs-on: ubuntu-latest
-    permissions:
-      issues: write
-      pull-requests: write
 
     steps:
-      - name: Add label
+      - name: Add ELUSOC label
         uses: actions/github-script@v7
         with:
           script: |
-            const labelName = 'elusoc';
+            const label = "ELUSOC";
 
-            if (context.eventName === 'issues') {
-              const { owner, repo } = context.repo;
-              const issue_number = context.payload.issue.number;
-
-              // Only label non-bot users (keeps CI-generated issues clean)
-              const isBot = context.payload.issue.user?.type === 'Bot';
-              if (isBot) return;
-
+            if (context.eventName === "issues") {
               await github.rest.issues.addLabels({
-                owner,
-                repo,
-                issue_number,
-                labels: [labelName],
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.payload.issue.number,
+                labels: [label]
               });
-
-              core.info(`Labeled issue #${issue_number} with '${labelName}'.`);
-              return;
             }
 
-            if (context.eventName === 'pull_request') {
-              const { owner, repo } = context.repo;
-              const pull_number = context.payload.pull_request.number;
-
+            if (context.eventName === "pull_request") {
               await github.rest.issues.addLabels({
-                owner,
-                repo,
-                issue_number: pull_number,
-                labels: [labelName],
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.payload.pull_request.number,
+                labels: [label]
               });
-
-              core.info(`Labeled PR #${pull_number} with '${labelName}'.`);
-              return;
             }
 
+            core.info(`Added "${label}" label successfully.`);
