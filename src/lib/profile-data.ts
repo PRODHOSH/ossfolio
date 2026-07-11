@@ -1,6 +1,7 @@
 import type { ContributorStats, Org, Repo, TechEntry, MergedPR } from "@/types";
 import { LANG_COLORS } from "@/lib/languages";
 import { fetchWithTimeout } from "@/lib/fetch-with-timeout";
+import { githubGraphQL } from "./github";
 
 
 /**
@@ -144,29 +145,123 @@ export async function fetchOrganizations(username: string): Promise<Org[]> {
   }
 }
 
-/** Fetch recent merged pull requests for a user */
+/** Fetch recent pull requests for a user in all states (merged, open, closed) */
 export async function fetchMergedPRs(username: string, limit: number = 10): Promise<MergedPR[]> {
-  const query = `search/issues?q=author:${encodeURIComponent(username)}+type:pr+is:merged&sort=updated&order=desc&per_page=${limit}`;
-  try {
-    const res = await fetchWithTimeout(
-      `https://api.github.com/${query}`,
-      {
-        headers: { Accept: "application/vnd.github.v3+json" },
-        next: { revalidate: 3600 },
-      },
-      10_000
-    );
+  const token = process.env.GITHUB_TOKEN || process.env.GH_TOKEN;
 
-    if (!res.ok) return [];
-    const json = await res.json();
-    if (!Array.isArray(json.items)) return [];
-    return json.items.map((item: any) => ({
-      title: item.title,
-      url: item.html_url,
-      repoName: item.repository_url.split('/').slice(-1)[0],
-      mergedAt: item.closed_at,
-    }));
+  if (token) {
+    const query = `
+      query PRSearch($query: String!, $limit: Int!) {
+        search(type: ISSUE, first: $limit, query: $query) {
+          nodes {
+            ... on PullRequest {
+              title
+              url
+              state
+              createdAt
+              closedAt
+              mergedAt
+              repository {
+                name
+              }
+            }
+          }
+        }
+      }
+    `;
+
+    try {
+      const data = await githubGraphQL<{
+        search: {
+          nodes: Array<{
+            title: string;
+            url: string;
+            state: "OPEN" | "CLOSED" | "MERGED";
+            createdAt: string;
+            closedAt: string | null;
+            mergedAt: string | null;
+            repository: {
+              name: string;
+            };
+          }>;
+        };
+      }>(
+        query,
+        {
+          query: `author:${username} is:pr sort:updated-desc`,
+          limit: limit * 3, // Fetch enough to cover open, closed, and merged
+        },
+        token
+      );
+
+      if (data?.search?.nodes) {
+        return data.search.nodes.map((node) => {
+          let state: "open" | "closed" | "merged" = "open";
+          if (node.state === "MERGED") state = "merged";
+          else if (node.state === "CLOSED") state = "closed";
+
+          let date = node.createdAt;
+          if (state === "merged") date = node.mergedAt || node.closedAt || node.createdAt;
+          else if (state === "closed") date = node.closedAt || node.createdAt;
+
+          return {
+            title: node.title,
+            url: node.url,
+            repoName: node.repository.name,
+            mergedAt: date,
+            state,
+          };
+        });
+      }
+    } catch (err) {
+      console.error("GraphQL PR search failed, falling back to REST:", err);
+    }
+  }
+
+  // Fallback to REST Search API
+  const u = encodeURIComponent(username);
+
+  const fetchForQuery = async (q: string, state: "open" | "closed" | "merged"): Promise<MergedPR[]> => {
+    const query = `search/issues?q=${q}&sort=updated&order=desc&per_page=${limit}`;
+    try {
+      const res = await fetchWithTimeout(
+        `https://api.github.com/${query}`,
+        {
+          headers: { Accept: "application/vnd.github.v3+json" },
+          next: { revalidate: 3600 },
+        },
+        10_000
+      );
+      if (!res.ok) return [];
+      const json = await res.json();
+      if (!Array.isArray(json.items)) return [];
+      return json.items.map((item: any) => {
+        let date = item.created_at;
+        if (state === "merged" || state === "closed") {
+          date = item.closed_at || item.created_at;
+        }
+        return {
+          title: item.title,
+          url: item.html_url,
+          repoName: item.repository_url.split("/").slice(-1)[0],
+          mergedAt: date,
+          state,
+        };
+      });
+    } catch {
+      return [];
+    }
+  };
+
+  try {
+    const [merged, open, closed] = await Promise.all([
+      fetchForQuery(`author:${u}+type:pr+is:merged`, "merged"),
+      fetchForQuery(`author:${u}+type:pr+is:open`, "open"),
+      fetchForQuery(`author:${u}+type:pr+is:closed+is:unmerged`, "closed"),
+    ]);
+    return [...merged, ...open, ...closed];
   } catch {
     return [];
   }
 }
+

@@ -5,7 +5,7 @@ import { fetchWithTimeout } from "@/lib/fetch-with-timeout";
 
 const GITHUB_GRAPHQL_URL = "https://api.github.com/graphql";
 
-async function githubGraphQL<T>(
+export async function githubGraphQL<T>(
   query: string,
   variables: Record<string, unknown>,
   token: string
