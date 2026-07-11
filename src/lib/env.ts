@@ -48,3 +48,5 @@ export function isSupabaseConfigured(): boolean {
     !key.includes("placeholder")
   );
 }
+
+export const isDev = process.env.NODE_ENV === "development";

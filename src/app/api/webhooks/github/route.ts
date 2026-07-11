@@ -1,5 +1,5 @@
 import { NextRequest, after } from "next/server";
-import { sanitizeUsername, createApiResponse, createErrorResponse } from "@/lib/api-validation";
+import { sanitizeUsername, createApiResponse, createErrorResponse } from "@/lib/validators/api";
 import { refreshProfile } from "@/lib/refresh-profile";
 
 // Receives GitHub `push` webhooks and triggers a (rate-limited) refresh of the

@@ -2,7 +2,7 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
-import { ScoreCalculator } from "@/components/home/ScoreCalculator";
+import { ScoreSimulator } from "@/components/profile/ScoreSimulator";
 
 export const metadata: Metadata = {
   title: "How Your Score Is Calculated",
@@ -157,7 +157,7 @@ export default function ScoreExplainedPage() {
             </p>
 
             {/* Score Simulator Component */}
-            <ScoreCalculator />
+            <ScoreSimulator />
           </section>
 
           {/* What it measures */}

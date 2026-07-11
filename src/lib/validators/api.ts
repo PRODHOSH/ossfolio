@@ -1,9 +1,5 @@
 import { NextResponse } from "next/server";
-
-export function sanitizeString(value: unknown, maxLength = 500): string {
-  if (typeof value !== "string") return "";
-  return stripHtml(value.trim().slice(0, maxLength));
-}
+import { sanitizeString } from "../sanitizer";
 
 export function sanitizeUsername(value: unknown): string | null {
   if (typeof value !== "string") return null;
@@ -96,19 +92,6 @@ export function sanitizeObject<T extends Record<string, unknown>>(
   }
 
   return { data, errors };
-}
-
-function stripHtml(str: string): string {
-  return str.replace(/[<>&"']/g, (c) => {
-      switch (c) {
-        case "<": return "&lt;";
-        case ">": return "&gt;";
-        case "&": return "&amp;";
-        case '"': return "&quot;";
-        case "'": return "&#x27;";
-        default: return c;
-      }
-    });
 }
 
 export function createApiResponse<T>(data: T, status = 200, extraHeaders?: Record<string, string>): NextResponse {

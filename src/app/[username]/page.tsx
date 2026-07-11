@@ -87,9 +87,27 @@ export async function generateMetadata({ params }: ProfilePageProps): Promise<Me
     // Rate limit or network error - fall back to minimal metadata
   }
   if (!user) {
+    const fallbackDescription = `Open-source profile for ${username}.`;
     return {
       title: `${username} - OSSfolio`,
-      description: `Open-source profile for ${username}.`,
+      description: fallbackDescription,
+      // Always emit openGraph/twitter blocks on a profile route — even when the
+      // GitHub lookup fails (rate limit / network). Returning without them let
+      // the root layout's static `/og-image.png` be inherited here, which is why
+      // shared profile links could fall back to the generic card. Neither block
+      // sets `images`, so the per-user `opengraph-image.tsx` / `twitter-image.tsx`
+      // file convention remains the single source of og:image and twitter:image.
+      openGraph: {
+        title: `${username} - OSSfolio`,
+        description: fallbackDescription,
+        type: "profile",
+        siteName: "OSSfolio",
+      },
+      twitter: {
+        card: "summary_large_image",
+        title: `${username} - OSSfolio`,
+        description: fallbackDescription,
+      },
     };
   }
   const displayName = user.name || user.login;
@@ -248,7 +266,8 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
   return (
     <>
       <Navbar />
-      {/* 💡 Fixed: Linked layout to design tokens and added transition curves */}
+        {/* 💡 Fixed: Linked layout to design tokens and added transition curves */}
+        {/* ProfileActions component within ProfileView handles GitHub profile sync/refresh state */}
       <main 
         style={{ 
           backgroundColor: "var(--color-canvas)", 

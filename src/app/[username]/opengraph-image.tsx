@@ -57,12 +57,12 @@ export default async function OGImage({ params }: OGImageProps) {
     ),
   ]);
 
-  // Fetch user data and score in parallel
+  // Fetch user data and the stored profile summary in parallel
   const [user, profileRow] = await Promise.all([
     fetchGitHubUser(username),
     supabase
       .from("profiles")
-      .select("score")
+      .select("score, total_commits, total_prs, total_issues, total_reviews")
       .eq("username", username)
       .maybeSingle()
       .then((r) => r.data),
@@ -74,6 +74,17 @@ export default async function OGImage({ params }: OGImageProps) {
     profileRow && typeof profileRow.score === "number"
       ? profileRow.score
       : 0;
+
+  // Stored contribution totals. Rendered only when the profile has been synced —
+  // an unsynced profile keeps the original avatar + score layout rather than
+  // showing a row of zeroes.
+  const statValue = (v: unknown) => (typeof v === "number" ? v : null);
+  const stats = [
+    { label: "Commits", value: statValue(profileRow?.total_commits) },
+    { label: "PRs", value: statValue(profileRow?.total_prs) },
+    { label: "Issues", value: statValue(profileRow?.total_issues) },
+    { label: "Reviews", value: statValue(profileRow?.total_reviews) },
+  ].filter((s): s is { label: string; value: number } => s.value !== null);
 
   return new ImageResponse(
     (
@@ -217,6 +228,53 @@ export default async function OGImage({ params }: OGImageProps) {
             </span>
           </div>
         </div>
+
+        {/* Stored contribution stats — only when the profile has been synced */}
+        {stats.length > 0 ? (
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "48px",
+              marginTop: "8px",
+            }}
+          >
+            {stats.map((stat) => (
+              <div
+                key={stat.label}
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "2px",
+                }}
+              >
+                <span
+                  style={{
+                    fontSize: "30px",
+                    fontWeight: 500,
+                    color: "#171717",
+                    lineHeight: 1.15,
+                    letterSpacing: "-0.6px",
+                  }}
+                >
+                  {stat.value.toLocaleString("en-US")}
+                </span>
+                <span
+                  style={{
+                    fontSize: "12px",
+                    fontWeight: 500,
+                    color: "#707070",
+                    letterSpacing: "1.2px",
+                    textTransform: "uppercase" as const,
+                    lineHeight: 1.45,
+                  }}
+                >
+                  {stat.label}
+                </span>
+              </div>
+            ))}
+          </div>
+        ) : null}
 
         {/* Bottom bar — URL + tagline */}
         <div

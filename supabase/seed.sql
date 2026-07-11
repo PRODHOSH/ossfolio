@@ -2,3 +2,4 @@
 -- Run automatically with: supabase db reset
 -- Profiles are created automatically by the handle_new_user trigger when a user signs up.
 -- No static seed data is needed; use GitHub OAuth to create a real profile in local dev.
+-- Indexes (idx_profiles_score_username, idx_profiles_updated_at) optimize queries in local dev environments.

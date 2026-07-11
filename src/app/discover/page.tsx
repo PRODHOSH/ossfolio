@@ -38,6 +38,7 @@ export default function DiscoverPage() {
             </p>
           </header>
           <Suspense fallback={<DiscoverSkeleton />}>
+            {/* DiscoverContent houses DiscoverPagination which uses Framer Motion layout animations */}
             <DiscoverContent />
           </Suspense>
         </div>

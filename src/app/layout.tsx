@@ -3,9 +3,11 @@ import { Inter } from "next/font/google";
 import Script from "next/script";
 import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getMessages } from "next-intl/server";
-import { SkipToContent } from "@/components/ui/SkipToContent";
+import { SkipToContent } from "@/components/layout/SkipToContent";
 import "./globals.css";
 import { JsonLd } from "@/components/ui/json-ld";
+import { ThemeProvider } from "@/context/ThemeContext";
+import { EnvValidationBanner } from "@/components/ui/EnvValidationBanner";
 
 
 const inter = Inter({
@@ -137,8 +139,11 @@ export default async function RootLayout({
 
       <body className={inter.className}>
         <NextIntlClientProvider locale={locale} messages={messages}>
-          <SkipToContent />
-          {children}
+          <ThemeProvider>
+            <SkipToContent />
+            <EnvValidationBanner />
+            {children}
+          </ThemeProvider>
         </NextIntlClientProvider>
       </body>
     </html>

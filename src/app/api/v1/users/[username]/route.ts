@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
-import { sanitizeUsername, createApiResponse, createErrorResponse } from "@/lib/api-validation";
+import { sanitizeUsername, createApiResponse, createErrorResponse } from "@/lib/validators/api";
 
 export const runtime = "edge";
 

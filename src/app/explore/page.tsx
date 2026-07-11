@@ -4,7 +4,7 @@ import type { Metadata } from "next";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { supabase } from "@/lib/supabase";
-import { Pagination } from "@/components/ui/pagination";
+import { DiscoverPagination } from "@/components/discover/DiscoverPagination";
 
 export const runtime = "edge";
 
@@ -225,7 +225,7 @@ const avatar = rowData.avatar_url || `https://github.com/${isOrg ? encodeURIComp
             </ol>
           )}
 
-          <Pagination currentPage={page} hasNext={hasNext} hasPrev={hasPrev} baseUrl="/explore" searchParams={{ q: searchQuery, type, sortBy }} />
+          <DiscoverPagination currentPage={page} hasNext={hasNext} hasPrev={hasPrev} baseUrl="/explore" searchParams={{ q: searchQuery, type, sortBy }} />
         </div>
       </main>
       <Footer />

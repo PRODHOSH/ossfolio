@@ -8,7 +8,8 @@ create table public.profiles (
   avatar_url text,
   github_url text,
   created_at timestamptz default now(),
-  updated_at timestamptz default now()
+  updated_at timestamptz default now(),
+  badges     jsonb not null default '[]'::jsonb
 );
 
 alter table public.profiles enable row level security;

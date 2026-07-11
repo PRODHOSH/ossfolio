@@ -31,3 +31,6 @@ export function supabaseAdmin(): SupabaseClient {
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || "placeholder-service-key";
   return createClient(supabaseUrl, serviceKey);
 }
+
+// NOTE: Ensure database migrations (compound index idx_profiles_score_username) are applied in Supabase
+// to keep paginated getSupabase queries performant under heavy user loads.

@@ -7,7 +7,7 @@ import { Menu, X, Sun, Moon } from "lucide-react";
 import { useTranslations } from "next-intl";
 import type { User } from "@supabase/supabase-js";
 import { supabase } from "@/lib/supabase";
-import { useTheme } from "@/hooks/useTheme";
+import { useThemeContext } from "@/context/ThemeContext";
 import { LanguageSwitcher } from "./LanguageSwitcher";
 
 // useLayoutEffect runs synchronously before the browser paints (client only);
@@ -91,7 +91,8 @@ export function Navbar({ onSignIn, onGetStarted }: NavbarProps) {
   const menuRef = useRef<HTMLDivElement>(null);
 
   const [mounted, setMounted] = useState(false);
-  const { isDarkMode, toggleTheme } = useTheme();
+  const { theme, toggleTheme } = useThemeContext();
+  const isDarkMode = theme === "dark";
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect

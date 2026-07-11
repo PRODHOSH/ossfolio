@@ -1,6 +1,9 @@
-import Link from "next/link";
+"use client";
 
-interface PaginationProps {
+import Link from "next/link";
+import { motion } from "framer-motion";
+
+interface DiscoverPaginationProps {
   currentPage: number;
   hasNext: boolean;
   hasPrev: boolean;
@@ -8,13 +11,13 @@ interface PaginationProps {
   searchParams?: Record<string, string>;
 }
 
-export function Pagination({
+export function DiscoverPagination({
   currentPage,
   hasNext,
   hasPrev,
   baseUrl,
   searchParams = {},
-}: PaginationProps) {
+}: DiscoverPaginationProps) {
   const buildUrl = (page: number) => {
     const params = new URLSearchParams(searchParams);
     params.set("page", String(page));
@@ -33,6 +36,7 @@ export function Pagination({
     display: "inline-flex",
     alignItems: "center",
     gap: "6px",
+    transition: "border-color 0.15s, background-color 0.15s",
   };
 
   const disabledStyle: React.CSSProperties = {
@@ -58,7 +62,7 @@ export function Pagination({
     <nav
       aria-label="Pagination"
       style={{
-        marginTop: "24px",
+        marginTop: "32px",
         display: "flex",
         alignItems: "center",
         justifyContent: "space-between",
@@ -84,7 +88,7 @@ export function Pagination({
         )}
       </div>
 
-      <div style={{ display: "flex", gap: "4px", alignItems: "center" }}>
+      <div style={{ display: "flex", gap: "6px", alignItems: "center" }}>
         {pageNumbers.map((page, i) =>
           page === "..." ? (
             <span key={`ellipsis-${i}`} style={{ fontSize: "13px", color: "var(--color-ink-mute-2)", padding: "0 4px" }}>
@@ -95,21 +99,29 @@ export function Pagination({
               key={page}
               href={buildUrl(page)}
               style={{
-                minWidth: "32px",
-                height: "32px",
+                minWidth: "36px",
+                height: "36px",
                 display: "inline-flex",
                 alignItems: "center",
                 justifyContent: "center",
                 fontSize: "13px",
                 fontWeight: page === currentPage ? 600 : 400,
-                color: page === currentPage ? "#ffffff" : "var(--color-ink)",
+                color: page === currentPage ? "#171717" : "var(--color-ink)",
                 backgroundColor: page === currentPage ? "#3ecf8e" : "transparent",
                 border: page === currentPage ? "none" : "1px solid var(--color-hairline)",
                 borderRadius: "6px",
                 textDecoration: "none",
+                position: "relative",
               }}
               aria-current={page === currentPage ? "page" : undefined}
             >
+              {page === currentPage && (
+                <motion.div
+                  layoutId="active-page"
+                  className="absolute inset-0 bg-[#3ecf8e] rounded-md z-[-1]"
+                  transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                />
+              )}
               {page}
             </Link>
           )

@@ -458,3 +458,4 @@ Product UI mockups use `srcset` with desktop / mobile crops; mobile crops focus 
 4. Default body to `{typography.body-md}`; use `{typography.code}` for any developer-facing snippet.
 5. Keep emerald scarce; one filled green button per viewport.
 6. The white-canvas commitment is non-negotiable — adding atmospheric backdrops breaks the brand.
+7. Developer-facing documentation of systems and interfaces is located in [System Flow Diagrams](docs/system-diagrams.md) and [API Reference Architecture](docs/api-reference-architecture.md).

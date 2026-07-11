@@ -15,6 +15,7 @@ import { calculateScore } from "@/lib/score";
 import { supabase } from "@/lib/supabase";
 import type { ContributorStats, Repo } from "@/types";
 import { CompareForm } from "@/components/profile/CompareForm";
+import { CompareCharts } from "@/components/profile/CompareCharts";
 
 export const runtime = "edge";
 
@@ -423,50 +424,24 @@ export default async function ComparePage({ searchParams }: ComparePageProps) {
           )}
 
           {profileA && profileB && (
-            <div style={{ marginTop: "32px", border: "1px solid var(--color-hairline)", borderRadius: "12px", padding: "24px", backgroundColor: "var(--color-canvas-soft)" }}>
-              <h3 style={{ fontSize: "16px", fontWeight: 600, color: "var(--color-ink)", marginBottom: "16px" }}>Visual Stats Comparison</h3>
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: "16px" }}>
-                {[
-                  { label: "Score", valA: profileA.score, valB: profileB.score },
-                  { label: "Commits", valA: profileA.stats.totalCommits, valB: profileB.stats.totalCommits },
-                  { label: "PRs", valA: profileA.stats.totalPRs, valB: profileB.stats.totalPRs },
-                  { label: "Issues", valA: profileA.stats.totalIssues, valB: profileB.stats.totalIssues },
-                  { label: "Reviews", valA: profileA.stats.totalReviews, valB: profileB.stats.totalReviews }
-                ].map((item) => {
-                  const maxVal = Math.max(item.valA, item.valB, 1);
-                  const pctA = Math.round((item.valA / maxVal) * 100);
-                  const pctB = Math.round((item.valB / maxVal) * 100);
-
-                  return (
-                    <div key={item.label} style={{ display: "flex", flexDirection: "column", gap: "8px", padding: "16px", border: "1px solid var(--color-hairline)", borderRadius: "8px", backgroundColor: "var(--color-canvas)" }}>
-                      <span style={{ fontSize: "13px", fontWeight: 600, color: "var(--color-ink-mute)" }}>{item.label}</span>
-                      
-                      {/* Contributor A Bar */}
-                      <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-                        <div style={{ display: "flex", justifyContent: "space-between", fontSize: "11px" }}>
-                          <span style={{ color: "var(--color-ink)", fontWeight: 500 }}>@{a}</span>
-                          <span style={{ color: "var(--color-ink)" }}>{item.valA}</span>
-                        </div>
-                        <div style={{ height: "6px", width: "100%", backgroundColor: "var(--color-hairline)", borderRadius: "3px", overflow: "hidden" }}>
-                          <div style={{ height: "100%", width: `${pctA}%`, backgroundColor: "var(--color-primary)", borderRadius: "3px" }} />
-                        </div>
-                      </div>
-
-                      {/* Contributor B Bar */}
-                      <div style={{ display: "flex", flexDirection: "column", gap: "4px", marginTop: "4px" }}>
-                        <div style={{ display: "flex", justifyContent: "space-between", fontSize: "11px" }}>
-                          <span style={{ color: "var(--color-ink)", fontWeight: 500 }}>@{b}</span>
-                          <span style={{ color: "var(--color-ink)" }}>{item.valB}</span>
-                        </div>
-                        <div style={{ height: "6px", width: "100%", backgroundColor: "var(--color-hairline)", borderRadius: "3px", overflow: "hidden" }}>
-                          <div style={{ height: "100%", width: `${pctB}%`, backgroundColor: "var(--color-accent-violet)", borderRadius: "3px" }} />
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
+            <CompareCharts
+              userA={{
+                username: a,
+                commits: profileA.stats.totalCommits,
+                prs: profileA.stats.totalPRs,
+                issues: profileA.stats.totalIssues,
+                reviews: profileA.stats.totalReviews,
+                score: profileA.score,
+              }}
+              userB={{
+                username: b,
+                commits: profileB.stats.totalCommits,
+                prs: profileB.stats.totalPRs,
+                issues: profileB.stats.totalIssues,
+                reviews: profileB.stats.totalReviews,
+                score: profileB.score,
+              }}
+            />
           )}
         </div>
       </main>

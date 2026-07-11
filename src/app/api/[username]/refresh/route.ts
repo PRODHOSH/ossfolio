@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server";
-import { sanitizeUsername, createApiResponse, createErrorResponse } from "@/lib/api-validation";
+import { sanitizeUsername, createApiResponse, createErrorResponse } from "@/lib/validators/api";
 import { refreshProfile } from "@/lib/refresh-profile";
 
 export async function POST(

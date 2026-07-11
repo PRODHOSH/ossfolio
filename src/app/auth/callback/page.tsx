@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { fetchContributorProfile, contributorToScoreInputs } from "@/lib/github";
 import { mapRepos, fetchLiveStats } from "@/lib/profile-data";
-import { calculateScore } from "@/lib/score";
+import { scoreWithAnomalyCheck } from "@/lib/anomaly";
 import type { Session } from "@supabase/supabase-js";
 import type { ContributorStats, Repo } from "@/types";
 
@@ -51,7 +51,11 @@ async function syncScore(
     ({ stats, repos } = await statsFromRest(username));
   }
 
-  const score = calculateScore(stats, repos);
+  // Score the account and run the anti-gaming heuristic. A flagged account is
+  // persisted with its reason (auditable, reversible) and stores the discounted
+  // score, so every surface that reads `profiles.score` reflects the discount.
+  const { score, anomaly } = scoreWithAnomalyCheck(stats, repos);
+  const now = new Date().toISOString();
 
   const { error } = await supabase.from("profiles").upsert(
     {
@@ -62,7 +66,10 @@ async function syncScore(
       total_prs: stats.totalPRs,
       total_issues: stats.totalIssues,
       total_reviews: stats.totalReviews,
-      updated_at: new Date().toISOString(),
+      flagged: anomaly.flagged,
+      flag_reason: anomaly.reason,
+      flagged_at: anomaly.flagged ? now : null,
+      updated_at: now,
     },
     { onConflict: "id" }
   );

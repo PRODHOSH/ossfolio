@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import { createClient } from "@supabase/supabase-js";
-import { sanitizeString, sanitizeUrl, createApiResponse, createErrorResponse } from "@/lib/api-validation";
+import { sanitizeString } from "@/lib/sanitizer";
+import { sanitizeUrl, createApiResponse, createErrorResponse } from "@/lib/validators/api";
 
 export const runtime = "edge";
 

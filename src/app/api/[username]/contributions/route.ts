@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 import { fetchContributionCalendar } from "@/lib/github";
-import { sanitizeUsername, validateYear, createApiResponse, createErrorResponse } from "@/lib/api-validation";
+import { sanitizeUsername, validateYear, createApiResponse, createErrorResponse } from "@/lib/validators/api";
 
 export const runtime = "edge";
 

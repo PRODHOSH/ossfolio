@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { SCORE_WEIGHTS, STAR_CAP, getScoreBreakdown } from "@/lib/score";
 
 export function ScoreCalculator() {
   const [commits, setCommits] = useState(10);
@@ -9,12 +10,14 @@ export function ScoreCalculator() {
   const [reviews, setReviews] = useState(1);
   const [stars, setStars] = useState(5);
 
-  const score = Math.round(
-    commits * 1 +
-    prs * 3 +
-    issues * 2 +
-    reviews * 2 +
-    Math.min(stars, 1000) * 0.1
+  const breakdown = getScoreBreakdown(
+    {
+      totalCommits: commits,
+      totalPRs: prs,
+      totalIssues: issues,
+      totalReviews: reviews,
+    },
+    stars
   );
 
   const rowStyle = {
@@ -29,19 +32,19 @@ export function ScoreCalculator() {
     fontSize: "14px",
     fontWeight: 500,
     color: "var(--color-ink)",
-    minWidth: "120px",
+    minWidth: "140px",
   };
 
   const inputStyle = {
     flex: 1,
-    accentColor: "var(--color-primary)",
+    accentColor: "#3ecf8e",
     cursor: "pointer",
   };
 
   const valueStyle = {
     fontSize: "14px",
     fontWeight: 600,
-    color: "var(--color-primary)",
+    color: "#3ecf8e",
     minWidth: "40px",
     textAlign: "right" as const,
   };
@@ -61,7 +64,7 @@ export function ScoreCalculator() {
       </h3>
 
       <div style={rowStyle}>
-        <span style={labelStyle}>Commits (1x)</span>
+        <span style={labelStyle}>Commits ({SCORE_WEIGHTS.COMMIT}x)</span>
         <input
           type="range"
           min="0"
@@ -74,7 +77,7 @@ export function ScoreCalculator() {
       </div>
 
       <div style={rowStyle}>
-        <span style={labelStyle}>PRs (3x)</span>
+        <span style={labelStyle}>PRs ({SCORE_WEIGHTS.PR}x)</span>
         <input
           type="range"
           min="0"
@@ -87,7 +90,7 @@ export function ScoreCalculator() {
       </div>
 
       <div style={rowStyle}>
-        <span style={labelStyle}>Issues (2x)</span>
+        <span style={labelStyle}>Issues ({SCORE_WEIGHTS.ISSUE}x)</span>
         <input
           type="range"
           min="0"
@@ -100,7 +103,7 @@ export function ScoreCalculator() {
       </div>
 
       <div style={rowStyle}>
-        <span style={labelStyle}>Reviews (2x)</span>
+        <span style={labelStyle}>Reviews ({SCORE_WEIGHTS.REVIEW}x)</span>
         <input
           type="range"
           min="0"
@@ -113,7 +116,7 @@ export function ScoreCalculator() {
       </div>
 
       <div style={rowStyle}>
-        <span style={labelStyle}>Stars (0.1x)</span>
+        <span style={labelStyle}>Stars ({SCORE_WEIGHTS.STAR}x, cap {STAR_CAP})</span>
         <input
           type="range"
           min="0"
@@ -138,8 +141,8 @@ export function ScoreCalculator() {
         <span style={{ fontSize: "15px", fontWeight: 600, color: "var(--color-ink)" }}>
           Simulated Score
         </span>
-        <span style={{ fontSize: "28px", fontWeight: 700, color: "var(--color-primary)" }}>
-          {score}
+        <span style={{ fontSize: "28px", fontWeight: 700, color: "#3ecf8e" }}>
+          {breakdown.total}
         </span>
       </div>
     </div>

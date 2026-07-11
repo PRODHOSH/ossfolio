@@ -85,7 +85,11 @@ export function SearchFilters() {
   };
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "16px", marginBottom: "24px" }}>
+    <form
+      role="search"
+      onSubmit={(e) => e.preventDefault()}
+      style={{ display: "flex", flexDirection: "column", gap: "16px", marginBottom: "24px" }}
+    >
       <input
         type="text"
         placeholder="Search by username, name, or language..."
@@ -164,6 +168,6 @@ export function SearchFilters() {
           </button>
         )}
       </div>
-    </div>
+    </form>
   );
 }

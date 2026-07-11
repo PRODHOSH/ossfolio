@@ -241,6 +241,8 @@ When syncing the score, the application checks for the user's GitHub provider to
 - **GraphQL Path (Authenticated)**: If `providerToken` is available, it queries the GitHub GraphQL API using `fetchContributorProfile`. The GraphQL API exposes the `contributionsCollection` query, which is the only source that returns the user's Pull Request review counts (`totalPullRequestReviewContributions`).
 - **REST Path (Unauthenticated Fallback)**: If the token is missing or if the GraphQL query fails (due to rate limits, expired tokens, or scope issues), the pipeline falls back to `statsFromRest(username)`. This runs three parallel REST Search API requests (`fetchLiveStats(username)`) to retrieve PR, issue, and commit counts. Because code review counts cannot be retrieved from unauthenticated REST or search APIs, the `totalReviews` count defaults to `0` in this fallback path.
 
+For full architectural flows and sequence diagrams of these pipelines, consult the [System Flow Diagrams](docs/system-diagrams.md) and [API Reference Architecture](docs/api-reference-architecture.md).
+
 #### Database Profile Schema
 The calculated score and activity stats are cached in the `public.profiles` database table. The table columns are:
 - `id` (uuid, primary key): References `auth.users(id)` in Supabase auth system.

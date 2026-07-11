@@ -1,0 +1,152 @@
+[
+  {
+    "title": "[FEAT] Implement Redis caching layer for GitHub API requests",
+    "body": "## Problem Statement\nCurrently, the application hits the GitHub API directly for every profile view. This leads to rate limiting (403 errors) when traffic spikes, leaving users with a broken page.\n\n## Proposed Solution\nImplement an Upstash Redis caching layer to store GitHub API responses. Use the `username` and endpoint as the cache key, with a TTL of 1 hour. If the cache misses, fetch from GitHub and populate the cache.\n\n## Alternatives Considered\nNext.js Data Cache (unstable in some Cloudflare environments), or Supabase Edge Functions. Upstash is preferred for its edge compatibility.\n\n## Additional Context\nRequires adding `@upstash/redis` and setting `UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN` in `.env.example`.",
+    "labels": ["enhancement", "VETERAN", "ELUSOC"]
+  },
+  {
+    "title": "[REFACTOR] Optimize `fetchGitHubUser` with parallel requests",
+    "body": "## Problem Statement\nProfile pages are loading slowly because we fetch user data, repositories, organizations, and contributions sequentially. \n\n## Proposed Solution\nRefactor the data fetching logic in `src/app/[username]/page.tsx` and `src/lib/profile-data.ts` to use `Promise.all` or `Promise.allSettled`. This will allow all external GitHub API requests to fire simultaneously, significantly reducing the Time to First Byte (TTFB).\n\n## Alternatives Considered\nNone. Parallelizing independent network requests is a standard optimization.\n\n## Additional Context\nBe mindful of error handling. If one promise fails (e.g., organizations API returns 500), it shouldn't crash the entire profile page.",
+    "labels": ["refactor", "ADVENTURER", "ELUSOC"]
+  },
+  {
+    "title": "[FEAT] Add 'Compare Profiles' feature",
+    "body": "## Problem Statement\nUsers want to compare their open-source stats (score, commits, PRs) side-by-side with their peers, but currently have to open two tabs to do so.\n\n## Proposed Solution\nCreate a new route `/compare?user1=username&user2=username`. Build a side-by-side UI component that visually highlights who has a higher score, longer streak, and more PRs. \n\n## Alternatives Considered\nAn overlay modal on the profile page, but a dedicated URL allows users to share the comparison link easily.\n\n## Additional Context\n> If this is a UI feature, the contributor working on it should read `DESIGN.md` before starting.",
+    "labels": ["enhancement", "VETERAN", "ELUSOC"]
+  },
+  {
+    "title": "[FEAT] Implement Webhooks to auto-update score on new push",
+    "body": "## Problem Statement\nScores and stats only update when a user manually triggers a refresh or views their profile after the cache expires. This makes the platform feel static.\n\n## Proposed Solution\nSet up a GitHub App / Webhook endpoint at `/api/webhooks/github`. When a user merges a PR or pushes code, GitHub pings our webhook, and we asynchronously recalculate their score and update Supabase in the background.\n\n## Alternatives Considered\nPolling the GitHub API via a cron job, but that is highly inefficient and uses too much API quota.\n\n## Additional Context\nMust verify the `X-Hub-Signature-256` header to ensure payloads actually come from GitHub.",
+    "labels": ["enhancement", "VETERAN", "ELUSOC"]
+  },
+  {
+    "title": "[FEAT] Custom OG Image Generator for Twitter sharing",
+    "body": "## Problem Statement\nWhen sharing an OSSfolio link on Twitter or LinkedIn, it shows a generic preview image. A personalized card would drive much higher engagement.\n\n## Proposed Solution\nUse `@vercel/og` to create a dynamic image endpoint at `/api/og?username=xxx`. The generated image should display the user's avatar, their total score, and their current streak using our brand colors.\n\n## Alternatives Considered\nGenerating static PNGs on build, but that doesn't work for dynamic user data.\n\n## Additional Context\nMust use Edge Runtime for the OG route. Refer to `DESIGN.md` for fonts and colors.",
+    "labels": ["enhancement", "ADVENTURER", "ELUSOC"]
+  },
+  {
+    "title": "[FEAT] Allow users to pin repositories on their profile",
+    "body": "## Problem Statement\nThe profile currently displays repositories sorted by stars automatically. Users might want to highlight a specific project that is less popular but more important to them.\n\n## Proposed Solution\nAdd a 'Pin' toggle on repositories for authenticated users viewing their own profile. Save the pinned repository IDs in the `profiles` table in Supabase. On the profile page, render pinned repos at the top with a distinct border or icon.\n\n## Alternatives Considered\nSyncing directly with GitHub's pinned repos, but we want OSSfolio to have its own customization layer.\n\n## Additional Context\nRequires updating the Supabase schema to include a `pinned_repos` JSONB or text array column.",
+    "labels": ["enhancement", "ADVENTURER", "ELUSOC"]
+  },
+  {
+    "title": "[FEAT] Display User Organizations",
+    "body": "## Problem Statement\nBeing part of notable open-source organizations (like Vercel, Facebook, or Apache) is a huge flex, but we don't display this on the profile.\n\n## Proposed Solution\nFetch the user's organizations from the GitHub API (`/users/{username}/orgs`) and display their avatars in a horizontal flex container below the bio section. \n\n## Alternatives Considered\nListing organization names as text, but avatars are much more recognizable.\n\n## Additional Context\n> If this is a UI feature, the contributor working on it should read `DESIGN.md` before starting.",
+    "labels": ["enhancement", "NEWBIE", "ELUSOC"]
+  },
+  {
+    "title": "[FEAT] Global Leaderboard Page",
+    "body": "## Problem Statement\nUsers have scores, but no way to see how they rank against the rest of the OSSfolio community.\n\n## Proposed Solution\nCreate a `/leaderboard` page that queries the top 100 users from the Supabase `profiles` table, ordered by `score` descending. Include pagination. \n\n## Alternatives Considered\nInfinite scroll, but pagination is easier to implement and cache.\n\n## Additional Context\nEnsure the database query is optimized and perhaps cached so we don't hammer the database on every page load.",
+    "labels": ["enhancement", "ADVENTURER", "ELUSOC"]
+  },
+  {
+    "title": "[FEAT] Add 'Top Languages' chart using Chart.js or Recharts",
+    "body": "## Problem Statement\nIt's hard to tell at a glance what a developer's primary tech stack is just by looking at their repo list.\n\n## Proposed Solution\nAggregate language data across the user's repositories and display a minimalist pie chart or progress bar showing their top 3-5 languages. Use `recharts` for consistency.\n\n## Alternatives Considered\nUsing GitHub's built-in language stats API, but it often includes vendor files. We should calculate it based on their owned repositories.\n\n## Additional Context\nMatch the chart colors to standard GitHub language colors (e.g., Yellow for JS, Blue for TS).",
+    "labels": ["enhancement", "ADVENTURER", "ELUSOC"]
+  },
+  {
+    "title": "[FEAT] Dark/Light Mode toggle",
+    "body": "## Problem Statement\nThe app is currently hardcoded to a dark theme. Some users prefer light mode for accessibility or readability.\n\n## Proposed Solution\nIntegrate `next-themes` to support theme toggling. Update `globals.css` and `DESIGN.md` to define CSS variables for light mode variants of `canvas`, `ink`, and `ink-mute`.\n\n## Alternatives Considered\nForcing system preference, but an explicit toggle in the navbar is better UX.\n\n## Additional Context\nEnsure no flash of unstyled content (FOUC) on load.",
+    "labels": ["enhancement", "ADVENTURER", "ELUSOC"]
+  },
+  {
+    "title": "[FEAT] Custom Social Links",
+    "body": "## Problem Statement\nUsers can only display what's in their GitHub bio. They want to link out to their personal blog, Twitter, or LinkedIn.\n\n## Proposed Solution\nAdd a section in `/settings` allowing users to add up to 4 custom URLs. Store these in a `custom_links` JSONB column in Supabase. Display them as small icons below the user's avatar on the profile page.\n\n## Alternatives Considered\nParsing URLs directly from the bio text, but structured data is cleaner.\n\n## Additional Context\nValidate URLs before saving to prevent XSS or malicious links.",
+    "labels": ["enhancement", "ADVENTURER", "ELUSOC"]
+  },
+  {
+    "title": "[FEAT] Achievements and Badges System",
+    "body": "## Problem Statement\nTo increase gamification, users need milestones to strive for beyond just a single score number.\n\n## Proposed Solution\nImplement a badge system (e.g., 'Night Owl' for late-night commits, 'Century' for 100+ PRs). Create a utility function that evaluates a user's GitHub stats and returns an array of unlocked badges. Render these in a dedicated grid on the profile.\n\n## Alternatives Considered\nManual badge assignment, but automated calculation based on raw stats is scalable.\n\n## Additional Context\nStart with just 3 basic badges. We can add more later.",
+    "labels": ["enhancement", "VETERAN", "ELUSOC"]
+  },
+  {
+    "title": "[FEAT] Activity Feed (Recent PRs)",
+    "body": "## Problem Statement\nThe contribution graph shows *when* a user was active, but not *what* they did.\n\n## Proposed Solution\nUse the GitHub Search API to find the user's most recently merged Pull Requests. Display a list of the 5 most recent PRs, showing the repo name, PR title, and relative time (e.g., '2 days ago').\n\n## Alternatives Considered\nShowing all events (issues, comments), but merged PRs represent the highest signal of OSS contribution.\n\n## Additional Context\nAPI Endpoint: `search/issues?q=author:USERNAME+type:pr+is:merged`",
+    "labels": ["enhancement", "ADVENTURER", "ELUSOC"]
+  },
+  {
+    "title": "[FEAT] Customizable Headline",
+    "body": "## Problem Statement\nUsers often use their GitHub bio for generic info, but want a specific 'Headline' for OSSfolio to stand out to recruiters.\n\n## Proposed Solution\nAdd a `headline` text column to the `profiles` table. Allow editing this via the `/settings` page. If set, this overrides the GitHub bio on their public profile.\n\n## Alternatives Considered\nNone. Straightforward CRUD operation.\n\n## Additional Context\nLimit the headline to 160 characters. Provide a live preview in the settings UI.",
+    "labels": ["enhancement", "NEWBIE", "ELUSOC"]
+  },
+  {
+    "title": "[FEAT] User RSS Feed endpoint",
+    "body": "## Problem Statement\nDevelopers want to syndicate their open-source activity to their personal blogs or newsletters.\n\n## Proposed Solution\nCreate a dynamic route at `/[username]/rss.xml` that generates an RSS feed of the user's recent merged PRs and major open-source events. \n\n## Alternatives Considered\nJSON Feed, but RSS is more universally supported by static site generators.\n\n## Additional Context\nUse the `rss` npm package to construct the XML. Ensure proper content-type headers.",
+    "labels": ["enhancement", "ADVENTURER", "ELUSOC"]
+  },
+  {
+    "title": "[REFACTOR] Setup Turborepo for Monorepo architecture",
+    "body": "## Problem Statement\nAs we add more scripts, a Discord bot, or shared UI components, keeping everything in a single Next.js root directory will become messy.\n\n## Proposed Solution\nMigrate the repository to a Turborepo workspace. Move the Next.js app to `apps/web` and create shared packages in `packages/ui` and `packages/config`.\n\n## Alternatives Considered\nNx, but Turborepo is generally easier to set up for Next.js-heavy codebases.\n\n## Additional Context\nThis is a major structural change. Ensure all Vercel/Cloudflare build configurations are updated to point to `apps/web`.",
+    "labels": ["refactor", "VETERAN", "ELUSOC"]
+  },
+  {
+    "title": "[CHORE] Auto-generate Supabase types on build",
+    "body": "## Problem Statement\nCurrently, developers manually write TypeScript interfaces for database rows, leading to out-of-sync types when the schema changes.\n\n## Proposed Solution\nIntegrate the Supabase CLI into the project. Add a `generate-types` script to `package.json` that fetches the schema from the local/remote project and outputs `database.types.ts`. Update the codebase to use these strict types.\n\n## Alternatives Considered\nUsing Prisma, but we want to stick to the native Supabase client for edge compatibility.\n\n## Additional Context\nRequires setting up a local Supabase environment in Docker or defining a clear workflow in `CONTRIBUTING.md`.",
+    "labels": ["chore", "ADVENTURER", "ELUSOC"]
+  },
+  {
+    "title": "[TEST] Implement Playwright E2E testing",
+    "body": "## Problem Statement\nWe have no automated testing to ensure the critical path (logging in, viewing a profile, updating settings) actually works before a deployment.\n\n## Proposed Solution\nSetup Playwright. Write tests to verify:\n1. The homepage renders.\n2. A mock user can view a generated profile.\n3. A user can navigate to the leaderboard.\nIntegrate this into GitHub Actions on PRs.\n\n## Alternatives Considered\nCypress, but Playwright is faster and has better support for modern web APIs.\n\n## Additional Context\nDo not test real GitHub OAuth in CI; mock the authentication state.",
+    "labels": ["test", "VETERAN", "ELUSOC"]
+  },
+  {
+    "title": "[CHORE] Setup Staging Environment on Pull Requests",
+    "body": "## Problem Statement\nReviewing UI changes is difficult when reviewers have to pull the code and run it locally.\n\n## Proposed Solution\nConfigure Cloudflare Pages (or Vercel) to deploy a preview URL for every Pull Request. Comment the URL on the PR automatically using a GitHub Action.\n\n## Alternatives Considered\nNone. Preview deployments are standard for modern web development.\n\n## Additional Context\nEnsure the staging environment connects to a separate staging Supabase instance so test data doesn't pollute production.",
+    "labels": ["chore", "ADVENTURER", "ELUSOC"]
+  },
+  {
+    "title": "[CHORE] Add Husky and lint-staged for pre-commit hooks",
+    "body": "## Problem Statement\nContributors sometimes commit code with TypeScript errors or bad formatting, which fails CI and clutters the commit history.\n\n## Proposed Solution\nInstall Husky and lint-staged. Configure a pre-commit hook that runs `eslint --fix` and `prettier --write` on staged files, and runs `tsc --noEmit` to catch type errors before the commit succeeds.\n\n## Alternatives Considered\nOnly relying on CI, but failing fast locally provides better developer experience.\n\n## Additional Context\nKeep the hook fast. Only lint staged files, not the whole codebase.",
+    "labels": ["chore", "NEWBIE", "ELUSOC"]
+  },
+  {
+    "title": "[CHORE] Create a database seed script for local development",
+    "body": "## Problem Statement\nNew contributors have an empty database when they spin up the project locally, making it hard to test the leaderboard or profile views.\n\n## Proposed Solution\nWrite a Node.js script (`scripts/seed.ts`) that uses the Supabase Admin client to inject 10 mock users and fake profile data into the local database.\n\n## Alternatives Considered\nProviding a SQL dump, but a TypeScript script allows generating dynamic dates and data via Faker.js.\n\n## Additional Context\nAdd a command `npm run db:seed` to `package.json`.",
+    "labels": ["chore", "ADVENTURER", "ELUSOC"]
+  },
+  {
+    "title": "[REFACTOR] Extract external API calls into a Services layer",
+    "body": "## Problem Statement\nData fetching logic (GitHub API, Supabase queries) is scattered directly inside React components and Page files, making it hard to test and reuse.\n\n## Proposed Solution\nCreate a `src/services` directory. Move all `fetch` calls to GitHub into `services/github.ts` and Supabase queries into `services/db.ts`. Export clean asynchronous functions that the UI can consume.\n\n## Alternatives Considered\nLeaving it as is, but separation of concerns improves maintainability.\n\n## Additional Context\nEnsure types are strongly defined for the return values of these service functions.",
+    "labels": ["refactor", "ADVENTURER", "ELUSOC"]
+  },
+  {
+    "title": "[FEAT] Profile Visibility Toggles (Privacy)",
+    "body": "## Problem Statement\nCurrently, anyone who signs up has a public profile automatically. Some users might want to hide their profile from the leaderboard or make it completely private.\n\n## Proposed Solution\nAdd a `visibility` enum column to `profiles` (`public`, `unlisted`, `private`). Update the settings UI with a radio group to select visibility. Ensure the leaderboard API filters out `unlisted` and `private`, and the profile page returns 404 for `private` unless the viewer is the owner.\n\n## Alternatives Considered\nJust a simple boolean `is_public`, but 3 states provide more control.\n\n## Additional Context\nRequires careful implementation of Row Level Security (RLS) in Supabase.",
+    "labels": ["enhancement", "VETERAN", "ELUSOC"]
+  },
+  {
+    "title": "[FEAT] Rate limiting on the manual refresh endpoint",
+    "body": "## Problem Statement\nA malicious user could spam the `/api/[username]/refresh` endpoint, burning through our GitHub API quota and causing denial of service.\n\n## Proposed Solution\nImplement rate limiting on the refresh endpoint using Upstash Redis or Cloudflare Workers KV. Limit users to 1 refresh per 5 minutes per IP or user ID. Return HTTP 429 Too Many Requests if exceeded.\n\n## Alternatives Considered\nIn-memory rate limiting, but that resets on serverless cold starts and doesn't sync across edge nodes.\n\n## Additional Context\nProvide clear feedback in the UI when a user is rate-limited (e.g., disable the button and show a countdown).",
+    "labels": ["enhancement", "VETERAN", "ELUSOC"]
+  },
+  {
+    "title": "[CHORE] Audit and strictify Supabase RLS policies",
+    "body": "## Problem Statement\nOur Row Level Security (RLS) policies might be too permissive, potentially allowing users to modify another user's profile data via the client-side Supabase SDK.\n\n## Proposed Solution\nReview all SQL migrations. Ensure that `UPDATE` and `DELETE` operations on the `profiles` table strictly check `auth.uid() = id`. Write tests or a validation script to confirm policies are tight.\n\n## Alternatives Considered\nMoving all database mutations to server-side APIs, but leveraging RLS allows faster client-side mutations safely.\n\n## Additional Context\nSecurity is paramount. The PR must include detailed explanations of the policy changes.",
+    "labels": ["chore", "VETERAN", "ELUSOC"]
+  },
+  {
+    "title": "[FEAT] Account Deletion",
+    "body": "## Problem Statement\nGDPR and general privacy practices require that users have a clear way to permanently delete their account and associated data.\n\n## Proposed Solution\nAdd a 'Danger Zone' section in `/settings` with a 'Delete Account' button. Requires typing their username to confirm. When triggered, call an API endpoint that deletes their Supabase auth record and wipes the `profiles` row.\n\n## Alternatives Considered\nSoft deletion (setting a flag), but hard deletion is better for compliance.\n\n## Additional Context\nEnsure the cascade deletes work correctly in the database so no orphaned data is left behind.",
+    "labels": ["enhancement", "ADVENTURER", "ELUSOC"]
+  },
+  {
+    "title": "[FEAT] Implement loading skeletons for profile page",
+    "body": "## Problem Statement\nWhile data is fetching, the page is blank or unstyled. We need a smoother perceived performance.\n\n## Proposed Solution\nCreate React suspense boundaries and build skeleton loader components (using pulsing CSS animations) that match the shape of the avatar, stats boxes, and heatmap. \n\n## Alternatives Considered\nA simple loading spinner, but skeletons provide a much more premium feel.\n\n## Additional Context\n> Read `DESIGN.md` for standard border radii and spacing to make the skeletons match the final UI perfectly.",
+    "labels": ["enhancement", "NEWBIE", "ELUSOC"]
+  },
+  {
+    "title": "[BUG] Heatmap renders incorrectly on mobile viewports",
+    "body": "## Problem Statement\nThe contribution heatmap overflows its container horizontally on screens smaller than 600px, breaking the page layout and causing horizontal scrolling.\n\n## Proposed Solution\nImplement a responsive design strategy for the heatmap. Either wrap the SVG in a scrollable container (`overflow-x: auto`), or conditionally render fewer months of data based on the window width using a ResizeObserver or CSS media queries.\n\n## Alternatives Considered\nScaling down the SVG, but that makes the individual squares too small to tap or read.\n\n## Additional Context\nTest on a simulated iPhone SE viewport to ensure it fits perfectly.",
+    "labels": ["bug", "ADVENTURER", "ELUSOC"]
+  },
+  {
+    "title": "[FEAT] Add OpenGraph metadata for dynamic routes",
+    "body": "## Problem Statement\nWhen pasting a link to a specific repository comparison or the leaderboard, messaging apps display a generic fallback image instead of context-specific metadata.\n\n## Proposed Solution\nImplement Next.js `generateMetadata` exports in `src/app/leaderboard/page.tsx` and `src/app/compare/page.tsx`. Ensure the title and description dynamically reflect the content of the page.\n\n## Alternatives Considered\nStatic metadata, but dynamic is required for good SEO and shareability.\n\n## Additional Context\nThis involves updating the `<head>` tags implicitly through Next.js conventions.",
+    "labels": ["enhancement", "ADVENTURER", "ELUSOC"]
+  },
+  {
+    "title": "[REFACTOR] Migrate CSS to TailwindCSS v4 features",
+    "body": "## Problem Statement\nWe recently upgraded to TailwindCSS v4, but we are still using older v3 paradigms and arbitrary values where native theme tokens or CSS variables could be used more efficiently.\n\n## Proposed Solution\nRefactor `globals.css` and component classNames to utilize Tailwind v4's new CSS-first configuration and dynamic utility features. Remove any deprecated plugins or workarounds.\n\n## Alternatives Considered\nStaying with the current syntax, but migrating keeps the codebase modern and easier to maintain.\n\n## Additional Context\nEnsure no visual regressions occur. Compare the UI before and after the refactor.",
+    "labels": ["refactor", "VETERAN", "ELUSOC"]
+  }
+]
