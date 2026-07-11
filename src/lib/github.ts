@@ -1,5 +1,7 @@
 import type { ContributorStats, Repo } from "@/types";
 import { redis } from "./redis";
+import { fetchWithTimeout } from "@/lib/fetch-with-timeout";
+
 
 const GITHUB_GRAPHQL_URL = "https://api.github.com/graphql";
 
@@ -8,15 +10,20 @@ async function githubGraphQL<T>(
   variables: Record<string, unknown>,
   token: string
 ): Promise<T> {
-  const res = await fetch(GITHUB_GRAPHQL_URL, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${token}`,
-      "Content-Type": "application/json",
+  const res = await fetchWithTimeout(
+    GITHUB_GRAPHQL_URL,
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ query, variables }),
+      next: { revalidate: 3600 }, // fallback memory cache for 1 hour
     },
-    body: JSON.stringify({ query, variables }),
-    next: { revalidate: 3600 }, // fallback memory cache for 1 hour
-  });
+    10_000
+  );
+
 
   if (!res.ok) throw new Error(`GitHub API error: ${res.status}`);
   const json = await res.json();
@@ -232,13 +239,18 @@ export async function fetchContributionCalendar(
     if (from) {
       url += `?from=${encodeURIComponent(from)}`;
     }
-    const res = await fetch(url, {
-      headers: {
-        Accept: "text/html",
-        "User-Agent": "ossfolio (+https://ossfolio.qzz.io)",
+    const res = await fetchWithTimeout(
+      url,
+      {
+        headers: {
+          Accept: "text/html",
+          "User-Agent": "ossfolio (+https://ossfolio.qzz.io)",
+        },
+        next: { revalidate: 3600 },
       },
-      next: { revalidate: 3600 },
-    });
+      10_000
+    );
+
     if (!res.ok) return null;
 
     const html = await res.text();

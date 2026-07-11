@@ -1,5 +1,7 @@
 import type { ContributorStats, Org, Repo, TechEntry, MergedPR } from "@/types";
 import { LANG_COLORS } from "@/lib/languages";
+import { fetchWithTimeout } from "@/lib/fetch-with-timeout";
+
 
 /**
  * Live profile "extras" derived from the public (unauthenticated) GitHub REST
@@ -65,15 +67,17 @@ export function deriveTechStack(repos: GitHubRepoLike[]): TechEntry[] {
 /** A single Search API count call. Returns 0 on any failure (rate limit, etc.). */
 async function searchCount(query: string, accept?: string): Promise<number> {
   try {
-    const res = await fetch(
+    const res = await fetchWithTimeout(
       `https://api.github.com/search/${query}&per_page=1`,
       {
         headers: {
           Accept: accept ?? "application/vnd.github.v3+json",
         },
         next: { revalidate: 3600 },
-      }
+      },
+      10_000
     );
+
     if (!res.ok) return 0;
     const json = await res.json();
     return typeof json.total_count === "number" ? json.total_count : 0;
@@ -117,13 +121,15 @@ interface GitHubOrgLike {
 /** Fetch the user's public organizations and map to the `Org` type. */
 export async function fetchOrganizations(username: string): Promise<Org[]> {
   try {
-    const res = await fetch(
+    const res = await fetchWithTimeout(
       `https://api.github.com/users/${encodeURIComponent(username)}/orgs`,
       {
         headers: { Accept: "application/vnd.github.v3+json" },
         next: { revalidate: 3600 },
-      }
+      },
+      10_000
     );
+
     if (!res.ok) return [];
     const orgs = (await res.json()) as GitHubOrgLike[];
     if (!Array.isArray(orgs)) return [];
@@ -142,10 +148,15 @@ export async function fetchOrganizations(username: string): Promise<Org[]> {
 export async function fetchMergedPRs(username: string, limit: number = 10): Promise<MergedPR[]> {
   const query = `search/issues?q=author:${encodeURIComponent(username)}+type:pr+is:merged&sort=updated&order=desc&per_page=${limit}`;
   try {
-    const res = await fetch(`https://api.github.com/${query}`, {
-      headers: { Accept: "application/vnd.github.v3+json" },
-      next: { revalidate: 3600 },
-    });
+    const res = await fetchWithTimeout(
+      `https://api.github.com/${query}`,
+      {
+        headers: { Accept: "application/vnd.github.v3+json" },
+        next: { revalidate: 3600 },
+      },
+      10_000
+    );
+
     if (!res.ok) return [];
     const json = await res.json();
     if (!Array.isArray(json.items)) return [];

@@ -24,6 +24,7 @@ interface LeaderboardRow {
   total_prs: number | null;
   total_issues: number | null;
   total_commits: number | null;
+  score_delta_30_days?: number | null;
 }
 
 interface OrgLeaderboardRow {
@@ -66,7 +67,7 @@ async function fetchPage(
     } else {
       query = supabase
         .from("profiles")
-        .select("username, name, avatar_url, score, total_prs, total_issues, total_commits");
+        .select("username, name, avatar_url, score, total_prs, total_issues, total_commits, score_delta_30_days");
       
       if (searchQuery) {
         query = query.or(`username.ilike.%${searchQuery}%,name.ilike.%${searchQuery}%`);
@@ -76,6 +77,7 @@ async function fetchPage(
       if (sortBy === "prs") orderColumn = "total_prs";
       else if (sortBy === "commits") orderColumn = "total_commits";
       else if (sortBy === "issues") orderColumn = "total_issues";
+      else if (sortBy === "improvement") orderColumn = "score_delta_30_days";
 
       query = query
         .order(orderColumn, { ascending: false })
@@ -148,6 +150,7 @@ export default async function ExplorePage({ searchParams }: ExplorePageProps) {
             {type === "users" && (
               <select name="sortBy" defaultValue={sortBy} style={{ padding: "10px 14px", borderRadius: "6px", border: "1px solid var(--color-hairline)", background: "var(--color-canvas)", color: "var(--color-ink)" }}>
                 <option value="score">Sort by Score</option>
+                <option value="improvement">Sort by Most Improved</option>
                 <option value="prs">Sort by PRs</option>
                 <option value="commits">Sort by Commits</option>
                 <option value="issues">Sort by Issues</option>
@@ -205,9 +208,15 @@ const avatar = rowData.avatar_url || `https://github.com/${isOrg ? encodeURIComp
                       </span>
 
                       {/* Score Value Rendering */}
-                      <span style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", minWidth: "60px", flexShrink: 0 }}>
+                      <span style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", minWidth: "65px", flexShrink: 0 }}>
                         <span style={{ fontSize: "24px", fontWeight: 600, color: "var(--color-primary)", lineHeight: 1 }}>{score}</span>
-                        <span style={{ fontSize: "11px", color: "var(--color-ink-mute)", marginTop: "3px" }}>score</span>
+                        {sortBy === "improvement" && typeof rowData.score_delta_30_days === "number" ? (
+                          <span style={{ fontSize: "11px", color: rowData.score_delta_30_days > 0 ? "#10b981" : "var(--color-ink-mute)", fontWeight: 600, marginTop: "4px", display: "flex", alignItems: "center", gap: "2px" }} title="Improvement over last 30 days">
+                            {rowData.score_delta_30_days > 0 ? `📈 +${rowData.score_delta_30_days}` : `➖ ${rowData.score_delta_30_days}`}
+                          </span>
+                        ) : (
+                          <span style={{ fontSize: "11px", color: "var(--color-ink-mute)", marginTop: "3px" }}>score</span>
+                        )}
                       </span>
                     </Link>
                   </li>

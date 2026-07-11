@@ -163,7 +163,7 @@ export function Navbar({ onSignIn, onGetStarted }: NavbarProps) {
         }}
       >
         <Link href="/" style={{ display: "flex", alignItems: "center", gap: "8px", textDecoration: "none" }} aria-label={t("home")}>
-          <Image src="/logo.png" alt="" width={28} height={28} priority style={{ borderRadius: "6px", flexShrink: 0 }} />
+          <Image src="/logo.png" alt="OSSfolio Logo" width={28} height={28} priority style={{ borderRadius: "6px", flexShrink: 0 }} />
           <span style={{ display: "flex", alignItems: "baseline" }}>
             <span style={{ fontSize: "15px", fontWeight: 600, color: "var(--color-ink)", letterSpacing: "-0.3px" }}>OSS</span>
             <span style={{ fontSize: "15px", fontWeight: 600, color: tokens.primary, letterSpacing: "-0.3px" }}>folio</span>

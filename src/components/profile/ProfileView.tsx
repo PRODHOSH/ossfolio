@@ -111,6 +111,13 @@ interface ProfileExtras {
   mergedPRs: MergedPR[];
 }
 
+function formatCount(n: number): string {
+  if (n >= 1000) {
+    return `${(n / 1000).toFixed(1).replace(/\.0$/, "")}k`;
+  }
+  return n.toLocaleString("en-US");
+}
+
 function formatUpdatedAt(iso: string): string {
   const diffMs = Date.now() - new Date(iso).getTime();
   const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
@@ -298,12 +305,15 @@ function ProfileDownloadCard({
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "24px" }}>
             <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
               <div style={{ display: "flex", gap: "16px", alignItems: "center" }}>
-                <img
+                <Image
                   src={user.avatar_url}
                   alt={displayName}
+                  width={64}
+                  height={64}
+                  unoptimized
                   style={{ width: "64px", height: "64px", borderRadius: "9999px", border: "1px solid rgba(255, 255, 255, 0.15)", objectFit: "cover" }}
-                  crossOrigin="anonymous"
                 />
+
                 <div>
                   <div style={{ fontSize: "18px", fontWeight: 600, color: "#ffffff", letterSpacing: "-0.3px", lineHeight: 1.2 }}>
                     {displayName}
@@ -366,10 +376,13 @@ interface FilterTabProps {
 
 function FilterTab({ label, isActive, onClick, dotColor }: FilterTabProps) {
   return (
-    <button
-      type="button"
-      aria-pressed={isActive}
-      onClick={onClick}
+      <button
+        type="button"
+        aria-pressed="false"
+        data-aria-pressed={isActive}
+
+
+        onClick={onClick}
       style={{
         display: "inline-flex",
         alignItems: "center",
@@ -710,13 +723,13 @@ export function ProfileView({
 
           <div style={{ display: "flex", gap: "20px", marginTop: "14px" }}>
             <span style={{ fontSize: "13px", color: "var(--color-ink-mute)" }}>
-              <strong style={{ color: "var(--color-ink)", fontWeight: 600 }}>{user.followers.toLocaleString("en-US")}</strong> followers
+              <strong style={{ color: "var(--color-ink)", fontWeight: 600 }}>{formatCount(user.followers)}</strong> followers
             </span>
             <span style={{ fontSize: "13px", color: "var(--color-ink-mute)" }}>
-              <strong style={{ color: "var(--color-ink)", fontWeight: 600 }}>{user.following.toLocaleString("en-US")}</strong> following
+              <strong style={{ color: "var(--color-ink)", fontWeight: 600 }}>{formatCount(user.following)}</strong> following
             </span>
             <span style={{ fontSize: "13px", color: "var(--color-ink-mute)" }}>
-              <strong style={{ color: "var(--color-ink)", fontWeight: 600 }}>{user.public_repos}</strong> repos
+              <strong style={{ color: "var(--color-ink)", fontWeight: 600 }}>{formatCount(user.public_repos)}</strong> repos
             </span>
           </div>
 

@@ -2,6 +2,8 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
+import { TemporaryUnavailableFallback } from "@/components/layout/TemporaryUnavailableFallback";
+
 import { ProfileView } from "@/components/profile/ProfileView";
 import {
   fetchLiveStats,
@@ -14,6 +16,8 @@ import { generateMockHeatmap, computeStreaks } from "@/lib/mock";
 import { fetchContributionCalendar } from "@/lib/github";
 import { calculateScore } from "@/lib/score";
 import { supabase } from "@/lib/supabase";
+import { fetchWithTimeout, isTimeoutError } from "@/lib/fetch-with-timeout";
+
 
 export const runtime = "edge";
 
@@ -36,11 +40,14 @@ interface ProfilePageProps {
 }
 
 async function fetchGitHubUser(username: string): Promise<GitHubUser | null> {
-  const res = await fetch(`https://api.github.com/users/${username}`, {
-    headers: { Accept: "application/vnd.github.v3+json" },
-    next: { revalidate: 3600 },
-    signal: AbortSignal.timeout(10000),
-  });
+  const res = await fetchWithTimeout(
+    `https://api.github.com/users/${username}`,
+    {
+      headers: { Accept: "application/vnd.github.v3+json" },
+      next: { revalidate: 3600 },
+    },
+    10_000
+  );
   if (!res.ok) {
     try {
       const err = await res.json();
@@ -52,21 +59,24 @@ async function fetchGitHubUser(username: string): Promise<GitHubUser | null> {
     }
     return null;
   }
+
   return res.json() as Promise<GitHubUser>;
 }
 
 async function fetchGitHubRepos(username: string) {
-  const res = await fetch(
+  const res = await fetchWithTimeout(
     `https://api.github.com/users/${username}/repos?sort=stars&per_page=100&type=owner`,
     {
       headers: { Accept: "application/vnd.github.mercy-preview+json" },
       next: { revalidate: 3600 },
-    }
+    },
+    10_000
   );
   if (!res.ok) return [];
   const repos = await res.json();
   return repos.filter((r: { fork: boolean }) => !r.fork).slice(0, 6);
 }
+
 
 export async function generateMetadata({ params }: ProfilePageProps): Promise<Metadata> {
   const { username } = await params;
@@ -123,8 +133,22 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
     user = await fetchGitHubUser(username);
   } catch (e) {
     if (e instanceof Error && e.message === "RateLimit") rateLimited = true;
+    // If GitHub is slow/unreachable, avoid a hard crash.
+    if (isTimeoutError(e)) {
+      return (
+        <TemporaryUnavailableFallback
+          heading="Temporarily Unavailable"
+          message={
+            <>
+              GitHub API is taking too long to respond for <strong>@{username}</strong>. Please try again in a moment.
+            </>
+          }
+        />
+      );
+    }
     user = null;
   }
+
   // Other fetches can also error on rate limit; we treat them similarly.
   try { repos = await fetchGitHubRepos(username); } catch (e) { if (e instanceof Error && e.message === "RateLimit") rateLimited = true; }
   try { liveStats = await fetchLiveStats(username); } catch (e) { if (e instanceof Error && e.message === "RateLimit") rateLimited = true; }
@@ -137,28 +161,15 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
 
   if (!user && rateLimited) {
     return (
-      <>
-        <Navbar />
-        <main
-          style={{
-            backgroundColor: "var(--color-canvas)",
-            color: "var(--color-ink)",
-            minHeight: "100vh",
-            transition: "background-color 0.2s ease, color 0.2s ease",
-          }}
-        >
-          <div style={{ maxWidth: "640px", margin: "0 auto", padding: "96px 20px", textAlign: "center" }}>
-            <h1 style={{ fontSize: "22px", fontWeight: 500, margin: "0 0 12px 0" }}>
-              Temporarily Unavailable
-            </h1>
-            <p style={{ fontSize: "15px", color: "var(--color-ink-mute)", margin: 0 }}>
-              GitHub API rate limit reached. Profile data for <strong>@{username}</strong> cannot be
-              loaded right now. Please try again in a few minutes.
-            </p>
-          </div>
-        </main>
-        <Footer />
-      </>
+      <TemporaryUnavailableFallback
+        heading="Temporarily Unavailable"
+        message={
+          <>
+            GitHub API rate limit reached. Profile data for <strong>@{username}</strong> cannot be
+            loaded right now. Please try again in a few minutes.
+          </>
+        }
+      />
     );
   }
 

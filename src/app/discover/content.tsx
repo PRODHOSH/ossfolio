@@ -17,6 +17,7 @@ interface DiscoverProfile {
   total_issues: number;
   followers: number;
   top_languages: string[];
+  score_delta_30_days?: number | null;
 }
 
 interface DiscoverResponse {
@@ -155,6 +156,7 @@ export function DiscoverContent() {
                 totalIssues={profile.total_issues}
                 followers={profile.followers}
                 topLanguages={profile.top_languages}
+                scoreDelta30Days={profile.score_delta_30_days}
               />
             ))}
           </div>

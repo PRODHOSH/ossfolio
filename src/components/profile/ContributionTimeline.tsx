@@ -1,6 +1,7 @@
 "use client";
 
 import type { MergedPR, BadgeItem } from "@/types";
+import { useMemo, useState } from "react";
 
 interface TimelineEvent {
   id: string;
@@ -19,6 +20,8 @@ interface ContributionTimelineProps {
 }
 
 export function ContributionTimeline({ mergedPRs, badges = [] }: ContributionTimelineProps) {
+  const PAGE_SIZE = 10;
+
   // 1. Gather and construct timeline events
   const events: TimelineEvent[] = [];
 
@@ -69,14 +72,17 @@ export function ContributionTimeline({ mergedPRs, badges = [] }: ContributionTim
   });
 
   // Sort events chronologically descending (newest first)
-  const sortedEvents = events.sort(
-    (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
-  );
+  const sortedEvents = useMemo(() => {
+    // Mutate-free sort to avoid surprising updates across renders
+    return [...events].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mergedPRs, badges]);
 
-  // If no milestones exist, do not render the section
-  if (sortedEvents.length === 0) {
-    return null;
-  }
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
+
+  const visibleEvents = useMemo(() => sortedEvents.slice(0, visibleCount), [sortedEvents, visibleCount]);
+  const hasMore = visibleCount < sortedEvents.length;
+
 
   return (
     <section style={{ marginTop: "44px" }}>
@@ -115,7 +121,7 @@ export function ContributionTimeline({ mergedPRs, badges = [] }: ContributionTim
           }}
         />
 
-        {sortedEvents.map((event) => {
+        {visibleEvents.map((event) => {
           const isHighlight = event.type === "first_pr" || event.type === "badge";
           return (
             <div
@@ -259,6 +265,39 @@ export function ContributionTimeline({ mergedPRs, badges = [] }: ContributionTim
           );
         })}
       </div>
+
+      {hasMore && (
+        <div style={{ marginTop: "20px", paddingLeft: "8px" }}>
+
+          <button
+            type="button"
+            onClick={() => setVisibleCount((c) => c + PAGE_SIZE)}
+            style={{
+              fontSize: "14px",
+              fontWeight: 600,
+              color: "var(--color-ink)",
+              backgroundColor: "var(--color-canvas)",
+              border: "1px solid var(--color-hairline-strong)",
+              borderRadius: "8px",
+              padding: "10px 16px",
+              cursor: "pointer",
+              transition: "transform 0.05s ease, box-shadow 0.2s ease",
+              boxShadow: "none",
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.boxShadow = "0 2px 10px rgba(0, 0, 0, 0.05)";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.boxShadow = "none";
+            }}
+          >
+            Load More
+          </button>
+        </div>
+      )}
+      {sortedEvents.length === 0 ? null : null}
     </section>
   );
 }
+
+

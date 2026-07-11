@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, memo } from "react";
+import { useState, useCallback, memo, useMemo } from "react";
 import type { HeatmapWeek } from "@/types";
 import { computeStreaks } from "@/lib/mock";
 
@@ -78,6 +78,47 @@ const StreakBadge = memo(function StreakBadge({
   );
 });
 
+interface DisplayedDay {
+  date: string;
+  count: number;
+  color: string;
+  isPlaceholder?: boolean;
+}
+
+interface DisplayedWeek {
+  days: DisplayedDay[];
+}
+
+function getFilteredWeeks(
+  weeks: HeatmapWeek[],
+  selectedYear: number,
+  viewMode: "365" | "calendar",
+): DisplayedWeek[] {
+  if (viewMode === "365" && selectedYear === currentYear) {
+    return weeks as DisplayedWeek[];
+  }
+
+  const yearStr = `${selectedYear}-`;
+
+  return weeks
+    .map((week) => {
+      const days: DisplayedDay[] = week.days.map((day) => {
+        if (day.date.startsWith(yearStr)) {
+          return day;
+        }
+        return {
+          ...day,
+          count: 0,
+          color: "transparent",
+          isPlaceholder: true,
+        };
+      });
+
+      return { ...week, days };
+    })
+    .filter((week) => week.days.some((day) => !day.isPlaceholder));
+}
+
 function HeatmapWithYearNavInner({
   username,
   initialWeeks,
@@ -86,8 +127,7 @@ function HeatmapWithYearNavInner({
 }: HeatmapWithYearNavProps) {
   const [selectedYear, setSelectedYear] = useState(currentYear);
   const [weeks, setWeeks] = useState(initialWeeks);
-  const [currentStreak, setCurrentStreak] = useState(initialCurrentStreak);
-  const [longestStreak, setLongestStreak] = useState(initialLongestStreak);
+  const [viewMode, setViewMode] = useState<"365" | "calendar">("365");
   const [loading, setLoading] = useState(false);
 
   const fetchYear = useCallback(
@@ -95,8 +135,6 @@ function HeatmapWithYearNavInner({
       if (year === selectedYear && weeks.length > 0) return;
       if (year === currentYear && initialWeeks.length > 0) {
         setWeeks(initialWeeks);
-        setCurrentStreak(initialCurrentStreak);
-        setLongestStreak(initialLongestStreak);
         setSelectedYear(year);
         return;
       }
@@ -110,26 +148,30 @@ function HeatmapWithYearNavInner({
         if (!res.ok) throw new Error("fetch failed");
         const data = await res.json();
         setWeeks(data.weeks);
-        const streaks = computeStreaks(data.weeks);
-        setCurrentStreak(streaks.current);
-        setLongestStreak(streaks.longest);
       } catch {
         setWeeks([]);
-        setCurrentStreak(0);
-        setLongestStreak(0);
       } finally {
         setLoading(false);
       }
     },
-    [
-      username,
-      selectedYear,
-      weeks.length,
-      initialWeeks,
-      initialCurrentStreak,
-      initialLongestStreak,
-    ],
+    [username, selectedYear, weeks.length, initialWeeks],
   );
+
+  const displayedWeeks = useMemo(() => {
+    return getFilteredWeeks(
+      weeks,
+      selectedYear,
+      selectedYear === currentYear ? viewMode : "calendar",
+    );
+  }, [weeks, selectedYear, viewMode]);
+
+  const { currentStreak, longestStreak } = useMemo(() => {
+    const streaks = computeStreaks(displayedWeeks);
+    return {
+      currentStreak: streaks.current,
+      longestStreak: streaks.longest,
+    };
+  }, [displayedWeeks]);
 
   if (initialWeeks.length === 0 && weeks.length === 0) return null;
 
@@ -173,10 +215,65 @@ function HeatmapWithYearNavInner({
           flexWrap: "wrap",
           gap: "8px",
           margin: "0 0 12px 0",
+          justifyContent: "space-between",
+          alignItems: "center",
         }}
       >
-        <StreakBadge label="Current streak" value={currentStreak} />
-        <StreakBadge label="Longest streak" value={longestStreak} />
+        <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
+          <StreakBadge label="Current streak" value={currentStreak} />
+          <StreakBadge label="Longest streak" value={longestStreak} />
+        </div>
+
+        {/* Toggle switch for Last 365 Days vs Calendar Year */}
+        {selectedYear === currentYear && (
+          <div
+            style={{
+              display: "inline-flex",
+              backgroundColor: "var(--color-canvas-soft)",
+              border: "1px solid var(--color-hairline)",
+              borderRadius: "20px",
+              padding: "2px",
+              gap: "2px",
+            }}
+          >
+            <button
+              type="button"
+              onClick={() => setViewMode("365")}
+              style={{
+                padding: "4px 12px",
+                fontSize: "12px",
+                fontWeight: viewMode === "365" ? 600 : 400,
+                color: viewMode === "365" ? "#171717" : "var(--color-ink-mute)",
+                backgroundColor: viewMode === "365" ? "#3ecf8e" : "transparent",
+                border: "none",
+                borderRadius: "9999px",
+                cursor: "pointer",
+                transition: "background-color 0.15s, color 0.15s",
+              }}
+            >
+              Last 365 Days
+            </button>
+            <button
+              type="button"
+              onClick={() => setViewMode("calendar")}
+              style={{
+                padding: "4px 12px",
+                fontSize: "12px",
+                fontWeight: viewMode === "calendar" ? 600 : 400,
+                color:
+                  viewMode === "calendar" ? "#171717" : "var(--color-ink-mute)",
+                backgroundColor:
+                  viewMode === "calendar" ? "#3ecf8e" : "transparent",
+                border: "none",
+                borderRadius: "9999px",
+                cursor: "pointer",
+                transition: "background-color 0.15s, color 0.15s",
+              }}
+            >
+              {currentYear} Year
+            </button>
+          </div>
+        )}
       </div>
 
       <div
@@ -192,7 +289,7 @@ function HeatmapWithYearNavInner({
           transition: "opacity 0.2s",
         }}
       >
-        {weeks.map((week, wi) => (
+        {displayedWeeks.map((week, wi) => (
           <div
             key={wi}
             style={{ display: "flex", flexDirection: "column", gap: "3px" }}
@@ -200,19 +297,26 @@ function HeatmapWithYearNavInner({
             {week.days.map((day, di) => (
               <div
                 key={di}
-                title={`${day.count} contributions on ${day.date}`}
+                title={
+                  day.isPlaceholder
+                    ? undefined
+                    : `${day.count} contributions on ${day.date}`
+                }
                 style={{
                   width: "11px",
                   height: "11px",
                   borderRadius: "2px",
-                  backgroundColor: day.color,
+                  backgroundColor: day.isPlaceholder
+                    ? "transparent"
+                    : day.color,
                   flexShrink: 0,
+                  pointerEvents: day.isPlaceholder ? "none" : "auto",
                 }}
               />
             ))}
           </div>
         ))}
-        {weeks.length === 0 && !loading && (
+        {displayedWeeks.length === 0 && !loading && (
           <p
             style={{
               fontSize: "13px",

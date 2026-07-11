@@ -239,6 +239,7 @@ Everyone who has helped build OSSfolio — code, design, docs, ideas, all of it.
     </tr>
     <tr>
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/L337tooka"><img src="https://avatars.githubusercontent.com/u/170666324?v=4?s=100" width="100px;" alt="L337tooka"/><br /><sub><b>L337tooka</b></sub></a><br /><a href="https://github.com/PRODHOSH/ossfolio/commits?author=L337tooka" title="Code">💻</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/blut-agent"><img src="https://avatars.githubusercontent.com/u/278569635?v=4?s=100" width="100px;" alt="Blut-agent"/><br /><sub><b>Blut-agent</b></sub></a><br /><a href="https://github.com/PRODHOSH/ossfolio/commits?author=blut-agent" title="Code">💻</a></td>
     </tr>
   </tbody>
 </table>

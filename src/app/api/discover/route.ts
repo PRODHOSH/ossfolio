@@ -6,7 +6,7 @@ export const runtime = "edge";
 
 const PAGE_SIZE = 20;
 const MAX_PAGE = 50;
-const VALID_SORT = ["score", "contributions", "followers"] as const;
+const VALID_SORT = ["score", "contributions", "followers", "improvement"] as const;
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
@@ -46,6 +46,7 @@ export async function GET(request: NextRequest) {
       total_issues: number;
       followers: number;
       top_languages: string[];
+      score_delta_30_days: number;
     }>;
 
     const hasNext = page < MAX_PAGE && results.length > PAGE_SIZE;

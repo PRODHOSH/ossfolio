@@ -6,6 +6,7 @@ import { useDebounce } from "@/hooks/useDebounce";
 
 const SORT_OPTIONS = [
   { value: "score", label: "Score" },
+  { value: "improvement", label: "Most Improved" },
   { value: "contributions", label: "Contributions" },
   { value: "followers", label: "Followers" },
 ] as const;
