@@ -7,8 +7,19 @@ interface ProfileShareButtonsProps {
   score: number;
 }
 
+function buildProfileMarkdown(username: string, score: number) {
+  const profileUrl = `https://ossfolio.qzz.io/${username}`;
+
+  const scoreBadge = `https://img.shields.io/badge/OSSfolio-Score-${score}-brightgreen`;
+
+  return `[![OSSfolio Score](${scoreBadge})](${profileUrl})\n\nSource: [${username}](${profileUrl})\n`;
+}
+
+
 export function ProfileShareButtons({ username, score }: ProfileShareButtonsProps) {
   const [copied, setCopied] = useState(false);
+  const [copiedMarkdown, setCopiedMarkdown] = useState(false);
+
 
   const btnBase: React.CSSProperties = {
     display: "inline-flex",
@@ -65,6 +76,18 @@ export function ProfileShareButtons({ username, score }: ProfileShareButtonsProp
     }
   };
 
+  const handleCopyMarkdown = async () => {
+    try {
+      const md = buildProfileMarkdown(username, score);
+      await navigator.clipboard.writeText(md);
+      setCopiedMarkdown(true);
+      setTimeout(() => setCopiedMarkdown(false), 2000);
+    } catch (err) {
+      console.error("Copy markdown to clipboard failed:", err);
+    }
+  };
+
+
   return (
     <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
       <button type="button" onClick={handleShareX} style={btnBase} aria-label="Share profile on X (Twitter)">
@@ -86,6 +109,35 @@ export function ProfileShareButtons({ username, score }: ProfileShareButtonsProp
           <path d="M6.167 8a.83.83 0 0 0-.83.83c0 .459.372.84.83.831a.831.831 0 0 0 0-1.661m1.843 3.647c.315 0 1.403-.038 1.976-.611a.23.23 0 0 0 0-.306.213.213 0 0 0-.306 0c-.353.363-1.126.487-1.67.487-.545 0-1.308-.124-1.671-.487a.213.213 0 0 0-.306 0 .213.213 0 0 0 0 .306c.564.563 1.652.61 1.977.61zm.992-2.807c0 .458.373.83.831.83s.83-.381.83-.83a.831.831 0 0 0-1.66 0z" />
         </svg>
         Share on Reddit
+      </button>
+
+      <button
+        type="button"
+        onClick={handleCopyMarkdown}
+        style={{
+          ...btnBase,
+          color: copiedMarkdown ? "#3ecf8e" : "var(--color-ink)",
+          borderColor: copiedMarkdown ? "#3ecf8e" : "var(--color-hairline-strong)",
+        }}
+        aria-label="Copy profile markdown to clipboard"
+      >
+        {copiedMarkdown ? (
+          <>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
+              <polyline points="20 6 9 17 4 12" />
+            </svg>
+            Copied!
+          </>
+        ) : (
+          <>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+              <path d="M4 4h16v16H4z" />
+              <path d="M8 9h8" />
+              <path d="M8 13h5" />
+            </svg>
+            Copy Markdown
+          </>
+        )}
       </button>
 
       <button
@@ -115,6 +167,7 @@ export function ProfileShareButtons({ username, score }: ProfileShareButtonsProp
           </>
         )}
       </button>
+
     </div>
   );
 }
