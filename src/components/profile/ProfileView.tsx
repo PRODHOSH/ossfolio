@@ -19,6 +19,7 @@ import { ProfileActions } from "@/components/profile/ProfileActions";
 import { OrganizationSection } from "@/components/profile/OrganizationSection";
 import { ProfileReposSection } from "@/components/profile/ProfileReposSection";
 import { ProfileBadgeModal } from "@/components/profile/ProfileBadgeModal";
+import { getContributorTier } from "@/lib/score";
 
 // Code-split the contribution heatmap out of the initial ProfileView bundle.
 // ProfileView is a client component, so `ssr: false` is valid here; the heatmap
@@ -703,26 +704,14 @@ export function ProfileView({
           </div>
 
           {(() => {
-            let tierName = "Bronze Contributor";
-            let tierColor = "#cd7f32";
-            let tierBg = "rgba(205, 127, 50, 0.15)";
-            if (score >= 1000) {
-              tierName = "Diamond Contributor";
-              tierColor = "#00e1d9";
-              tierBg = "rgba(0, 225, 217, 0.15)";
-            } else if (score >= 500) {
-              tierName = "Platinum Contributor";
-              tierColor = "#e5e4e2";
-              tierBg = "rgba(229, 228, 226, 0.15)";
-            } else if (score >= 250) {
-              tierName = "Gold Contributor";
-              tierColor = "#ffd700";
-              tierBg = "rgba(255, 215, 0, 0.15)";
-            } else if (score >= 100) {
-              tierName = "Silver Contributor";
-              tierColor = "#c0c0c0";
-              tierBg = "rgba(192, 192, 192, 0.15)";
-            }
+            const tier = getContributorTier(score);
+            const hex = tier.colorHex;
+            const r = parseInt(hex.substring(0, 2), 16);
+            const g = parseInt(hex.substring(2, 4), 16);
+            const b = parseInt(hex.substring(4, 6), 16);
+            const tierColor = `#${hex}`;
+            const tierBg = `rgba(${r}, ${g}, ${b}, 0.15)`;
+            const tierName = tier.name;
             return (
               <div style={{ marginTop: "12px", display: "inline-flex", alignItems: "center" }}>
                 <span style={{ fontSize: "11px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", color: tierColor, backgroundColor: tierBg, border: `1px solid ${tierColor}`, padding: "3px 8px", borderRadius: "4px", boxShadow: "0 2px 8px rgba(0,0,0,0.05)" }}>

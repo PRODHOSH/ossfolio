@@ -78,3 +78,22 @@ export function getScoreDeltaPercentage(scoreA: number, scoreB: number): string 
   const percentage = (diff / (min || 1)) * 100;
   return `+${percentage.toFixed(0)}%`;
 }
+
+export interface ContributorTier {
+  name: string;
+  colorHex: string;
+  threshold: number;
+}
+
+export const CONTRIBUTOR_TIERS: ContributorTier[] = [
+  { threshold: 1000, name: "Diamond Contributor", colorHex: "00e1d9" },
+  { threshold: 500, name: "Platinum Contributor", colorHex: "e5e4e2" },
+  { threshold: 250, name: "Gold Contributor", colorHex: "ffd700" },
+  { threshold: 100, name: "Silver Contributor", colorHex: "c0c0c0" },
+  { threshold: 0, name: "Bronze Contributor", colorHex: "cd7f32" },
+];
+
+export function getContributorTier(score: number): ContributorTier {
+  return CONTRIBUTOR_TIERS.find((t) => score >= t.threshold) || CONTRIBUTOR_TIERS[CONTRIBUTOR_TIERS.length - 1];
+}
+

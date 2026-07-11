@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import type { ContributorStats } from "@/types";
+import { getContributorTier } from "@/lib/score";
 
 interface ProfileActionsProps {
   username: string;
@@ -10,6 +11,10 @@ interface ProfileActionsProps {
   onRefresh: () => Promise<void>;
   stats: ContributorStats;
 }
+
+const getTierColor = (scoreValue: number) => {
+  return getContributorTier(scoreValue).colorHex;
+};
 
 export function ProfileActions({ username, score, isRefreshing, onRefresh, stats }: ProfileActionsProps) {
   const [copied, setCopied] = useState(false);
@@ -50,14 +55,6 @@ export function ProfileActions({ username, score, isRefreshing, onRefresh, stats
     } catch (err) {
       console.error("Copy to clipboard failed:", err);
     }
-  };
-
-  const getTierColor = (scoreValue: number) => {
-    if (scoreValue >= 1000) return "00e1d9"; // Diamond
-    if (scoreValue >= 500) return "e5e4e2";  // Platinum
-    if (scoreValue >= 250) return "ffd700";  // Gold
-    if (scoreValue >= 100) return "c0c0c0";  // Silver
-    return "cd7f32";                    // Bronze
   };
 
   const handleCopyMarkdown = async () => {
