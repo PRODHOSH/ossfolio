@@ -791,6 +791,7 @@ export function ProfileView({
               score={score}
               isRefreshing={isRefreshing}
               onRefresh={handleRefresh}
+              stats={stats}
             />
           </div>
 

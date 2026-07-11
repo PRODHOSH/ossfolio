@@ -1,16 +1,19 @@
 "use client";
 
 import { useState } from "react";
+import type { ContributorStats } from "@/types";
 
 interface ProfileActionsProps {
   username: string;
   score: number;
   isRefreshing: boolean;
   onRefresh: () => Promise<void>;
+  stats: ContributorStats;
 }
 
-export function ProfileActions({ username, score, isRefreshing, onRefresh }: ProfileActionsProps) {
+export function ProfileActions({ username, score, isRefreshing, onRefresh, stats }: ProfileActionsProps) {
   const [copied, setCopied] = useState(false);
+  const [markdownCopied, setMarkdownCopied] = useState(false);
   const [refreshState, setRefreshState] = useState<"idle" | "loading" | "success" | "error">("idle");
 
   const btnBase: React.CSSProperties = {
@@ -46,6 +49,39 @@ export function ProfileActions({ username, score, isRefreshing, onRefresh }: Pro
       setTimeout(() => setCopied(false), 2000);
     } catch (err) {
       console.error("Copy to clipboard failed:", err);
+    }
+  };
+
+  const getTierColor = (scoreValue: number) => {
+    if (scoreValue >= 1000) return "00e1d9"; // Diamond
+    if (scoreValue >= 500) return "e5e4e2";  // Platinum
+    if (scoreValue >= 250) return "ffd700";  // Gold
+    if (scoreValue >= 100) return "c0c0c0";  // Silver
+    return "cd7f32";                    // Bronze
+  };
+
+  const handleCopyMarkdown = async () => {
+    const tierColor = getTierColor(score);
+    const profileUrl = `https://ossfolio.qzz.io/${username}`;
+    const markdown = `[![OSSfolio Score](https://img.shields.io/badge/OSSfolio-Score%20${score}-${tierColor}?logo=github&style=flat-square)](${profileUrl})
+
+### OSSfolio Stats
+
+- **Contributor Score:** ${score}
+- **Total Contributions:** ${stats.totalContributions}
+- **Commits:** ${stats.totalCommits}
+- **Pull Requests:** ${stats.totalPRs}
+- **Issues Opened:** ${stats.totalIssues}
+- **Code Reviews:** ${stats.totalReviews}
+
+[View my full OSSfolio profile](${profileUrl})`;
+
+    try {
+      await navigator.clipboard.writeText(markdown);
+      setMarkdownCopied(true);
+      setTimeout(() => setMarkdownCopied(false), 2000);
+    } catch (err) {
+      console.error("Copy markdown to clipboard failed:", err);
     }
   };
 
@@ -125,6 +161,35 @@ export function ProfileActions({ username, score, isRefreshing, onRefresh }: Pro
               <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
             </svg>
             Copy link
+          </>
+        )}
+      </button>
+
+      <button
+        type="button"
+        onClick={handleCopyMarkdown}
+        style={{
+          ...btnBase,
+          color: markdownCopied ? "#3ecf8e" : "var(--color-ink)",
+          borderColor: markdownCopied ? "#3ecf8e" : "var(--color-hairline-strong)",
+        }}
+        aria-label="Copy markdown embed code to clipboard"
+      >
+        {markdownCopied ? (
+          <>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
+              <polyline points="20 6 9 17 4 12" />
+            </svg>
+            Copied Markdown!
+          </>
+        ) : (
+          <>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="M4 18H20V6H4V18Z" />
+              <path d="M7 9V15L9 12L11 15V9" />
+              <path d="M17 12V9H15V12H13L16 15L19 12H17Z" />
+            </svg>
+            Copy Markdown
           </>
         )}
       </button>
