@@ -128,6 +128,7 @@ export function ProfileActions({ username, score, isRefreshing, onRefresh }: Pro
           </>
         )}
       </button>
+
     </div>
   );
 }
