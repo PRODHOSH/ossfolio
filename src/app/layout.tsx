@@ -141,11 +141,9 @@ export default async function RootLayout({
         <NextIntlClientProvider locale={locale} messages={messages}>
           <ThemeProvider>
             <SkipToContent />
+            <EnvValidationBanner />
             {children}
           </ThemeProvider>
-          <SkipToContent />
-          <EnvValidationBanner />
-          {children}
         </NextIntlClientProvider>
       </body>
     </html>

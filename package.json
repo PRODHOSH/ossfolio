@@ -5,6 +5,8 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "build:cf": "opennextjs-cloudflare build",
+    "preview:cf": "opennextjs-cloudflare build && opennextjs-cloudflare preview",
     "start": "next start",
     "lint": "eslint src/",
     "type-check": "tsc --noEmit"
@@ -32,6 +34,8 @@
     "tailwind-merge": "^3.3.0"
   },
   "devDependencies": {
+    "@opennextjs/cloudflare": "^1",
+    "wrangler": "^4",
     "@emnapi/core": "^1.11.1",
     "@emnapi/runtime": "^1.11.1",
     "@tailwindcss/postcss": "^4",
