@@ -178,6 +178,7 @@ export function ProfileReposSection({ repos, username }: ProfileReposSectionProp
                   borderRadius: "12px",
                   textDecoration: "none",
                   backgroundColor: "var(--color-canvas-soft)",
+                  boxShadow: "0 2px 8px rgba(0, 0, 0, 0.08)",
                   transition: "border-color 0.15s, box-shadow 0.15s",
                 }}
               >

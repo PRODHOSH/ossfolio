@@ -40,6 +40,8 @@ const YearButton = memo(function YearButton({
         borderRadius: "9999px",
         cursor: loading ? "wait" : "pointer",
         transition: "background-color 0.15s, color 0.15s",
+        // Hold the pill's natural width so the strip scrolls instead of squashing.
+        flexShrink: 0,
       }}
     >
       {year}
@@ -173,7 +175,22 @@ function HeatmapWithYearNavInner({
         <h2 style={{ fontSize: "16px", fontWeight: 600, color: "var(--color-ink)", margin: 0, letterSpacing: "-0.2px" }}>
           Contribution activity
         </h2>
-        <div style={{ display: "flex", gap: "6px" }}>
+        <div
+          style={{
+            display: "flex",
+            gap: "6px",
+            // Keep the years on one row and let the strip scroll horizontally on
+            // narrow screens rather than squashing the buttons. `minWidth: 0` is
+            // required because this div is itself a flex item — without it the
+            // default `min-width: auto` prevents it from shrinking below its
+            // content, so `overflowX` would never engage.
+            flexWrap: "nowrap",
+            overflowX: "auto",
+            minWidth: 0,
+            WebkitOverflowScrolling: "touch",
+            scrollbarWidth: "none",
+          }}
+        >
           {years.map((year) => (
             <YearButton
               key={year}

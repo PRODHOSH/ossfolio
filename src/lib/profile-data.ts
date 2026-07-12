@@ -2,6 +2,22 @@ import type { ContributorStats, Org, Repo, TechEntry, MergedPR } from "@/types";
 import { LANG_COLORS } from "@/lib/languages";
 import { fetchWithTimeout } from "@/lib/fetch-with-timeout";
 
+/**
+ * GitHub answers a rate limit with 403/429 and a "rate limit" message. Raise it as
+ * an error so callers that persist results can decline to cache a degraded response.
+ */
+async function throwIfRateLimited(res: Response): Promise<void> {
+  if (res.status !== 403 && res.status !== 429) return;
+  try {
+    const err = await res.clone().json();
+    if (typeof err?.message === "string" && err.message.toLowerCase().includes("rate limit")) {
+      throw new Error("RateLimit");
+    }
+  } catch (e) {
+    if (e instanceof Error && e.message === "RateLimit") throw e;
+  }
+}
+
 
 /**
  * Live profile "extras" derived from the public (unauthenticated) GitHub REST
@@ -28,7 +44,7 @@ export function languageColor(language: string | null): string | null {
   return LANG_COLORS[language] ?? "#9a9a9a";
 }
 
-interface GitHubRepoLike {
+export interface GitHubRepoLike {
   name: string;
   description: string | null;
   html_url: string;
@@ -36,6 +52,16 @@ interface GitHubRepoLike {
   forks_count: number;
   language: string | null;
   topics?: string[];
+}
+
+/**
+ * A raw GitHub repo as the REST API returns it, carrying every field this app reads.
+ * A superset of `GitHubRepoLike` (what mapRepos/deriveTechStack need) and of the shape
+ * ProfileView renders, so one snapshot payload satisfies all three consumers without casts.
+ */
+export interface GitHubRepoPayload extends GitHubRepoLike {
+  id: number;
+  pushed_at?: string;
 }
 
 /** Map raw REST repos into the `Repo` type the TopRepos component consumes. */
@@ -125,12 +151,15 @@ export async function fetchOrganizations(username: string): Promise<Org[]> {
       `https://api.github.com/users/${encodeURIComponent(username)}/orgs`,
       {
         headers: { Accept: "application/vnd.github.v3+json" },
-        next: { revalidate: 3600 },
+        cache: "no-store",
       },
       10_000
     );
 
-    if (!res.ok) return [];
+    if (!res.ok) {
+      await throwIfRateLimited(res);
+      return [];
+    }
     const orgs = (await res.json()) as GitHubOrgLike[];
     if (!Array.isArray(orgs)) return [];
     return orgs.map((o) => ({
@@ -139,7 +168,10 @@ export async function fetchOrganizations(username: string): Promise<Org[]> {
       avatarUrl: o.avatar_url,
       url: `https://github.com/${o.login}`,
     }));
-  } catch {
+  } catch (e) {
+    // A rate limit must not be flattened into "this user has none" — the result is
+    // persisted now, so that would cache an empty list as fresh for a full hour.
+    if (e instanceof Error && e.message === "RateLimit") throw e;
     return [];
   }
 }
@@ -152,12 +184,15 @@ export async function fetchMergedPRs(username: string, limit: number = 10): Prom
       `https://api.github.com/${query}`,
       {
         headers: { Accept: "application/vnd.github.v3+json" },
-        next: { revalidate: 3600 },
+        cache: "no-store",
       },
       10_000
     );
 
-    if (!res.ok) return [];
+    if (!res.ok) {
+      await throwIfRateLimited(res);
+      return [];
+    }
     const json = await res.json();
     if (!Array.isArray(json.items)) return [];
     return json.items.map((item: any) => ({
@@ -166,7 +201,79 @@ export async function fetchMergedPRs(username: string, limit: number = 10): Prom
       repoName: item.repository_url.split('/').slice(-1)[0],
       mergedAt: item.closed_at,
     }));
-  } catch {
+  } catch (e) {
+    // A rate limit must not be flattened into "this user has none" — the result is
+    // persisted now, so that would cache an empty list as fresh for a full hour.
+    if (e instanceof Error && e.message === "RateLimit") throw e;
     return [];
   }
+}
+
+/**
+ * The GitHub user object. Previously defined inside the profile page; lifted here
+ * so the background snapshot sync can fetch exactly what the page renders, rather
+ * than a second, drifting copy of the same request.
+ */
+export interface GitHubUser {
+  login: string;
+  name: string | null;
+  bio: string | null;
+  avatar_url: string;
+  html_url: string;
+  public_repos: number;
+  followers: number;
+  following: number;
+  blog: string | null;
+  location: string | null;
+  twitter_username: string | null;
+}
+
+export async function fetchGitHubUser(username: string): Promise<GitHubUser | null> {
+  const res = await fetchWithTimeout(
+    `https://api.github.com/users/${username}`,
+    {
+      headers: { Accept: "application/vnd.github.v3+json" },
+      // The snapshot TTL in the DB is now the single source of freshness. A second,
+      // independent Next Data Cache in front of it would let a "stale" sync be served
+      // an hour-old response, so it is deliberately disabled here.
+      cache: "no-store",
+    },
+    10_000
+  );
+  if (!res.ok) {
+    try {
+      const err = await res.json();
+      if (err.message && err.message.toLowerCase().includes("rate limit")) {
+        throw new Error("RateLimit");
+      }
+    } catch (e) {
+      if (e instanceof Error && e.message === "RateLimit") throw e;
+    }
+    return null;
+  }
+
+  return res.json() as Promise<GitHubUser>;
+}
+
+export async function fetchGitHubRepos(username: string): Promise<GitHubRepoPayload[]> {
+  const res = await fetchWithTimeout(
+    `https://api.github.com/users/${username}/repos?sort=stars&per_page=100&type=owner`,
+    {
+      headers: { Accept: "application/vnd.github.mercy-preview+json" },
+      cache: "no-store",
+    },
+    10_000
+  );
+  if (!res.ok) {
+    // Previously this swallowed every non-OK response into an empty list. That was
+    // survivable when the page re-fetched on each render, but the result is now
+    // persisted, so a rate-limited response would cache an empty repo list as
+    // "fresh" for an hour. Surface it instead, so the sync declines to store it.
+    await throwIfRateLimited(res);
+    return [];
+  }
+  // Untyped JSON from the API boundary — assert the shape once, here, rather than
+  // leaking `any` into every consumer.
+  const repos = (await res.json()) as (GitHubRepoPayload & { fork: boolean })[];
+  return repos.filter((r) => !r.fork).slice(0, 6);
 }
