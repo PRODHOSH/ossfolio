@@ -19,6 +19,7 @@ import { ProfileActions } from "@/components/profile/ProfileActions";
 import { OrganizationSection } from "@/components/profile/OrganizationSection";
 import { ProfileReposSection } from "@/components/profile/ProfileReposSection";
 import { ProfileBadgeModal } from "@/components/profile/ProfileBadgeModal";
+import * as Tooltip from "@radix-ui/react-tooltip";
 
 // Code-split the contribution heatmap out of the initial ProfileView bundle.
 // ProfileView is a client component, so `ssr: false` is valid here; the heatmap
@@ -64,6 +65,15 @@ interface GitHubRepo {
   pushed_at?: string;
 }
 
+
+/** Full program names, shown on hover/focus — the badge itself only has room for the short name. */
+const PROGRAM_FULL_NAMES: Record<string, string> = {
+  GSoC: "Google Summer of Code",
+  GSSoC: "GirlScript Summer of Code",
+  SWoC: "Social Winter of Code",
+  Hacktoberfest: "Hacktoberfest",
+  EluSoC: "EduLinkUp Season of Code",
+};
 
 const PROGRAM_STYLING: Record<string, { gradient: string; text: string; bg: string }> = {
   GSSoC: {
@@ -919,6 +929,7 @@ export function ProfileView({
           {badgesList.length === 0 ? (
             <p style={{ fontSize: "13px", color: "var(--color-ink-mute)", margin: 0 }}>No badges claimed yet. Click &quot;Add badge&quot; to show your participation.</p>
           ) : (
+            <Tooltip.Provider delayDuration={200}>
             <div style={{ display: "flex", flexWrap: "wrap", gap: "10px" }}>
               {badgesList.map((badge) => {
                 if (!badge || !badge.program || !Array.isArray(badge.years)) return null;
@@ -927,9 +938,13 @@ export function ProfileView({
                   text: "#ffffff",
                   bg: "rgba(128, 128, 128, 0.1)",
                 };
+                const fullName = PROGRAM_FULL_NAMES[badge.program] ?? badge.program;
                 return (
+                  <Tooltip.Root key={badge.program}>
+                    <Tooltip.Trigger asChild>
                   <div
-                    key={badge.program}
+                    tabIndex={0}
+                    aria-label={fullName}
                     style={{
                       display: "inline-flex",
                       alignItems: "center",
@@ -970,9 +985,32 @@ export function ProfileView({
                       </button>
                     )}
                   </div>
+                    </Tooltip.Trigger>
+                    <Tooltip.Portal>
+                      <Tooltip.Content
+                        side="top"
+                        sideOffset={6}
+                        style={{
+                          padding: "6px 10px",
+                          borderRadius: "6px",
+                          fontSize: "12px",
+                          fontWeight: 500,
+                          lineHeight: 1.4,
+                          color: "var(--color-on-primary)",
+                          backgroundColor: "var(--color-ink)",
+                          boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+                          zIndex: 50,
+                        }}
+                      >
+                        {fullName}
+                        <Tooltip.Arrow style={{ fill: "var(--color-ink)" }} />
+                      </Tooltip.Content>
+                    </Tooltip.Portal>
+                  </Tooltip.Root>
                 );
               })}
             </div>
+            </Tooltip.Provider>
           )}
         </div>
       )}

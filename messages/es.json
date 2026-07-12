@@ -40,7 +40,10 @@
       "terms": "Términos",
       "license": "Licencia (MIT)"
     },
-    "ariaLabel": "Pie de página"
+    "ariaLabel": "Pie de página",
+    "copyEmail": "Copiar correo",
+    "emailCopied": "Correo copiado",
+    "copyEmailAria": "Copiar el correo de contacto {email} al portapapeles"
   },
   "LanguageSwitcher": {
     "label": "Idioma",

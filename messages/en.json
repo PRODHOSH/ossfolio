@@ -40,7 +40,10 @@
       "terms": "Terms",
       "license": "License (MIT)"
     },
-    "ariaLabel": "Site footer"
+    "ariaLabel": "Site footer",
+    "copyEmail": "Copy email",
+    "emailCopied": "Email copied",
+    "copyEmailAria": "Copy contact email {email} to clipboard"
   },
   "LanguageSwitcher": {
     "label": "Language",
