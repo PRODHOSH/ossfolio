@@ -15,7 +15,9 @@
     "closeMenu": "Close navigation menu",
     "toggleTheme": "Toggle theme",
     "switchToLight": "Switch to light mode",
-    "switchToDark": "Switch to dark mode"
+    "switchToDark": "Switch to dark mode",
+    "settings": "Settings",
+    "compare": "Compare Profiles"
   },
   "Footer": {
     "tagline": "Your open-source identity, beyond GitHub.",
