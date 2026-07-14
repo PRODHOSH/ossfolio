@@ -287,6 +287,31 @@ Examples: `feat/contribution-heatmap`, `fix/github-api-rate-limit`, `docs/supaba
 
 ---
 
+### Lint & Code Quality
+
+This project uses **ESLint** (flat config v9+) with `eslint-config-next` to enforce code quality.
+
+Run linting before submitting a PR:
+
+```bash
+npm run lint          # Check for issues
+npm run lint:fix      # Auto-fix where possible
+```
+
+The ESLint config is in `eslint.config.mjs` at the root. Key rules:
+- `no-console`: Warn on `console.log` (allow `warn`/`error`)
+- `prefer-const`: Error on `let` that is never reassigned
+- `no-unused-vars`: Warn on unused variables (ignore `_`-prefixed)
+- `no-duplicate-imports`: Error on duplicate imports
+
+TypeScript type-checking is also run in CI:
+
+```bash
+npm run type-check    # tsc --noEmit
+```
+
+---
+
 ## Commit Messages
 
 Follow [Conventional Commits](https://www.conventionalcommits.org/):
