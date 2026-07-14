@@ -15,11 +15,6 @@ function isAbortLikeError(err: unknown): boolean {
   return false;
 }
 
-export function isTimeoutError(err: unknown): boolean {
-  if (err instanceof FetchTimeoutError) return true;
-  return isAbortLikeError(err);
-}
-
 export async function fetchWithTimeout(
   input: RequestInfo | URL,
   init: RequestInit = {},

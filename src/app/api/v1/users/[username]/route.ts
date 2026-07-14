@@ -33,7 +33,33 @@ function withCors(res: NextResponse): NextResponse {
 const RATE_LIMIT_MAX = 60; // requests per window, per IP, per isolate
 const RATE_LIMIT_WINDOW_MS = 60_000;
 const RATE_LIMIT_MAX_KEYS = 10_000; // hard cap on tracked IPs to bound memory
-const rateHits = new Map<string, { count: number; resetAt: number }>();
+let rateHits: Map<string, { count: number; resetAt: number }> | null = null;
+
+function getRateHits(): Map<string, { count: number; resetAt: number }> {
+  if (!rateHits) {
+    rateHits = new Map();
+  }
+  return rateHits;
+}
+
+// Run periodic cleanup every 60 seconds in the background to evict stale
+// entries and keep heap growth bounded even under sustained traffic.
+let cleanupInterval: ReturnType<typeof setInterval> | null = null;
+function ensureCleanup(): void {
+  if (cleanupInterval) return;
+  cleanupInterval = setInterval(() => {
+    const hits = getRateHits();
+    if (hits.size === 0) return;
+    const now = Date.now();
+    for (const [key, value] of hits) {
+      if (now >= value.resetAt) hits.delete(key);
+    }
+  }, 60_000);
+  // Allow the process to exit even if the interval is still active.
+  if (typeof cleanupInterval === "object" && "unref" in cleanupInterval) {
+    cleanupInterval.unref();
+  }
+}
 
 function getClientIp(request: NextRequest): string {
   // Prefer the platform-set header (unspoofable on Cloudflare) so a client can't
@@ -48,23 +74,26 @@ function getClientIp(request: NextRequest): string {
 }
 
 function checkRateLimit(ip: string): { limited: boolean; retryAfter: number } {
+  ensureCleanup();
+
+  const hits = getRateHits();
   const now = Date.now();
 
-  // Opportunistically drop expired entries, then enforce a hard cap so a flood
-  // of many unique IPs can't grow the map without bound and OOM the isolate.
-  if (rateHits.size > RATE_LIMIT_MAX_KEYS) {
-    for (const [key, value] of rateHits) {
-      if (now >= value.resetAt) rateHits.delete(key);
+  // Prune expired entries, then enforce a hard cap so a flood of many unique
+  // IPs can't grow the map without bound and OOM the isolate.
+  if (hits.size > RATE_LIMIT_MAX_KEYS) {
+    for (const [key, value] of hits) {
+      if (now >= value.resetAt) hits.delete(key);
     }
     // Still at capacity after pruning: stop tracking new keys rather than grow.
-    if (rateHits.size > RATE_LIMIT_MAX_KEYS && !rateHits.has(ip)) {
+    if (hits.size > RATE_LIMIT_MAX_KEYS && !hits.has(ip)) {
       return { limited: true, retryAfter: Math.ceil(RATE_LIMIT_WINDOW_MS / 1000) };
     }
   }
 
-  const entry = rateHits.get(ip);
+  const entry = hits.get(ip);
   if (!entry || now >= entry.resetAt) {
-    rateHits.set(ip, { count: 1, resetAt: now + RATE_LIMIT_WINDOW_MS });
+    hits.set(ip, { count: 1, resetAt: now + RATE_LIMIT_WINDOW_MS });
     return { limited: false, retryAfter: 0 };
   }
 

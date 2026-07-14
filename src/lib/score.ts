@@ -69,12 +69,4 @@ export function calculateScore(stats: ContributorStats, repos: Repo[]): number {
   return breakdown.total;
 }
 
-/** Calculates the percentage difference relative to a baseline score. */
-export function getScoreDeltaPercentage(scoreA: number, scoreB: number): string {
-  if (scoreA === scoreB) return "0%";
-  const max = Math.max(scoreA, scoreB);
-  const min = Math.min(scoreA, scoreB);
-  const diff = max - min;
-  const percentage = (diff / (min || 1)) * 100;
-  return `+${percentage.toFixed(0)}%`;
-}
+

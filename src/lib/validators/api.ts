@@ -1,6 +1,4 @@
 import { NextResponse } from "next/server";
-import type { AppError } from "@/lib/errors";
-import { toApiErrorBody } from "@/lib/errors";
 
 export function sanitizeUsername(value: unknown): string | null {
   if (typeof value !== "string") return null;
@@ -90,6 +88,7 @@ export function createErrorResponse(
     },
   });
 }
+
 
 function errorCodeForStatus(status: number): string {
   switch (status) {

@@ -1,34 +1,91 @@
 import type { ContributorStats, Repo } from "@/types";
 import { redis } from "./redis";
-import { fetchWithTimeout } from "@/lib/fetch-with-timeout";
+import { fetchWithTimeout, FetchTimeoutError } from "@/lib/fetch-with-timeout";
 
 
 const GITHUB_GRAPHQL_URL = "https://api.github.com/graphql";
+
+const RETRY_CONFIG = {
+  maxRetries: 3,
+  baseDelayMs: 1_000,
+  maxDelayMs: 10_000,
+};
+
+async function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
 
 async function githubGraphQL<T>(
   query: string,
   variables: Record<string, unknown>,
   token: string
 ): Promise<T> {
-  const res = await fetchWithTimeout(
-    GITHUB_GRAPHQL_URL,
-    {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ query, variables }),
-      next: { revalidate: 3600 }, // fallback memory cache for 1 hour
-    },
-    10_000
-  );
+  let lastError: Error | null = null;
 
+  for (let attempt = 0; attempt <= RETRY_CONFIG.maxRetries; attempt++) {
+    try {
+      const res = await fetchWithTimeout(
+        GITHUB_GRAPHQL_URL,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ query, variables }),
+          next: { revalidate: 3600 },
+        },
+        10_000
+      );
 
-  if (!res.ok) throw new Error(`GitHub API error: ${res.status}`);
-  const json = await res.json();
-  if (json.errors) throw new Error(json.errors[0].message);
-  return json.data as T;
+      if (!res.ok) {
+        // 429 or 5xx — retryable
+        if (res.status === 429 || res.status >= 500) {
+          lastError = new Error(`GitHub API error: ${res.status}`);
+          if (attempt < RETRY_CONFIG.maxRetries) {
+            const delay = Math.min(
+              RETRY_CONFIG.baseDelayMs * 2 ** attempt,
+              RETRY_CONFIG.maxDelayMs
+            );
+            await sleep(delay);
+            continue;
+          }
+        }
+        throw new Error(`GitHub API error: ${res.status}`);
+      }
+
+      const json = await res.json();
+      if (json.errors) {
+        lastError = new Error(json.errors[0].message);
+        // Some GitHub errors are retryable (e.g. secondary rate limit)
+        if (attempt < RETRY_CONFIG.maxRetries) {
+          const delay = Math.min(
+            RETRY_CONFIG.baseDelayMs * 2 ** attempt,
+            RETRY_CONFIG.maxDelayMs
+          );
+          await sleep(delay);
+          continue;
+        }
+        throw lastError;
+      }
+      return json.data as T;
+    } catch (err) {
+      if (err instanceof FetchTimeoutError) {
+        lastError = err;
+        if (attempt < RETRY_CONFIG.maxRetries) {
+          const delay = Math.min(
+            RETRY_CONFIG.baseDelayMs * 2 ** attempt,
+            RETRY_CONFIG.maxDelayMs
+          );
+          await sleep(delay);
+          continue;
+        }
+      }
+      throw err;
+    }
+  }
+
+  throw lastError ?? new Error("GitHub API request failed after retries");
 }
 
 export const CONTRIBUTOR_QUERY = `
