@@ -4,6 +4,7 @@ import Script from "next/script";
 import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getMessages } from "next-intl/server";
 import { SkipToContent } from "@/components/layout/SkipToContent";
+import { PwaInitializer } from "@/components/ui/PwaInitializer";
 import "./globals.css";
 import { JsonLd } from "@/components/ui/json-ld";
 import { ThemeProvider } from "@/context/ThemeContext";
@@ -33,6 +34,14 @@ export const metadata: Metadata = {
     icon: "/logo.png",
     shortcut: "/logo.png",
     apple: "/logo.png",
+  },
+
+  manifest: "/manifest.json",
+
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "OSSfolio",
   },
 
   openGraph: {
@@ -141,6 +150,7 @@ export default async function RootLayout({
         <NextIntlClientProvider locale={locale} messages={messages}>
           <ThemeProvider>
             <SkipToContent />
+            <PwaInitializer />
             <EnvValidationBanner />
             {children}
           </ThemeProvider>
