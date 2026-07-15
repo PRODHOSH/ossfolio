@@ -14,28 +14,12 @@ function warningMissingEnv() {
   }
 }
 
-// Connection pool sizing — the Supabase JS client uses HTTP keep-alive under
-// the hood, so these options control connection-level behaviour at the
-// transport layer. The pool settings here are tuned for a serverless edge
-// environment where short-lived, bursty connections are the norm.
-const POOL_CONFIG = {
-  db: {
-    pool: {
-      min: 0,
-      max: 5,
-      acquireTimeoutMillis: 10_000,
-      createTimeoutMillis: 5_000,
-      idleTimeoutMillis: 30_000,
-    },
-  },
-};
-
 let client: SupabaseClient | null = null;
 
 export function getSupabase(): SupabaseClient {
   if (!client) {
     warningMissingEnv();
-    client = createClient(supabaseUrl, supabaseAnonKey, POOL_CONFIG);
+    client = createClient(supabaseUrl, supabaseAnonKey);
   }
   return client;
 }
@@ -45,5 +29,5 @@ export const supabase = getSupabase();
 export function supabaseAdmin(): SupabaseClient {
   warningMissingEnv();
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || "placeholder-service-key";
-  return createClient(supabaseUrl, serviceKey, POOL_CONFIG);
+  return createClient(supabaseUrl, serviceKey);
 }
