@@ -11,8 +11,10 @@ export function useVisibility(
 ) {
   const visibleRef = useRef(onVisible);
   const hiddenRef = useRef(onHidden);
-  visibleRef.current = onVisible;
-  hiddenRef.current = onHidden;
+  useEffect(() => {
+    visibleRef.current = onVisible;
+    hiddenRef.current = onHidden;
+  });
 
   useEffect(() => {
     if (typeof document === "undefined") return;
