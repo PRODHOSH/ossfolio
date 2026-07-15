@@ -3,6 +3,7 @@
 import type { MergedPR, BadgeItem } from "@/types";
 import { useMemo, useState } from "react";
 
+
 interface TimelineEvent {
   id: string;
   type: "first_pr" | "pr" | "badge";
@@ -309,7 +310,41 @@ export function ContributionTimeline({ mergedPRs, badges = [] }: ContributionTim
           </button>
         </div>
       )}
-      {sortedEvents.length === 0 ? null : null}
+      {sortedEvents.length === 0 ? (
+     <div
+       style={{
+        marginTop: "16px",
+        padding: "32px",
+        border: "1px solid var(--color-hairline)",
+        borderRadius: "12px",
+        backgroundColor: "var(--color-canvas)",
+        textAlign: "center",
+        color: "var(--color-ink-mute)",
+        boxShadow: "0 1px 3px rgba(0,0,0,0.06)",
+      }}
+    >
+      <p
+        style={{
+          margin: 0,
+          fontSize: "16px",
+         fontWeight: 500,
+           color: "var(--color-ink)",
+         }}
+       >
+         No contribution activity yet
+       </p>
+     <p
+       style={{
+         marginTop: "8px",
+           fontSize: "13px",
+           lineHeight: 1.45,
+           color: "var(--color-ink-mute)",
+         }}
+       >
+         Your merged pull requests will appear here as you contribute.
+       </p>
+     </div>
+ ) : null}
     </section>
   );
 }

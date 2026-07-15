@@ -6,9 +6,25 @@ interface LatestMergedPRsProps {
 
 export function LatestMergedPRs({ mergedPRs }: LatestMergedPRsProps) {
   if (!mergedPRs || mergedPRs.length === 0) {
-    return null;
+     return (
+      <section style={{ marginTop: '32px' }}>
+        <h2 style={{ fontSize: '16px', fontWeight: 600, color: 'var(--color-ink)', margin: 0, marginBottom: '12px' }}>
+          Latest Merged Pull Requests
+        </h2>
+        <div style={{ 
+          padding: "16px", 
+          border: "1px solid var(--color-hairline)", 
+          borderRadius: "6px",
+          color: "var(--color-ink-mute)",
+          fontSize: "13px",
+          backgroundColor: "var(--color-canvas-soft)"
+        }}>
+          No merged pull requests found.
+        </div>
+      </section>
+    );
+  
   }
-
   return (
     <section style={{ marginTop: '32px' }}>
       <h2 style={{ fontSize: '16px', fontWeight: 600, color: 'var(--color-ink)', margin: 0, marginBottom: '12px' }}>
