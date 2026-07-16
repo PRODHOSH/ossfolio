@@ -252,6 +252,7 @@ Everyone who has helped build OSSfolio — code, design, docs, ideas, all of it.
     </tr>
     <tr>
       <td align="center" valign="top" width="14.28%"><a href="http://www.houssemeddinechaouch.me"><img src="https://avatars.githubusercontent.com/u/121398886?v=4?s=100" width="100px;" alt="Houssem Eddine Chaouch"/><br /><sub><b>Houssem Eddine Chaouch</b></sub></a><br /><a href="https://github.com/PRODHOSH/ossfolio/commits?author=HoussemEddineChaouch" title="Code">💻</a> <a href="#design-HoussemEddineChaouch" title="Design">🎨</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/anushka17jaiswal"><img src="https://avatars.githubusercontent.com/u/243538993?v=4?s=100" width="100px;" alt="ANUSHKA JAISWAL"/><br /><sub><b>ANUSHKA JAISWAL</b></sub></a><br /><a href="https://github.com/PRODHOSH/ossfolio/commits?author=anushka17jaiswal" title="Code">💻</a> <a href="#design-anushka17jaiswal" title="Design">🎨</a></td>
     </tr>
   </tbody>
 </table>
