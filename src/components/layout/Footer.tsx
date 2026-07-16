@@ -4,6 +4,7 @@ import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
+import { useThemeContext } from "@/context/ThemeContext";
 
 /**
  * Contact address surfaced in the footer. Defined as a constant so it lives in
@@ -41,6 +42,8 @@ const linkSections = [
 
 export function Footer() {
   const [copied, setCopied] = useState(false);
+  const { theme } = useThemeContext();
+  const isDarkMode = theme === "dark";
   const t = useTranslations("Footer");
   const tSections = useTranslations("Footer.sections");
   const tLinks = useTranslations("Footer.links");
@@ -69,10 +72,15 @@ export function Footer() {
             <Link href="/" style={{ display: "flex", alignItems: "center", gap: "8px", textDecoration: "none" }}>
               <Image
                 src="/logo.png"
-                alt=""
+                alt="OSSfolio logo"
                 width={24}
                 height={24}
-                style={{ borderRadius: "6px", flexShrink: 0 }}
+                style={{
+                  borderRadius: "6px",
+                  flexShrink: 0,
+                  filter: isDarkMode ? "brightness(0) invert(1)" : "none",
+                  transition: "filter 0.2s ease",
+                }}
               />
               <span style={{ display: "flex", alignItems: "baseline" }}>
                 <span style={{ fontSize: "14px", fontWeight: 600, color: "var(--color-ink)", transition: "color 0.2s ease" }}>OSS</span>
@@ -231,7 +239,12 @@ export function Footer() {
               alt="PRODHOSH V.S"
               width={22}
               height={22}
-              style={{ borderRadius: "9999px", border: "1px solid var(--color-hairline)", transition: "border-color 0.2s ease" }}
+              style={{
+                borderRadius: "9999px",
+                border: "1px solid var(--color-hairline)",
+                transition: "border-color 0.2s ease, filter 0.2s ease",
+                filter: isDarkMode ? "brightness(0.95) contrast(1.05)" : "none",
+              }}
             />
             <span 
               className="author-name"
@@ -244,4 +257,4 @@ export function Footer() {
       </div>
     </footer>
   );
-}
+}"
