@@ -4,7 +4,6 @@ import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import Image from "next/image";
 import dynamic from "next/dynamic";
 import { AnimatePresence, motion } from "framer-motion";
-import type { MergedPR } from '@/types';
 import { LatestMergedPRs } from '@/components/profile/LatestMergedPRs';
 import { ContributionTimeline } from '@/components/profile/ContributionTimeline';
 import Link from "next/link";
@@ -15,7 +14,7 @@ import { useVisibility } from "@/hooks/useVisibility";
 import { SkeletonCard } from "@/components/ui/skeleton-card";
 import { evaluateAchievements, countUnlocked } from "@/lib/achievements";
 import { AchievementsGrid } from "@/components/profile/AchievementsGrid";
-import type { ContributorStats, Org, TechEntry, HeatmapWeek, BadgeItem } from "@/types";
+import type { ContributorStats, Org, TechEntry, HeatmapWeek, BadgeItem, MergedPR } from "@/types";
 import { toPng } from "html-to-image";
 import { supabase } from "@/lib/supabase";
 import { LANG_COLORS } from "@/lib/languages";
@@ -849,6 +848,7 @@ export function ProfileView({
             <ProfileActions
               username={user.login}
               score={score}
+              stats={stats}
               isRefreshing={isRefreshing}
               onRefresh={handleRefresh}
             />

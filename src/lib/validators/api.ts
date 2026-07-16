@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { AppError, toApiErrorBody } from "@/lib/errors";
 
 export function sanitizeUsername(value: unknown): string | null {
   if (typeof value !== "string") return null;

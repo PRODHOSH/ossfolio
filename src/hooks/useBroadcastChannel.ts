@@ -16,7 +16,9 @@ export function useBroadcastChannel<T = unknown>(
   onMessage: MessageHandler<T>
 ) {
   const handlerRef = useRef<MessageHandler<T>>(onMessage);
-  handlerRef.current = onMessage;
+  useEffect(() => {
+    handlerRef.current = onMessage;
+  });
 
   useEffect(() => {
     if (typeof BroadcastChannel === "undefined") return;

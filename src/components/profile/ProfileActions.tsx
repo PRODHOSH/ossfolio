@@ -1,16 +1,19 @@
 "use client";
 
 import { useState } from "react";
+import type { ContributorStats } from "@/types";
 
 interface ProfileActionsProps {
   username: string;
   score: number;
+  stats: ContributorStats;
   isRefreshing: boolean;
   onRefresh: () => Promise<void>;
 }
 
-export function ProfileActions({ username, score, isRefreshing, onRefresh }: ProfileActionsProps) {
+export function ProfileActions({ username, score, stats, isRefreshing, onRefresh }: ProfileActionsProps) {
   const [copied, setCopied] = useState(false);
+  const [copiedMarkdown, setCopiedMarkdown] = useState(false);
   const [refreshState, setRefreshState] = useState<"idle" | "loading" | "success" | "error">("idle");
 
   const btnBase: React.CSSProperties = {
@@ -46,6 +49,25 @@ export function ProfileActions({ username, score, isRefreshing, onRefresh }: Pro
       setTimeout(() => setCopied(false), 2000);
     } catch (err) {
       console.error("Copy to clipboard failed:", err);
+    }
+  };
+
+  const handleCopyMarkdown = async () => {
+    const profileUrl = `${window.location.origin}/${username}`;
+    const markdown = [
+      `[![OSSfolio Score](https://img.shields.io/badge/OSSfolio_Score-${score}-6366f1?style=flat-square)](${profileUrl})`,
+      `[![Commits](https://img.shields.io/badge/Commits-${stats.totalCommits}-2da44e?style=flat-square)](${profileUrl})`,
+      `[![PRs](https://img.shields.io/badge/PRs-${stats.totalPRs}-7057ff?style=flat-square)](${profileUrl})`,
+      `[![Issues](https://img.shields.io/badge/Issues-${stats.totalIssues}-fb8f44?style=flat-square)](${profileUrl})`,
+      `[![Reviews](https://img.shields.io/badge/Reviews-${stats.totalReviews}-0075ca?style=flat-square)](${profileUrl})`
+    ].join(" ");
+
+    try {
+      await navigator.clipboard.writeText(markdown);
+      setCopiedMarkdown(true);
+      setTimeout(() => setCopiedMarkdown(false), 2000);
+    } catch (err) {
+      console.error("Copy markdown to clipboard failed:", err);
     }
   };
 
@@ -125,6 +147,34 @@ export function ProfileActions({ username, score, isRefreshing, onRefresh }: Pro
               <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
             </svg>
             Copy link
+          </>
+        )}
+      </button>
+
+      <button
+        type="button"
+        onClick={handleCopyMarkdown}
+        style={{
+          ...btnBase,
+          color: copiedMarkdown ? "#3ecf8e" : "var(--color-ink)",
+          borderColor: copiedMarkdown ? "#3ecf8e" : "var(--color-hairline-strong)",
+        }}
+        aria-label="Copy profile stats markdown badge code to clipboard"
+      >
+        {copiedMarkdown ? (
+          <>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
+              <polyline points="20 6 9 17 4 12" />
+            </svg>
+            Markdown Copied!
+          </>
+        ) : (
+          <>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <polyline points="16 18 22 12 16 6" />
+              <polyline points="8 6 2 12 8 18" />
+            </svg>
+            Copy Markdown
           </>
         )}
       </button>
