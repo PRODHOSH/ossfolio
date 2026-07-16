@@ -23,13 +23,17 @@ interface ContributionTimelineProps {
 export function ContributionTimeline({ mergedPRs, badges = [] }: ContributionTimelineProps) {
   const PAGE_SIZE = 10;
 
+  const mergedOnlyPRs = useMemo(() => {
+    return (mergedPRs || []).filter((pr) => !pr.state || pr.state === "merged");
+  }, [mergedPRs]);
+
   // 1. Gather and construct timeline events
   const events: TimelineEvent[] = [];
 
   // Parse PR events
-  if (mergedPRs && mergedPRs.length > 0) {
+  if (mergedOnlyPRs && mergedOnlyPRs.length > 0) {
     // Sort PRs chronologically ascending (oldest first) to find the absolute oldest retrieved PR
-    const sortedAscPRs = [...mergedPRs].sort(
+    const sortedAscPRs = [...mergedOnlyPRs].sort(
       (a, b) => new Date(a.mergedAt).getTime() - new Date(b.mergedAt).getTime()
     );
 

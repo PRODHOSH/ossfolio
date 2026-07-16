@@ -158,7 +158,7 @@ export async function GET(
   }
 
   const mergedPRs: MergedPR[] = (snapshot.mergedPRs ?? [])
-    .filter((pr) => pr && typeof pr.url === "string" && typeof pr.title === "string")
+    .filter((pr) => pr && typeof pr.url === "string" && typeof pr.title === "string" && (!pr.state || pr.state === "merged"))
     .slice(0, MAX_ITEMS);
 
   const displayName = user.name || username;

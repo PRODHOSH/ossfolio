@@ -176,9 +176,9 @@ export async function fetchOrganizations(username: string): Promise<Org[]> {
   }
 }
 
-/** Fetch recent merged pull requests for a user */
-export async function fetchMergedPRs(username: string, limit: number = 10): Promise<MergedPR[]> {
-  const query = `search/issues?q=author:${encodeURIComponent(username)}+type:pr+is:merged&sort=updated&order=desc&per_page=${limit}`;
+/** Fetch recent pull requests for a user, containing all states */
+export async function fetchMergedPRs(username: string, limit: number = 30): Promise<MergedPR[]> {
+  const query = `search/issues?q=author:${encodeURIComponent(username)}+type:pr&sort=updated&order=desc&per_page=${limit}`;
   try {
     const res = await fetchWithTimeout(
       `https://api.github.com/${query}`,
@@ -195,12 +195,18 @@ export async function fetchMergedPRs(username: string, limit: number = 10): Prom
     }
     const json = await res.json();
     if (!Array.isArray(json.items)) return [];
-    return json.items.map((item: any) => ({
-      title: item.title,
-      url: item.html_url,
-      repoName: item.repository_url.split('/').slice(-1)[0],
-      mergedAt: item.closed_at,
-    }));
+    return json.items.map((item: any) => {
+      const isMerged = !!item.pull_request?.merged_at;
+      const prState = item.state === "open" ? "open" : (isMerged ? "merged" : "closed");
+      return {
+        title: item.title,
+        url: item.html_url,
+        repoName: item.repository_url.split('/').slice(-1)[0],
+        mergedAt: item.pull_request?.merged_at || item.closed_at || item.created_at,
+        state: prState,
+        createdAt: item.created_at,
+      };
+    });
   } catch (e) {
     // A rate limit must not be flattened into "this user has none" — the result is
     // persisted now, so that would cache an empty list as fresh for a full hour.
