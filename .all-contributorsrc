@@ -281,6 +281,16 @@
       "contributions": [
         "code"
       ]
+    },
+    {
+      "login": "HoussemEddineChaouch",
+      "name": "Houssem Eddine Chaouch",
+      "avatar_url": "https://avatars.githubusercontent.com/u/121398886?v=4",
+      "profile": "http://www.houssemeddinechaouch.me",
+      "contributions": [
+        "code",
+        "design"
+      ]
     }
   ],
   "contributionTypes": [

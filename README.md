@@ -250,6 +250,9 @@ Everyone who has helped build OSSfolio — code, design, docs, ideas, all of it.
       <td align="center" valign="top" width="14.28%"><a href="https://alimahmoud-dev.vercel.app/"><img src="https://avatars.githubusercontent.com/u/127209252?v=4?s=100" width="100px;" alt="Ali Mahmmoud"/><br /><sub><b>Ali Mahmmoud</b></sub></a><br /><a href="https://github.com/PRODHOSH/ossfolio/commits?author=AliMahmoudDev" title="Code">💻</a></td>
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/asiya2123"><img src="https://avatars.githubusercontent.com/u/228271347?v=4?s=100" width="100px;" alt="Shaik Asiya "/><br /><sub><b>Shaik Asiya </b></sub></a><br /><a href="https://github.com/PRODHOSH/ossfolio/commits?author=asiya2123" title="Code">💻</a></td>
     </tr>
+    <tr>
+      <td align="center" valign="top" width="14.28%"><a href="http://www.houssemeddinechaouch.me"><img src="https://avatars.githubusercontent.com/u/121398886?v=4?s=100" width="100px;" alt="Houssem Eddine Chaouch"/><br /><sub><b>Houssem Eddine Chaouch</b></sub></a><br /><a href="https://github.com/PRODHOSH/ossfolio/commits?author=HoussemEddineChaouch" title="Code">💻</a> <a href="#design-HoussemEddineChaouch" title="Design">🎨</a></td>
+    </tr>
   </tbody>
 </table>
 
