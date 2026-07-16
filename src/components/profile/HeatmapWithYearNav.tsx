@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, memo, useMemo } from "react";
+import { useState, useCallback, memo, useMemo, useEffect, useRef } from "react";
 import type { HeatmapWeek } from "@/types";
 import { computeStreaks } from "@/lib/mock";
 
@@ -134,6 +134,10 @@ function HeatmapWithYearNavInner({
 
   const fetchYear = useCallback(
     async (year: number) => {
+      if (typeof window !== "undefined") {
+        localStorage.setItem("heatmap_selected_year", String(year));
+      }
+
       if (year === selectedYear && weeks.length > 0) return;
       if (year === currentYear && initialWeeks.length > 0) {
         setWeeks(initialWeeks);
@@ -158,6 +162,24 @@ function HeatmapWithYearNavInner({
     },
     [username, selectedYear, weeks.length, initialWeeks],
   );
+
+  const hasInitialized = useRef(false);
+
+  useEffect(() => {
+    if (hasInitialized.current) return;
+    hasInitialized.current = true;
+
+    const savedYearStr = localStorage.getItem("heatmap_selected_year");
+    if (savedYearStr) {
+      const savedYear = parseInt(savedYearStr, 10);
+      if (years.includes(savedYear) && savedYear !== currentYear) {
+        const timer = setTimeout(() => {
+          fetchYear(savedYear);
+        }, 0);
+        return () => clearTimeout(timer);
+      }
+    }
+  }, [fetchYear]);
 
   const displayedWeeks = useMemo(() => {
     return getFilteredWeeks(
