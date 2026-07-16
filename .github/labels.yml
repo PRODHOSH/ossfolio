@@ -64,3 +64,8 @@
 - name: "invalid"
   color: "e4e669"
   description: "This doesn't seem right"
+
+- name: "stale"
+  color: "6e7681"
+  description: "Extra attention needed — stale and inactive"
+
