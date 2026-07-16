@@ -211,6 +211,39 @@ export function SettingsClient() {
         <p style={{ fontSize: "12px", color: "var(--color-ink-mute-2)", marginTop: "4px" }}>
           {settings.headline.length}/160 characters
         </p>
+        <div
+  style={{
+    marginTop: "16px",
+    padding: "16px",
+    border: "1px solid var(--color-hairline)",
+    borderRadius: "8px",
+    backgroundColor: "var(--color-canvas-soft)",
+  }}
+>
+  <p
+    style={{
+      fontSize: "12px",
+      fontWeight: 600,
+      color: "var(--color-ink-mute)",
+      margin: "0 0 8px 0",
+    }}
+  >
+    Live Preview
+  </p>
+
+  <p
+    style={{
+      fontSize: "14px",
+      color: "var(--color-ink)",
+      lineHeight: 1.55,
+      margin: 0,
+    }}
+  >
+    {settings.headline.trim()
+      ? settings.headline
+      : "Your GitHub bio will appear here if no custom headline is set."}
+  </p>
+</div>
       </div>
 
       <div style={sectionStyle}>
