@@ -172,18 +172,18 @@ function HeatmapWithYearNavInner({
     if (hasInitialized.current) return;
     hasInitialized.current = true;
 
-    const savedYearStr = localStorage.getItem("heatmap_selected_year");
-    if (savedYearStr) {
-      const savedYear = parseInt(savedYearStr, 10);
-      if (years.includes(savedYear) && savedYear !== currentYear) {
-        const timer = setTimeout(() => {
+    try {
+      const savedYearStr = localStorage.getItem("heatmap_selected_year");
+      if (savedYearStr) {
+        const savedYear = parseInt(savedYearStr, 10);
+        if (years.includes(savedYear) && savedYear !== currentYear) {
           fetchYear(savedYear);
-        }, 0);
-        return () => clearTimeout(timer);
+        }
       }
+    } catch {
+      // Ignore errors from blocked storage access
     }
   }, [fetchYear]);
-
   const displayedWeeks = useMemo(() => {
     return getFilteredWeeks(
       weeks,
