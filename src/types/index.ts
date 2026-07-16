@@ -63,10 +63,12 @@ export interface BadgeItem {
   years: number[];
 }
 
-/** Represents a merged pull request */
+/** Represents a pull request and its status */
 export interface MergedPR {
   title: string;
   url: string;
   repoName: string;
   mergedAt: string;
+  state?: "open" | "closed" | "merged";
+  createdAt?: string;
 }
