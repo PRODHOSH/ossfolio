@@ -458,6 +458,7 @@ export function ProfileView({
   rateLimited,
   mergedPRs,
   customLinks = [],
+  pinnedRepos = [],
   customizationLoaded = false,
   repoSectionTitle, // <-- NEW: Added this prop
 }: {
@@ -468,6 +469,7 @@ export function ProfileView({
   {
     rateLimited?: boolean;
     customLinks?: Array<{ label: string; url: string }>;
+    pinnedRepos?: string[];
     customizationLoaded?: boolean;
     repoSectionTitle?: string; // <-- NEW: Added to TypeScript definitions
   }) {
@@ -488,6 +490,17 @@ export function ProfileView({
   const [repoFilter, setRepoFilter] = useState("");
   const [activeLanguage, setActiveLanguage] = useState<string>("All");
   const [activeTab, setActiveTab] = useState<"repos" | "stats" | "prs" | "timeline">("repos");
+  const [pinnedList, setPinnedList] = useState<string[]>(pinnedRepos);
+  const [pinningRepo, setPinningRepo] = useState<string | null>(null);
+  // Sync local pinned state when the prop changes (e.g. after a background refresh), using React's
+  // "adjust state during render" pattern rather than an effect — it avoids an extra render pass and
+  // the cascading-render the effect-based approach triggers.
+  const [prevPinnedProp, setPrevPinnedProp] = useState<string[]>(pinnedRepos);
+  if (prevPinnedProp !== pinnedRepos) {
+    setPrevPinnedProp(pinnedRepos);
+    setPinnedList(pinnedRepos);
+  }
+  const MAX_PINNED = 6;
 
   const profileTabs = [
     { key: "repos" as const, label: "Repos" },
@@ -543,15 +556,19 @@ export function ProfileView({
   }, [repos]);
 
   const filteredRepos = useMemo(() => {
+    const pinnedSet = new Set(pinnedList);
     return [...repos]
       .sort((a, b) => {
+        const aPinned = pinnedSet.has(a.name);
+        const bPinned = pinnedSet.has(b.name);
+        if (aPinned !== bPinned) return aPinned ? -1 : 1;
         if (repoSort === "forks") return b.forks_count - a.forks_count;
         if (repoSort === "updated") return (b.pushed_at || "").localeCompare(a.pushed_at || "");
         return b.stargazers_count - a.stargazers_count;
       })
       .filter((repo) => !repoFilter || repo.name.toLowerCase().includes(repoFilter.toLowerCase()) || (repo.description || "").toLowerCase().includes(repoFilter.toLowerCase()))
       .filter((repo) => activeLanguage === "All" || repo.language === activeLanguage);
-  }, [repos, repoSort, repoFilter, activeLanguage]);
+  }, [repos, repoSort, repoFilter, activeLanguage, pinnedList]);
 
   const focusSearch = useCallback(() => searchRef.current?.focus(), []);
   useKeyboardShortcuts({ onSlash: focusSearch });
@@ -729,6 +746,50 @@ export function ProfileView({
     }
   };
 
+
+    const handleTogglePin = async (repoName: string) => {
+      // Single-flight: block all toggles while one PUT is in flight, so two quick clicks on different
+      // cards can't race — overlapping requests could otherwise land out of order and persist a stale list.
+      if (pinningRepo !== null) return;
+      const isPinned = pinnedList.includes(repoName);
+      if (!isPinned && pinnedList.length >= MAX_PINNED) {
+        alert(`You can pin up to ${MAX_PINNED} repositories.`);
+        return;
+      }
+      const next = isPinned
+        ? pinnedList.filter((name) => name !== repoName)
+        : [...pinnedList, repoName];
+      const previous = pinnedList;
+      setPinnedList(next);
+      setPinningRepo(repoName);
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        const token = session?.access_token;
+        if (!token) {
+          setPinnedList(previous);
+          alert("Please sign in again to update pinned repositories.");
+          return;
+        }
+        const resp = await fetch("/api/settings", {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ pinned_repos: next }),
+        });
+        if (!resp.ok) {
+          setPinnedList(previous);
+          alert("Failed to update pinned repositories. Please try again.");
+        }
+      } catch (err) {
+        setPinnedList(previous);
+        console.error("Error updating pinned repositories:", err);
+        alert("Failed to update pinned repositories. Please try again.");
+      } finally {
+        setPinningRepo(null);
+      }
+    };
   const scrollToTop = () =>
     window.scrollTo({ top: 0, behavior: "smooth" });
 
@@ -1217,31 +1278,36 @@ export function ProfileView({
               </div>
             ) : (
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: "16px" }}>
-                {filteredRepos.map((repo) => (
-                  <a
-                    key={repo.id}
-                    href={repo.html_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    style={{
-                      display: "flex",
-                      flexDirection: "column",
-                      gap: "8px",
-                      padding: "20px",
-                      border: "1px solid var(--color-hairline)",
-                      borderRadius: "12px",
-                      textDecoration: "none",
-                      backgroundColor: "var(--color-canvas-soft)",
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.borderColor = "var(--color-hairline-strong)";
-                      e.currentTarget.style.boxShadow = "0 1px 3px rgba(0,0,0,0.12)";
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.borderColor = "var(--color-hairline)";
-                      e.currentTarget.style.boxShadow = "none";
-                    }}
-                  >
+                {filteredRepos.map((repo) => {
+                  const isPinnedRepo = pinnedList.includes(repo.name);
+                  return (
+                  <div key={repo.id} style={{ position: "relative", display: "flex" }}>
+                    <a
+                      href={repo.html_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: "8px",
+                        padding: "20px",
+                        paddingTop: isOwner ? "44px" : "20px",
+                        width: "100%",
+                        border: isPinnedRepo ? "1px solid var(--color-primary)" : "1px solid var(--color-hairline)",
+                        boxShadow: isPinnedRepo ? "0 0 0 1px var(--color-primary)" : "none",
+                        borderRadius: "12px",
+                        textDecoration: "none",
+                        backgroundColor: "var(--color-canvas-soft)",
+                      }}
+                      onMouseEnter={(e) => {
+                        if (!isPinnedRepo) e.currentTarget.style.borderColor = "var(--color-hairline-strong)";
+                        e.currentTarget.style.boxShadow = isPinnedRepo ? "0 0 0 1px var(--color-primary), 0 1px 3px rgba(0,0,0,0.12)" : "0 1px 3px rgba(0,0,0,0.12)";
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.borderColor = isPinnedRepo ? "var(--color-primary)" : "var(--color-hairline)";
+                        e.currentTarget.style.boxShadow = isPinnedRepo ? "0 0 0 1px var(--color-primary)" : "none";
+                      }}
+                    >
                     <p style={{ fontSize: "14px", fontWeight: 600, color: "var(--color-ink)", margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                       {repo.name}
                     </p>
@@ -1293,8 +1359,48 @@ export function ProfileView({
                         {repo.forks_count.toLocaleString("en-US")}
                       </span>
                     </div>
-                  </a>
-                ))}
+                    </a>
+                    {isOwner && (
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          handleTogglePin(repo.name);
+                        }}
+                        disabled={pinningRepo !== null}
+                        aria-pressed={isPinnedRepo}
+                        aria-label={isPinnedRepo ? `Unpin ${repo.name}` : `Pin ${repo.name}`}
+                        title={isPinnedRepo ? "Unpin from profile" : "Pin to profile"}
+                        style={{
+                          position: "absolute",
+                          top: "12px",
+                          right: "12px",
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "4px",
+                          padding: "4px 10px",
+                          fontSize: "12px",
+                          fontWeight: 600,
+                          color: isPinnedRepo ? "var(--color-on-primary)" : "var(--color-ink-mute)",
+                          backgroundColor: isPinnedRepo ? "var(--color-primary)" : "var(--color-canvas)",
+                          border: isPinnedRepo ? "none" : "1px solid var(--color-hairline)",
+                          borderRadius: "9999px",
+                          cursor: pinningRepo !== null ? "default" : "pointer",
+                          opacity: pinningRepo !== null ? 0.6 : 1,
+                          zIndex: 1,
+                        }}
+                      >
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill={isPinnedRepo ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2">
+                          <line x1="12" y1="17" x2="12" y2="22" />
+                          <path d="M5 17h14l-1.5-4.5a2 2 0 0 1 .5-2L20 8a2 2 0 0 0-1.4-3.4H5.4A2 2 0 0 0 4 8l1.9 2.5a2 2 0 0 1 .5 2z" />
+                        </svg>
+                        {isPinnedRepo ? "Pinned" : "Pin"}
+                      </button>
+                    )}
+                  </div>
+                  );
+                })}
               </div>
             )}
 
