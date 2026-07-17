@@ -76,7 +76,7 @@ export function Footer() {
                 width={24}
                 height={24}
                 style={{
-                  borderRadius: "6px",
+                  borderRadius: "var(--radius-sm)",
                   flexShrink: 0,
                   filter: isDarkMode ? "brightness(0) invert(1)" : "none",
                   transition: "filter 0.2s ease",
@@ -257,4 +257,4 @@ export function Footer() {
       </div>
     </footer>
   );
-}"
+}

@@ -180,7 +180,7 @@ export function Navbar({ onSignIn, onGetStarted }: NavbarProps) {
             height={28}
             priority
             style={{
-              borderRadius: "6px",
+              borderRadius: "var(--radius-sm)",
               flexShrink: 0,
               filter: isDarkMode ? "brightness(0) invert(1)" : "none",
               transition: "filter 0.2s ease",
