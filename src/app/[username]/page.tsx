@@ -19,7 +19,7 @@ import {
 import { ProfileSyncing } from "@/components/profile/ProfileSyncing";
 import { after } from "next/server";
 import { generateMockHeatmap, computeStreaks } from "@/lib/mock";
-import { fetchContributionCalendar } from "@/lib/github";
+import { fetchContributionCalendar, fetchContributorProfile } from "@/lib/github";
 import { calculateScore } from "@/lib/score";
 import { supabase } from "@/lib/supabase";
 
@@ -151,12 +151,11 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
   }
 
   const profileUser = user!;
+  
+  // Keep original full repos for accurate tech stack and score calculations
   const mappedRepos = mapRepos(repos);
   const techStack = deriveTechStack(repos);
 
-  // Heatmap calculation — use the user's real contribution calendar parsed from
-  // GitHub's public endpoint. If that request failed (network error, rate limit,
-  // markup change), fall back to the seeded placeholder so the page still renders.
   const { weeks: heatmap, totalContributions } = contributionCalendar
     ? contributionCalendar
     : generateMockHeatmap(username);
@@ -166,6 +165,34 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
 
   const stats = { ...liveStats, totalContributions };
   const liveScore = calculateScore(stats, mappedRepos);
+
+  // --- NEW: Fetch GraphQL profile specifically for Pinned Repos ---
+  let pinnedReposRaw: any[] = [];
+  try {
+    const token = process.env.GITHUB_TOKEN || process.env.GITHUB_API_TOKEN || "";
+    if (token) {
+      const gqlProfile = await fetchContributorProfile(username, token);
+      if (gqlProfile?.pinnedItems?.nodes?.length > 0) {
+        // Map GraphQL shape to match REST API shape expected by ProfileView
+        pinnedReposRaw = gqlProfile.pinnedItems.nodes.map((n: any) => ({
+          name: n.name,
+          description: n.description,
+          stargazers_count: n.stargazerCount,
+          forks_count: n.forkCount,
+          language: n.primaryLanguage?.name || null,
+          html_url: n.url,
+          topics: [],
+        }));
+      }
+    }
+  } catch (err) {
+    console.error(`Failed to fetch pinned repos for ${username}:`, err);
+  }
+
+  // Fallback Logic
+  const displayRepos = pinnedReposRaw.length > 0 ? pinnedReposRaw : repos;
+  const repoSectionTitle = pinnedReposRaw.length > 0 ? "Pinned repositories" : "Popular repositories";
+  // ----------------------------------------------------------------
 
   let score = liveScore;
   let updatedAt: string | null = null;
@@ -275,7 +302,8 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
       >
         <ProfileView
           user={profileUser}
-          repos={repos}
+          repos={displayRepos}
+          repoSectionTitle={repoSectionTitle}
           stats={stats}
           techStack={techStack}
           orgs={orgs}
