@@ -21,7 +21,7 @@ import { after } from "next/server";
 import { generateMockHeatmap, computeStreaks } from "@/lib/mock";
 import { fetchContributionCalendar } from "@/lib/github";
 import { calculateScore } from "@/lib/score";
-import { supabase } from "@/lib/supabase";
+import { getProfileByUsername } from "@/lib/db";
 
 
 export const runtime = "edge";
@@ -175,11 +175,10 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
   let customizationFetchSettled = false;
   let visibilityUnknown = false;
   try {
-    const { data, error } = await supabase
-      .from("profiles")
-      .select("id, score, updated_at, badges, headline, pinned_repos, custom_links, visibility")
-      .eq("username", username)
-      .maybeSingle();
+    const { data, error } = await getProfileByUsername(
+        username,
+        "id, score, updated_at, badges, headline, pinned_repos, custom_links, visibility",
+      );
     customizationFetchSettled = true;
 
     // The Supabase client resolves with `{ data: null, error }` rather than throwing, so reading

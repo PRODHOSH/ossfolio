@@ -1,5 +1,5 @@
 import { after } from "next/server";
-import { supabase } from "@/lib/supabase";
+import { getProfileByUsername } from "@/lib/db";
 import { sanitizeUsername } from "@/lib/validators/api";
 import { getProfileSnapshot, syncProfileSnapshot } from "@/lib/profile-snapshot";
 import type { MergedPR } from "@/types";
@@ -94,11 +94,10 @@ export async function GET(
   // `unlisted` is deliberately still served. It means "don't list me", not "don't exist": the
   // profile page itself still renders for anyone holding the link, and the feed follows the page
   // rather than inventing a stricter rule of its own.
-  const { data: profileRow, error: visibilityError } = await supabase
-    .from("profiles")
-    .select("visibility")
-    .eq("username", username)
-    .maybeSingle();
+  const { data: profileRow, error: visibilityError } = await getProfileByUsername(
+        username,
+        "visibility",
+      );
 
   // Fail closed. The Supabase client resolves with `{ data: null, error }` rather than throwing, so
   // discarding the error would leave `profileRow` null on any database failure — the private check

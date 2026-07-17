@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server";
-import { supabase } from "@/lib/supabase";
+import { searchProfiles } from "@/lib/db";
 import { sanitizeString } from "@/lib/sanitizer";
 import { validatePagination, validateSortBy, createApiResponse, createErrorResponse } from "@/lib/validators/api";
 
@@ -22,13 +22,13 @@ export async function GET(request: NextRequest) {
   const offset = (page - 1) * PAGE_SIZE;
 
   try {
-    const { data, error } = await supabase.rpc("search_profiles", {
+    const { data, error } = await searchProfiles({
       query,
       lang,
-      min_score: minScore,
-      sort_by: sortBy,
-      page_size: PAGE_SIZE + 1,
-      page_offset: offset,
+      minScore,
+      sortBy,
+      pageSize: PAGE_SIZE + 1,
+      pageOffset: offset,
     });
 
     if (error) {

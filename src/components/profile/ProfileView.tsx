@@ -17,6 +17,7 @@ import { AchievementsGrid } from "@/components/profile/AchievementsGrid";
 import type { ContributorStats, Org, TechEntry, HeatmapWeek, BadgeItem, MergedPR } from "@/types";
 import { toPng } from "html-to-image";
 import { supabase } from "@/lib/supabase";
+import { updateProfileBadges } from "@/lib/db";
 import { LANG_COLORS } from "@/lib/languages";
 import { ProfileActions } from "@/components/profile/ProfileActions";
 import { OrganizationSection } from "@/components/profile/OrganizationSection";
@@ -708,13 +709,10 @@ export function ProfileView({
 
     try {
       const updatedList = badgesList.filter((b) => b.program !== program);
-      const { error } = await supabase
-        .from("profiles")
-        .upsert({
+      const { error } = await updateProfileBadges({
           id: profileId,
           username: user.login,
           badges: updatedList,
-          updated_at: new Date().toISOString(),
         });
 
       if (error) {
