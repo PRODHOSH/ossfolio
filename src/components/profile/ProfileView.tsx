@@ -746,6 +746,9 @@ export function ProfileView({
 
 
     const handleTogglePin = async (repoName: string) => {
+      // Single-flight: block all toggles while one PUT is in flight, so two quick clicks on different
+      // cards can't race — overlapping requests could otherwise land out of order and persist a stale list.
+      if (pinningRepo !== null) return;
       const isPinned = pinnedList.includes(repoName);
       if (!isPinned && pinnedList.length >= MAX_PINNED) {
         alert(`You can pin up to ${MAX_PINNED} repositories.`);
@@ -1285,19 +1288,19 @@ export function ProfileView({
                         padding: "20px",
                         paddingTop: isOwner ? "44px" : "20px",
                         width: "100%",
-                        border: isPinnedRepo ? "1px solid #3ecf8e" : "1px solid var(--color-hairline)",
-                        boxShadow: isPinnedRepo ? "0 0 0 1px #3ecf8e" : "none",
+                        border: isPinnedRepo ? "1px solid var(--color-primary)" : "1px solid var(--color-hairline)",
+                        boxShadow: isPinnedRepo ? "0 0 0 1px var(--color-primary)" : "none",
                         borderRadius: "12px",
                         textDecoration: "none",
                         backgroundColor: "var(--color-canvas-soft)",
                       }}
                       onMouseEnter={(e) => {
                         if (!isPinnedRepo) e.currentTarget.style.borderColor = "var(--color-hairline-strong)";
-                        e.currentTarget.style.boxShadow = isPinnedRepo ? "0 0 0 1px #3ecf8e, 0 1px 3px rgba(0,0,0,0.12)" : "0 1px 3px rgba(0,0,0,0.12)";
+                        e.currentTarget.style.boxShadow = isPinnedRepo ? "0 0 0 1px var(--color-primary), 0 1px 3px rgba(0,0,0,0.12)" : "0 1px 3px rgba(0,0,0,0.12)";
                       }}
                       onMouseLeave={(e) => {
-                        e.currentTarget.style.borderColor = isPinnedRepo ? "#3ecf8e" : "var(--color-hairline)";
-                        e.currentTarget.style.boxShadow = isPinnedRepo ? "0 0 0 1px #3ecf8e" : "none";
+                        e.currentTarget.style.borderColor = isPinnedRepo ? "var(--color-primary)" : "var(--color-hairline)";
+                        e.currentTarget.style.boxShadow = isPinnedRepo ? "0 0 0 1px var(--color-primary)" : "none";
                       }}
                     >
                     <p style={{ fontSize: "14px", fontWeight: 600, color: "var(--color-ink)", margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
@@ -1360,7 +1363,7 @@ export function ProfileView({
                           e.stopPropagation();
                           handleTogglePin(repo.name);
                         }}
-                        disabled={pinningRepo === repo.name}
+                        disabled={pinningRepo !== null}
                         aria-pressed={isPinnedRepo}
                         aria-label={isPinnedRepo ? `Unpin ${repo.name}` : `Pin ${repo.name}`}
                         title={isPinnedRepo ? "Unpin from profile" : "Pin to profile"}
@@ -1374,12 +1377,12 @@ export function ProfileView({
                           padding: "4px 10px",
                           fontSize: "12px",
                           fontWeight: 600,
-                          color: isPinnedRepo ? "#171717" : "var(--color-ink-mute)",
-                          backgroundColor: isPinnedRepo ? "#3ecf8e" : "var(--color-canvas)",
+                          color: isPinnedRepo ? "var(--color-on-primary)" : "var(--color-ink-mute)",
+                          backgroundColor: isPinnedRepo ? "var(--color-primary)" : "var(--color-canvas)",
                           border: isPinnedRepo ? "none" : "1px solid var(--color-hairline)",
                           borderRadius: "9999px",
-                          cursor: pinningRepo === repo.name ? "default" : "pointer",
-                          opacity: pinningRepo === repo.name ? 0.6 : 1,
+                          cursor: pinningRepo !== null ? "default" : "pointer",
+                          opacity: pinningRepo !== null ? 0.6 : 1,
                           zIndex: 1,
                         }}
                       >
