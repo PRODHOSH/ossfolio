@@ -17,11 +17,9 @@ create table if not exists public.scheduler_locks (
 comment on table public.scheduler_locks is
   'Exclusive locks for edge-function cron jobs. Each row guards one schedule.';
 
--- Allow the service-role (used by the edge function) to read & write the lock.
--- No other role needs access.
+-- The only writer is the scheduled-refresh edge function, which connects with the
+-- service-role key and so bypasses RLS entirely. No policy is needed -- and adding a
+-- permissive one (using/with check true, no TO clause) would default to PUBLIC and
+-- expose the locks to every client role, including anon. RLS on with zero policies
+-- denies all client roles by default, which is exactly what we want here.
 alter table public.scheduler_locks enable row level security;
-
-create policy "service role can manage locks"
-  on public.scheduler_locks
-  using (true)
-  with check (true);
