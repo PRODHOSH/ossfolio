@@ -1,6 +1,7 @@
 import type { ContributorStats, Repo } from "@/types";
 import { redis } from "./redis";
 import { fetchWithTimeout, FetchTimeoutError } from "@/lib/fetch-with-timeout";
+import { GitHubRateLimitError } from "@/lib/errors";
 
 const GITHUB_GRAPHQL_URL = "https://api.github.com/graphql";
 
@@ -38,6 +39,14 @@ async function githubGraphQL<T>(
       );
 
       if (!res.ok) {
+        if (res.status === 403) {
+          const isRateLimit =
+            res.headers.get("x-ratelimit-remaining") === "0" ||
+            res.headers.has("retry-after");
+          if (isRateLimit) {
+            throw new GitHubRateLimitError();
+          }
+        }
         // 429 or 5xx — retryable
         if (res.status === 429 || res.status >= 500) {
           lastError = new Error(`GitHub API error: ${res.status}`);
@@ -54,8 +63,13 @@ async function githubGraphQL<T>(
       }
 
       const json = await res.json();
-      if (json.errors) {
-        lastError = new Error(json.errors[0].message);
+      if (json.errors?.length) {
+        const firstErr = json.errors[0];
+        // GitHub GraphQL signals quota exhaustion with a structured type field.
+        if (firstErr.type === "RATE_LIMITED") {
+          throw new GitHubRateLimitError(firstErr.message);
+        }
+        lastError = new Error(firstErr.message);
         // Some GitHub errors are retryable (e.g. secondary rate limit)
         if (attempt < RETRY_CONFIG.maxRetries) {
           const delay = Math.min(
