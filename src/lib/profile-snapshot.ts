@@ -12,6 +12,7 @@ import {
 } from "@/lib/profile-data";
 import { fetchContributionCalendar, type ContributionCalendar } from "@/lib/github";
 import type { ContributorStats, Org, MergedPR } from "@/types";
+import { GitHubRateLimitError } from "@/lib/errors";
 
 /**
  * DB-first profile data.
@@ -173,9 +174,7 @@ export async function syncProfileSnapshot(rawUsername: string): Promise<void> {
     ]);
 
   const wasRateLimited = (r: PromiseSettledResult<unknown>) =>
-    r.status === "rejected" &&
-    r.reason instanceof Error &&
-    r.reason.message === "RateLimit";
+    r.status === "rejected" && r.reason instanceof GitHubRateLimitError;
 
   const rateLimited = [user, repos, liveStats, mergedPRs, orgs, contributionCalendar].some(
     wasRateLimited
