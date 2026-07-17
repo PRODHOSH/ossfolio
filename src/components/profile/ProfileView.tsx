@@ -459,6 +459,7 @@ export function ProfileView({
   mergedPRs,
   customLinks = [],
   customizationLoaded = false,
+  repoSectionTitle, // <-- NEW: Added this prop
 }: {
   user: GitHubUser;
   repos: GitHubRepo[];
@@ -468,6 +469,7 @@ export function ProfileView({
     rateLimited?: boolean;
     customLinks?: Array<{ label: string; url: string }>;
     customizationLoaded?: boolean;
+    repoSectionTitle?: string; // <-- NEW: Added to TypeScript definitions
   }) {
   // Derived from stats the page already fetched and passed down, so the whole feature
   // costs no extra GitHub calls and no extra database queries. `useMemo` keeps the array
@@ -1137,10 +1139,13 @@ export function ProfileView({
       {/* Repos */}
       <div style={{ marginTop: "24px" }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", margin: "0 0 12px 0", flexWrap: "wrap", gap: "12px" }}>
+          
+          {/* 👇 HERE IS THE UPDATED H2 ELEMENT 👇 */}
           <h2 style={{ fontSize: "16px", fontWeight: 600, color: "var(--color-ink)", margin: 0, letterSpacing: "-0.2px" }}>
-            Popular repositories
+            {repoSectionTitle || "Popular repositories"}
           </h2>
-          <div role="group" aria-label="Sort popular repositories" style={{ display: "flex", gap: "6px" }}>
+          
+          <div role="group" aria-label="Sort repositories" style={{ display: "flex", gap: "6px" }}>
             {(["stars", "forks", "updated"] as const).map((option) => (
               <button
                 key={option}
@@ -1178,7 +1183,7 @@ export function ProfileView({
             {uniqueLanguages.length > 0 && (
               <div
                 role="group"
-                aria-label="Filter popular repositories by language"
+                aria-label="Filter repositories by language"
                 style={{
                   display: "flex",
                   gap: "8px",
