@@ -3,7 +3,7 @@ import Image from "next/image";
 import type { Metadata } from "next";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
-import { supabase } from "@/lib/supabase";
+import { fetchExploreProfiles, fetchExploreOrganizations, type ExploreProfileSort } from "@/lib/db";
 import { DiscoverPagination } from "@/components/discover/DiscoverPagination";
 
 export const runtime = "edge";
@@ -51,48 +51,15 @@ async function fetchPage(
   const isOrg = type === "organizations";
 
   try {
-    let query;
-
-    if (isOrg) {
-      query = supabase
-        .from("organizations")
-        .select("name, slug, avatar_url, score");
-      
-      if (searchQuery) {
-        query = query.ilike("name", `%${searchQuery}%`);
-      }
-      query = query
-        .order("score", { ascending: false })
-        .order("slug", { ascending: true });
-    } else {
-      query = supabase
-        .from("profiles")
-        .select("username, name, avatar_url, score, total_prs, total_issues, total_commits, score_delta_30_days")
-        // Explore is a listing, so only public profiles belong in it. `unlisted` and `private` have
-        // both opted out of being found — until now the setting saved and this query ignored it, so
-        // a user who chose "unlisted" stayed on the leaderboard anyway.
-        .eq("visibility", "public");
-      
-      if (searchQuery) {
-        query = query.or(`username.ilike.%${searchQuery}%,name.ilike.%${searchQuery}%`);
-      }
-
-      let orderColumn = "score";
-      if (sortBy === "prs") orderColumn = "total_prs";
-      else if (sortBy === "commits") orderColumn = "total_commits";
-      else if (sortBy === "issues") orderColumn = "total_issues";
-      else if (sortBy === "improvement") orderColumn = "score_delta_30_days";
-
-      query = query
-        .order(orderColumn, { ascending: false })
-        .order("updated_at", { ascending: false })
-        .order("username", { ascending: true });
-    }
-
-    query = query.range(from, to);
-
-    const { data, error } = await query;
-    if (error || !Array.isArray(data)) return { rows: [], hasNext: false };
+    const { data, error } = isOrg
+        ? await fetchExploreOrganizations({ searchQuery, from, to })
+        : await fetchExploreProfiles({
+            searchQuery,
+            sortBy: sortBy as ExploreProfileSort,
+            from,
+            to,
+          });
+      if (error || !Array.isArray(data)) return { rows: [], hasNext: false };
     const hasNext = data.length > PAGE_SIZE;
     return { rows: (data as LeaderboardData[]).slice(0, PAGE_SIZE), hasNext };
   } catch {
