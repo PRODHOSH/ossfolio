@@ -4,9 +4,9 @@
 // writes that were previously inline in route handlers and components, so the UI consumes named,
 // typed functions instead of building queries in place (issue #406).
 //
-// It uses the shared anon client (`supabase`) for public reads and the service-role client
-// (`supabaseAdmin`) only where a write must bypass RLS — both come from `@/lib/supabase`, matching
-// the existing convention (e.g. `lib/profile-snapshot.ts`). Queries that run *as the authenticated
+// It uses the shared anon client (`supabase`) for public reads and the two shared-client writes,
+// matching the existing convention (e.g. `lib/profile-snapshot.ts`). Queries that run *as the
+// authenticated
 // user* (a per-request client carrying the user's JWT, in the settings and profile-sync routes) are
 // intentionally left in place: moving them here would require passing the client in, which is out of
 // scope for this change.
@@ -17,7 +17,7 @@
 // failed queries as `{ data: null, error }` rather than throwing, so callers must inspect `error` —
 // these functions do not swallow it.
 
-import { supabase, supabaseAdmin } from "@/lib/supabase";
+import { supabase } from "@/lib/supabase";
 import type { PostgrestError } from "@supabase/supabase-js";
 
 /** A row read from `profiles`, keyed by whatever columns the caller selected. */
@@ -86,7 +86,8 @@ export async function updateProfileBadges(params: {
     id: params.id,
     username: params.username,
     badges: params.badges,
-    updated_at: new Date().toISOString(),
+    // `updated_at` is set server-side by the profiles_set_updated_at trigger; setting it here would
+    // let a client forge the timestamp (e.g. to pin itself to the top of "recently updated").
   });
   return { error };
 }
@@ -194,5 +195,3 @@ export async function fetchExploreOrganizations(opts: {
 
   return { data: (data as unknown[]) ?? null, error };
 }
-
-export { supabaseAdmin };
