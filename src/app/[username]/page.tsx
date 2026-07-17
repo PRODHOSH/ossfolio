@@ -289,6 +289,7 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
           rateLimited={rateLimited}
           mergedPRs={mergedPRs}
           customLinks={customization?.customLinks ?? []}
+          pinnedRepos={customization?.pinnedRepos ?? []}
           customizationLoaded={customizationFetchSettled}
         />
       </main>
