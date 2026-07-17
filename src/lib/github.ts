@@ -40,9 +40,13 @@ async function githubGraphQL<T>(
       );
 
       if (!res.ok) {
-        // GitHub returns 403 for primary rate-limit exhaustion on the GraphQL endpoint.
         if (res.status === 403) {
-          throw new GitHubRateLimitError();
+          const isRateLimit =
+            res.headers.get("x-ratelimit-remaining") === "0" ||
+            res.headers.has("retry-after");
+          if (isRateLimit) {
+            throw new GitHubRateLimitError();
+          }
         }
         // 429 or 5xx — retryable
         if (res.status === 429 || res.status >= 500) {
