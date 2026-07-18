@@ -196,15 +196,12 @@ export function ProfileReposSection({ repos, username }: ProfileReposSectionProp
                   {repo.name}
                 </p>
                 <p
+                  className="line-clamp-2"
                   style={{
                     fontSize: "13px",
                     color: "var(--color-ink-mute)",
                     margin: 0,
                     lineHeight: 1.45,
-                    display: "-webkit-box",
-                    WebkitLineClamp: 2,
-                    WebkitBoxOrient: "vertical" as const,
-                    overflow: "hidden",
                     minHeight: "38px",
                   }}
                 >
