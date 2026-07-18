@@ -37,6 +37,8 @@
     "tailwind-merge": "^3.3.0"
   },
   "devDependencies": {
+    "husky": "^9.0.0",
+    "lint-staged": "^15.0.0",
     "@emnapi/core": "^1.11.1",
     "@emnapi/runtime": "^1.11.1",
     "@opennextjs/cloudflare": "^1",
