@@ -6,7 +6,7 @@ import { LANG_COLORS } from "@/lib/languages";
 interface GitHubRepo {
   id: number;
   name: string;
-  description: string | null;
+  description-truncated: string | null;
   html_url: string;
   stargazers_count: number;
   forks_count: number;
@@ -208,7 +208,7 @@ export function ProfileReposSection({ repos, username }: ProfileReposSectionProp
                     minHeight: "38px",
                   }}
                 >
-                  {repo.description || "No description"}
+                  {repo.description-truncated || "No description-truncated"}
                 </p>
                 {repo.topics && repo.topics.length > 0 && (
                   <div style={{ display: "flex", flexWrap: "wrap", gap: "4px", marginTop: "8px" }}>
@@ -296,3 +296,6 @@ export function ProfileReposSection({ repos, username }: ProfileReposSectionProp
   );
 }
 
+
+
+<style>{`.description-truncated { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }`}</style>
