@@ -192,7 +192,7 @@ export function Navbar({ onSignIn, onGetStarted }: NavbarProps) {
           </span>
         </Link>
 
-        <nav aria-label={t("mainNav")} style={{ display: "flex", alignItems: "center", gap: "28px" }} className="hide-on-mobile">
+        <nav aria-label={t("mainNav")} style={{ display: "flex", alignItems: "center", gap: "28px" }} className="hide-on-mobile hover:text-primary transition-colors duration-200">
           {navLinks.map((item) => (
             <Link
               key={item.key}
@@ -204,7 +204,7 @@ export function Navbar({ onSignIn, onGetStarted }: NavbarProps) {
           ))}
         </nav>
 
-        <div style={{ display: "flex", alignItems: "center", gap: "16px" }} className="hide-on-mobile">
+        <div style={{ display: "flex", alignItems: "center", gap: "16px" }} className="hide-on-mobile hover:text-primary transition-colors duration-200">
           <LanguageSwitcher />
           <button
             type="button"
@@ -212,8 +212,8 @@ export function Navbar({ onSignIn, onGetStarted }: NavbarProps) {
             aria-label={!mounted ? t("toggleTheme") : isDarkMode ? t("switchToLight") : t("switchToDark")}
             style={{ background: "none", border: "none", cursor: "pointer", color: "var(--color-ink-mute)", display: "flex", alignItems: "center", justifyContent: "center", padding: "6px", borderRadius: "6px" }}
           >
-            <Moon size={18} className="nav-theme-moon" />
-            <Sun size={18} className="nav-theme-sun" />
+            <Moon size={18} className="nav-theme-moon hover:text-primary transition-colors duration-200" />
+            <Sun size={18} className="nav-theme-sun hover:text-primary transition-colors duration-200" />
           </button>
 
           {user ? (
@@ -245,7 +245,7 @@ export function Navbar({ onSignIn, onGetStarted }: NavbarProps) {
         {/* Mobile menu toggle */}
         <button
           type="button"
-          className="show-on-mobile"
+          className="show-on-mobile hover:text-primary transition-colors duration-200"
           onClick={() => setMobileOpen(!mobileOpen)}
           aria-label={mobileOpen ? t("closeMenu") : t("openMenu")}
           aria-expanded={mobileOpen}
