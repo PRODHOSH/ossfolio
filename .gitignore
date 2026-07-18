@@ -34,3 +34,13 @@ next-env.d.ts
 /playwright-report/
 /test-results/
 /blob-report/
+
+# Backup and sensitive files
+.env.local.backup
+.env.*.local
+*.backup
+*.bak
+.DS_Store
+*.log
+.vscode/
+.idea/
