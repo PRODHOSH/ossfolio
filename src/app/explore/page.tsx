@@ -144,8 +144,7 @@ export default async function ExplorePage({ searchParams }: ExplorePageProps) {
                 const rowData = row as any;
                 const name = isOrg ? rowData.name : (rowData.name || rowData.username);
                 const sub = isOrg ? `@${rowData.slug}` : `@${rowData.username}`;
-               // Replace line 171 with this:
-const avatar = rowData.avatar_url || `https://github.com/${isOrg ? encodeURIComponent(rowData.slug) : encodeURIComponent(rowData.username)}.png`;
+                const avatar = rowData.avatar_url || `https://github.com/${isOrg ? encodeURIComponent(rowData.slug) : encodeURIComponent(rowData.username)}.png`;
                 const score = typeof rowData.score === "number" ? rowData.score : 0;
                 const isTop = rank <= 3;
 
@@ -158,7 +157,7 @@ const avatar = rowData.avatar_url || `https://github.com/${isOrg ? encodeURIComp
   style={{ display: "flex", alignItems: "center", gap: "16px", padding: "14px 18px", border: "1px solid var(--color-hairline)", borderRadius: "12px", textDecoration: "none", background: "var(--color-canvas-soft)" }}
 >
                       {/* Rank Indicator */}
-                      <span aria-label={`Rank ${rank}`} style={{ minWidth: "32px", fontSize: "16px", fontWeight: 600, color: isTop ? "var(--color-primary)" : "var(--color-ink-mute)", textAlign: "center", flexShrink: 0 }}>
+                      <span aria-label={`Rank ${rank}`} style={{ minWidth: "32px", fontSize: "16px", fontWeight: 600, color: isTop ? "var(--color-primary)" : "var(--color-ink-mute)", flexShrink: 0, display: "inline-flex", alignItems: "center", justifyContent: "center", lineHeight: 1 }}>
                         {rank === 1 ? "🥇" : rank === 2 ? "🥈" : rank === 3 ? "🥉" : rank}
                       </span>
 
