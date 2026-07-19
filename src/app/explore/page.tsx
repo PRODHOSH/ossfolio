@@ -3,7 +3,7 @@ import Image from "next/image";
 import type { Metadata } from "next";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
-import { supabase } from "@/lib/supabase";
+import { fetchExploreProfiles, fetchExploreOrganizations, type ExploreProfileSort } from "@/lib/db";
 import { DiscoverPagination } from "@/components/discover/DiscoverPagination";
 
 export const runtime = "edge";
@@ -51,48 +51,15 @@ async function fetchPage(
   const isOrg = type === "organizations";
 
   try {
-    let query;
-
-    if (isOrg) {
-      query = supabase
-        .from("organizations")
-        .select("name, slug, avatar_url, score");
-      
-      if (searchQuery) {
-        query = query.ilike("name", `%${searchQuery}%`);
-      }
-      query = query
-        .order("score", { ascending: false })
-        .order("slug", { ascending: true });
-    } else {
-      query = supabase
-        .from("profiles")
-        .select("username, name, avatar_url, score, total_prs, total_issues, total_commits, score_delta_30_days")
-        // Explore is a listing, so only public profiles belong in it. `unlisted` and `private` have
-        // both opted out of being found — until now the setting saved and this query ignored it, so
-        // a user who chose "unlisted" stayed on the leaderboard anyway.
-        .eq("visibility", "public");
-      
-      if (searchQuery) {
-        query = query.or(`username.ilike.%${searchQuery}%,name.ilike.%${searchQuery}%`);
-      }
-
-      let orderColumn = "score";
-      if (sortBy === "prs") orderColumn = "total_prs";
-      else if (sortBy === "commits") orderColumn = "total_commits";
-      else if (sortBy === "issues") orderColumn = "total_issues";
-      else if (sortBy === "improvement") orderColumn = "score_delta_30_days";
-
-      query = query
-        .order(orderColumn, { ascending: false })
-        .order("updated_at", { ascending: false })
-        .order("username", { ascending: true });
-    }
-
-    query = query.range(from, to);
-
-    const { data, error } = await query;
-    if (error || !Array.isArray(data)) return { rows: [], hasNext: false };
+    const { data, error } = isOrg
+        ? await fetchExploreOrganizations({ searchQuery, from, to })
+        : await fetchExploreProfiles({
+            searchQuery,
+            sortBy: sortBy as ExploreProfileSort,
+            from,
+            to,
+          });
+      if (error || !Array.isArray(data)) return { rows: [], hasNext: false };
     const hasNext = data.length > PAGE_SIZE;
     return { rows: (data as LeaderboardData[]).slice(0, PAGE_SIZE), hasNext };
   } catch {
@@ -177,8 +144,7 @@ export default async function ExplorePage({ searchParams }: ExplorePageProps) {
                 const rowData = row as any;
                 const name = isOrg ? rowData.name : (rowData.name || rowData.username);
                 const sub = isOrg ? `@${rowData.slug}` : `@${rowData.username}`;
-               // Replace line 171 with this:
-const avatar = rowData.avatar_url || `https://github.com/${isOrg ? encodeURIComponent(rowData.slug) : encodeURIComponent(rowData.username)}.png`;
+                const avatar = rowData.avatar_url || `https://github.com/${isOrg ? encodeURIComponent(rowData.slug) : encodeURIComponent(rowData.username)}.png`;
                 const score = typeof rowData.score === "number" ? rowData.score : 0;
                 const isTop = rank <= 3;
 
@@ -191,7 +157,7 @@ const avatar = rowData.avatar_url || `https://github.com/${isOrg ? encodeURIComp
   style={{ display: "flex", alignItems: "center", gap: "16px", padding: "14px 18px", border: "1px solid var(--color-hairline)", borderRadius: "12px", textDecoration: "none", background: "var(--color-canvas-soft)" }}
 >
                       {/* Rank Indicator */}
-                      <span aria-label={`Rank ${rank}`} style={{ minWidth: "32px", fontSize: "16px", fontWeight: 600, color: isTop ? "var(--color-primary)" : "var(--color-ink-mute)", textAlign: "center", flexShrink: 0 }}>
+                      <span aria-label={`Rank ${rank}`} style={{ minWidth: "32px", fontSize: "16px", fontWeight: 600, color: isTop ? "var(--color-primary)" : "var(--color-ink-mute)", flexShrink: 0, display: "inline-flex", alignItems: "center", justifyContent: "center", lineHeight: 1 }}>
                         {rank === 1 ? "🥇" : rank === 2 ? "🥈" : rank === 3 ? "🥉" : rank}
                       </span>
 

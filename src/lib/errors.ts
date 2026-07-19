@@ -59,6 +59,21 @@ export class UpstreamError extends AppError {
   }
 }
 
+/**
+ * Thrown when the **GitHub API** (REST or GraphQL) returns a rate-limit response.
+ *
+ * Kept separate from `RateLimitError` (which models the app's own HTTP 429
+ * responses to clients) to avoid conflating the two layers and to allow callers
+ * to distinguish a GitHub quota exhaustion from any other kind of failure with a
+ * simple `instanceof` check rather than fragile message-string comparisons.
+ */
+export class GitHubRateLimitError extends Error {
+  readonly name = "GitHubRateLimitError";
+  constructor(message = "GitHub API rate limit exceeded") {
+    super(message);
+  }
+}
+
 export interface ApiErrorBody {
   error: string;
   code: string;

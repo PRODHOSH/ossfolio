@@ -1,20 +1,22 @@
 import type { ContributorStats, Org, Repo, TechEntry, MergedPR } from "@/types";
 import { LANG_COLORS } from "@/lib/languages";
 import { fetchWithTimeout } from "@/lib/fetch-with-timeout";
+import { GitHubRateLimitError } from "@/lib/errors";
 
 /**
  * GitHub answers a rate limit with 403/429 and a "rate limit" message. Raise it as
- * an error so callers that persist results can decline to cache a degraded response.
+ * a `GitHubRateLimitError` so callers that persist results can decline to cache a
+ * degraded response and can detect the condition with a reliable `instanceof` check.
  */
 async function throwIfRateLimited(res: Response): Promise<void> {
   if (res.status !== 403 && res.status !== 429) return;
   try {
     const err = await res.clone().json();
     if (typeof err?.message === "string" && err.message.toLowerCase().includes("rate limit")) {
-      throw new Error("RateLimit");
+      throw new GitHubRateLimitError(err.message);
     }
   } catch (e) {
-    if (e instanceof Error && e.message === "RateLimit") throw e;
+    if (e instanceof GitHubRateLimitError) throw e;
   }
 }
 
@@ -171,7 +173,7 @@ export async function fetchOrganizations(username: string): Promise<Org[]> {
   } catch (e) {
     // A rate limit must not be flattened into "this user has none" — the result is
     // persisted now, so that would cache an empty list as fresh for a full hour.
-    if (e instanceof Error && e.message === "RateLimit") throw e;
+    if (e instanceof GitHubRateLimitError) throw e;
     return [];
   }
 }
@@ -210,7 +212,7 @@ export async function fetchMergedPRs(username: string, limit: number = 30): Prom
   } catch (e) {
     // A rate limit must not be flattened into "this user has none" — the result is
     // persisted now, so that would cache an empty list as fresh for a full hour.
-    if (e instanceof Error && e.message === "RateLimit") throw e;
+    if (e instanceof GitHubRateLimitError) throw e;
     return [];
   }
 }
@@ -250,10 +252,10 @@ export async function fetchGitHubUser(username: string): Promise<GitHubUser | nu
     try {
       const err = await res.json();
       if (err.message && err.message.toLowerCase().includes("rate limit")) {
-        throw new Error("RateLimit");
+        throw new GitHubRateLimitError(err.message);
       }
     } catch (e) {
-      if (e instanceof Error && e.message === "RateLimit") throw e;
+      if (e instanceof GitHubRateLimitError) throw e;
     }
     return null;
   }

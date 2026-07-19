@@ -122,7 +122,39 @@ export function ProfileReposSection({ repos, username }: ProfileReposSectionProp
         </div>
       </div>
 
-      {filteredRepos.length === 0 ? (
+      {repos.length === 0 ? (
+        <div
+          style={{
+            padding: "40px",
+            border: "1px dashed var(--color-hairline-strong)",
+            borderRadius: "12px",
+            textAlign: "center",
+            backgroundColor: "var(--color-canvas-soft)",
+            margin: "16px 0",
+          }}
+        >
+          <svg
+            style={{ margin: "0 auto 12px", color: "var(--color-ink-mute-2)" }}
+            width="36"
+            height="36"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+          >
+            <rect x="3" y="4" width="18" height="16" rx="2" ry="2" />
+            <path d="M8 9h8" />
+            <path d="M8 13h5" />
+            <path d="M10 20l-1-2h2l-1 2z" />
+          </svg>
+          <p style={{ fontSize: "14px", fontWeight: 600, color: "var(--color-ink)", margin: 0 }}>
+            No repositories found
+          </p>
+          <p style={{ fontSize: "13px", color: "var(--color-ink-mute)", margin: "4px 0 0 0" }}>
+            This profile doesn’t have any public repositories yet.
+          </p>
+        </div>
+      ) : filteredRepos.length === 0 ? (
         <div
           style={{
             padding: "40px",
@@ -146,12 +178,10 @@ export function ProfileReposSection({ repos, username }: ProfileReposSectionProp
             <path d="M12 18H12.01" />
           </svg>
           <p style={{ fontSize: "14px", fontWeight: 600, color: "var(--color-ink)", margin: 0 }}>
-            {trimmedQuery ? "No repositories match your search" : "No public repositories found"}
+            {trimmedQuery ? "No repositories match your search" : "No repositories found"}
           </p>
           <p style={{ fontSize: "13px", color: "var(--color-ink-mute)", margin: "4px 0 0 0" }}>
-            {trimmedQuery
-              ? "Try a different search term"
-              : "Create public repositories on GitHub to display them here."}
+            {trimmedQuery ? "Try a different search term" : ""}
           </p>
         </div>
       ) : (
@@ -196,15 +226,12 @@ export function ProfileReposSection({ repos, username }: ProfileReposSectionProp
                   {repo.name}
                 </p>
                 <p
+                  className="line-clamp-2"
                   style={{
                     fontSize: "13px",
                     color: "var(--color-ink-mute)",
                     margin: 0,
                     lineHeight: 1.45,
-                    display: "-webkit-box",
-                    WebkitLineClamp: 2,
-                    WebkitBoxOrient: "vertical" as const,
-                    overflow: "hidden",
                     minHeight: "38px",
                   }}
                 >

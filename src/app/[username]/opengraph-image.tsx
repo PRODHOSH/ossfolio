@@ -1,6 +1,6 @@
 
 import { ImageResponse } from "next/og";
-import { supabase } from "@/lib/supabase";
+import { getProfileByUsername } from "@/lib/db";
 
 export const runtime = "edge";
 
@@ -60,11 +60,10 @@ export default async function OGImage({ params }: OGImageProps) {
   // Fetch user data and the stored profile summary in parallel
   const [user, profileResult] = await Promise.all([
     fetchGitHubUser(username),
-    supabase
-      .from("profiles")
-      .select("score, total_commits, total_prs, total_issues, total_reviews, visibility")
-      .eq("username", username)
-      .maybeSingle(),
+    getProfileByUsername(
+          username,
+          "score, total_commits, total_prs, total_issues, total_reviews, visibility",
+        ),
   ]);
 
   // Fail closed. This previously did `.then((r) => r.data)`, which discards the error — and the

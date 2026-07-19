@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { supabase } from "@/lib/supabase";
+import { getPublicProfileByUsername } from "@/lib/db";
 import { sanitizeUsername, createApiResponse, createErrorResponse } from "@/lib/validators/api";
 
 export const runtime = "edge";
@@ -137,12 +137,7 @@ export async function GET(
     return withCors(createErrorResponse("Invalid username format", 400));
   }
 
-  const { data, error } = await supabase
-    .from("profiles")
-    .select(PUBLIC_COLUMNS)
-    .eq("username", username)
-    .eq("visibility", "public")
-    .maybeSingle();
+  const { data, error } = await getPublicProfileByUsername(username, PUBLIC_COLUMNS);
 
   if (error) {
     return withCors(createErrorResponse("Failed to fetch profile", 502));

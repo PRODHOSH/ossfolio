@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useEffect, useState } from "react";
-import { supabase } from "@/lib/supabase";
+import { updateProfileBadges } from "@/lib/db";
 import type { BadgeItem } from "@/types";
 
 const AVAILABLE_PROGRAMS = ["GSSoC", "Hacktoberfest", "EluSoC", "GSoC", "MLH Fellowship", "SWoC"];
@@ -82,12 +82,11 @@ export function ProfileBadgeModal({
         updatedList = [...badgesList, { program: selectedProgram, years: [selectedYear] }];
       }
 
-      const { error } = await supabase.from("profiles").upsert({
-        id: profileId,
-        username,
-        badges: updatedList,
-        updated_at: new Date().toISOString(),
-      });
+      const { error } = await updateProfileBadges({
+          id: profileId,
+          username,
+          badges: updatedList,
+        });
 
       if (error) {
         alert(`Failed to save badge: ${error.message}`);

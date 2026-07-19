@@ -12,7 +12,7 @@ import {
 import { fetchContributionCalendar } from "@/lib/github";
 import { generateMockHeatmap } from "@/lib/mock";
 import { calculateScore } from "@/lib/score";
-import { supabase } from "@/lib/supabase";
+import { getProfileByUsername } from "@/lib/db";
 import type { ContributorStats, Repo } from "@/types";
 import { CompareForm } from "@/components/profile/CompareForm";
 import { CompareCharts } from "@/components/profile/CompareCharts";
@@ -100,11 +100,10 @@ async function fetchProfile(username: string): Promise<ProfileData> {
   let visibility: string | null = null;
   let visibilityUnknown = false;
   try {
-    const { data: profileRow, error } = await supabase
-      .from("profiles")
-      .select("score, visibility")
-      .eq("username", username)
-      .maybeSingle();
+    const { data: profileRow, error } = await getProfileByUsername(
+      username,
+      "score, visibility",
+    );
 
     // The Supabase client resolves with `{ data: null, error }` rather than throwing, so the catch
     // below never sees a query failure — reading only `data` would leave `visibility` null on a
