@@ -442,6 +442,27 @@ function FilterTab({ label, isActive, onClick, dotColor }: FilterTabProps) {
     </button>
   );
 }
+function ContributorScoreCard({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  const [animate, setAnimate] = useState(true);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setAnimate(false);
+    }, 1000);
+
+    return () => clearTimeout(timer);
+  }, []);
+
+  return (
+    <div className={animate ? "animate-pulse" : ""}>
+      {children}
+    </div>
+  );
+}
 
 export function ProfileView({
   user,
@@ -491,15 +512,6 @@ export function ProfileView({
   const [repoFilter, setRepoFilter] = useState("");
   const [activeLanguage, setActiveLanguage] = useState<string>("All");
   const [activeTab, setActiveTab] = useState<"repos" | "stats" | "prs" | "timeline">("repos");
-  const [animateScore, setAnimateScore] = useState(true);
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setAnimateScore(false);
-    }, 1000);
-
-    return () => clearTimeout(timer);
-  }, []);
 
   const [pinnedList, setPinnedList] = useState<string[]>(pinnedRepos);
   const [pinningRepo, setPinningRepo] = useState<string | null>(null);
@@ -1462,40 +1474,67 @@ export function ProfileView({
             { label: "Stars", value: totalStars },
             { label: "Forks", value: totalForks },
             { label: "Contributor score", value: score },
-          ].map((item) => (
-             <div
-                key={item.label}
-                className={
-                  item.label === "Contributor score" && animateScore
-                    ? "animate-pulse"
-                    : ""
-                }
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                justifyContent: "center",
-                padding: "20px 12px",
-                border: "1px solid var(--color-hairline)",
-                borderRadius: "12px",
-                backgroundColor: "var(--color-canvas-soft)",
-                textAlign: "center",
-              }}
-            >
-              <span style={{ fontSize: "24px", fontWeight: 700, color: "var(--color-ink)", letterSpacing: "-0.5px" }}>
-                {item.value.toLocaleString("en-US")}
-              </span>
-              <span style={{ fontSize: "12px", color: "var(--color-ink-mute)", marginTop: "4px" }}>{item.label}</span>
-              {item.label === "Contributor score" && (
-                <Link
-                  href="/score-explained"
-                  style={{ fontSize: "11px", color: "var(--color-ink-mute-2)", marginTop: "4px", textDecoration: "none" }}
+            ].map((item) => {
+              const card = (
+                <div
+                  key={item.label}
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    padding: "20px 12px",
+                    border: "1px solid var(--color-hairline)",
+                    borderRadius: "12px",
+                    backgroundColor: "var(--color-canvas-soft)",
+                    textAlign: "center",
+                  }}
                 >
-                  Score explained →
-                </Link>
-              )}
-            </div>
-          ))}
+                  <span
+                    style={{
+                      fontSize: "24px",
+                      fontWeight: 700,
+                      color: "var(--color-ink)",
+                      letterSpacing: "-0.5px",
+                    }}
+                  >
+                    {item.value.toLocaleString("en-US")}
+                  </span>
+
+                  <span
+                    style={{
+                      fontSize: "12px",
+                      color: "var(--color-ink-mute)",
+                      marginTop: "4px",
+                    }}
+                  >
+                    {item.label}
+                  </span>
+
+                  {item.label === "Contributor score" && (
+                    <Link
+                      href="/score-explained"
+                      style={{
+                        fontSize: "11px",
+                        color: "var(--color-ink-mute-2)",
+                        marginTop: "4px",
+                        textDecoration: "none",
+                      }}
+                    >
+                      Score explained →
+                    </Link>
+                  )}
+                </div>
+              );
+
+              return item.label === "Contributor score" ? (
+                <ContributorScoreCard key={item.label}>
+                  {card}
+                </ContributorScoreCard>
+              ) : (
+                card
+              );
+            })}
         </div>
       </div>
           </motion.div>
