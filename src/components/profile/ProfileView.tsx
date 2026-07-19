@@ -486,6 +486,15 @@ export function ProfileView({
   const [repoFilter, setRepoFilter] = useState("");
   const [activeLanguage, setActiveLanguage] = useState<string>("All");
   const [activeTab, setActiveTab] = useState<"repos" | "stats" | "prs" | "timeline">("repos");
+  const [animateScore, setAnimateScore] = useState(true);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setAnimateScore(false);
+    }, 1000);
+
+    return () => clearTimeout(timer);
+  }, []);
 
   const profileTabs = [
     { key: "repos" as const, label: "Repos" },
@@ -1341,8 +1350,13 @@ export function ProfileView({
             { label: "Forks", value: totalForks },
             { label: "Contributor score", value: score },
           ].map((item) => (
-            <div
-              key={item.label}
+             <div
+                key={item.label}
+                className={
+                  item.label === "Contributor score" && animateScore
+                    ? "animate-pulse"
+                    : ""
+                }
               style={{
                 display: "flex",
                 flexDirection: "column",
