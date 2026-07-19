@@ -59,11 +59,13 @@ const LANGUAGE_DISPLAY_NAMES: Record<string, string> = {
   "c#": "C#",
 };
 
-
+export function normalizeLanguageName(language: string): string {
+  return LANGUAGE_DISPLAY_NAMES[language.toLowerCase()] ?? language;
+}
 /** Return the hex colour for a programming language name, or null if the language is not in the built-in map. */
 export function languageColor(language: string | null): string | null {
   if (!language) return null;
-  return LANG_COLORS[language] ?? "#9a9a9a";
+  return LANG_COLORS[normalizeLanguageName(language)] ?? "#9a9a9a";
 }
 
 export interface GitHubRepoLike {
@@ -106,9 +108,7 @@ export function deriveTechStack(repos: GitHubRepoLike[]): TechEntry[] {
   for (const repo of repos) {
     if (!repo.language) continue;
 
-    const displayName =
-      LANGUAGE_DISPLAY_NAMES[repo.language.toLowerCase()] ?? repo.language;
-
+    const displayName = normalizeLanguageName(repo.language);
     counts.set(displayName, (counts.get(displayName) ?? 0) + 1);
   }
 
