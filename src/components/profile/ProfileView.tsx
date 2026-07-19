@@ -458,7 +458,10 @@ function ContributorScoreCard({
   }, []);
 
   return (
-    <div className={animate ? "animate-pulse" : ""}>
+    <div
+      className={animate ? "animate-pulse" : ""}
+      style={{ height: "100%" }}
+    >
       {children}
     </div>
   );
