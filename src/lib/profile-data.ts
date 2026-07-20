@@ -37,13 +37,37 @@ async function throwIfRateLimited(res: Response): Promise<void> {
  * authenticated GraphQL contributionsCollection, so totalReviews is reported as
  * 0 rather than guessed.
  */
+const LANGUAGE_DISPLAY_NAMES: Record<string, string> = {
+  javascript: "JavaScript",
+  typescript: "TypeScript",
+  python: "Python",
+  java: "Java",
+  go: "Go",
+  rust: "Rust",
+  php: "PHP",
+  html: "HTML",
+  css: "CSS",
+  shell: "Shell",
+  kotlin: "Kotlin",
+  swift: "Swift",
+  dart: "Dart",
+  ruby: "Ruby",
+  vue: "Vue",
+  svelte: "Svelte",
+  dockerfile: "Dockerfile",
+  "jupyter notebook": "Jupyter Notebook",
+  c: "C",
+  "c++": "C++",
+  "c#": "C#",
+};
 
-
-
+export function normalizeLanguageName(language: string): string {
+  return LANGUAGE_DISPLAY_NAMES[language.toLowerCase()] ?? language;
+}
 /** Return the hex colour for a programming language name, or null if the language is not in the built-in map. */
 export function languageColor(language: string | null): string | null {
   if (!language) return null;
-  return LANG_COLORS[language] ?? "#9a9a9a";
+  return LANG_COLORS[normalizeLanguageName(language)] ?? "#9a9a9a";
 }
 
 export interface GitHubRepoLike {
@@ -55,7 +79,6 @@ export interface GitHubRepoLike {
   language: string | null;
   topics?: string[];
 }
-
 /**
  * A raw GitHub repo as the REST API returns it, carrying every field this app reads.
  * A superset of `GitHubRepoLike` (what mapRepos/deriveTechStack need) and of the shape
@@ -83,10 +106,14 @@ export function mapRepos(repos: GitHubRepoLike[]): Repo[] {
 /** Aggregate repo primary languages into a sorted TechEntry[] (most repos first). */
 export function deriveTechStack(repos: GitHubRepoLike[]): TechEntry[] {
   const counts = new Map<string, number>();
+
   for (const repo of repos) {
     if (!repo.language) continue;
-    counts.set(repo.language, (counts.get(repo.language) ?? 0) + 1);
+
+    const displayName = normalizeLanguageName(repo.language);
+    counts.set(displayName, (counts.get(displayName) ?? 0) + 1);
   }
+
   return [...counts.entries()]
     .map(([language, repoCount]) => ({ language, repoCount }))
     .sort((a, b) => b.repoCount - a.repoCount);
