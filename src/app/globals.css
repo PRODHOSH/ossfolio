@@ -158,3 +158,28 @@ dialog::backdrop {
 @utility theme-transition {
   transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease, fill 0.2s ease, stroke 0.2s ease;
 }
+
+/* Global scrollbar styling */
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-primary) var(--color-canvas-soft);
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-canvas-soft);
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: var(--color-primary);
+  border-radius: var(--radius-full);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: var(--color-primary-deep);
+}
