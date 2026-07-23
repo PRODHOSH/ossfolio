@@ -24,7 +24,7 @@ jobs:
             - Checked that your changes work locally and compile cleanly.
             - Followed the guidelines outlined in [CONTRIBUTING.md](https://github.com/${context.repo.owner}/${context.repo.repo}/blob/main/CONTRIBUTING.md).
             - Linked your PR to an open issue (e.g. \`Closes #ISSUE_NUMBER\`).
-            
+
             We will review your PR as soon as possible. Happy coding! 💻✨`;
 
             await github.rest.issues.createComment({

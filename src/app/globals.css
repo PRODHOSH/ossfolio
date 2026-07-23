@@ -15,7 +15,6 @@
    `:root`, so all existing `var(--color-…)` usages keep working untouched.
    ───────────────────────────────────────────────────────────────────────────── */
 @theme {
-
   /* Brand Constants */
   --color-primary: #3ecf8e;
   --color-primary-deep: #24b47e;
@@ -156,7 +155,12 @@ dialog::backdrop {
    lands in the utilities layer and composes with variants (`hover:`, `dark:`, ...)
    instead of being an unlayered class that outranks everything. */
 @utility theme-transition {
-  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease, fill 0.2s ease, stroke 0.2s ease;
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease,
+    color 0.2s ease,
+    fill 0.2s ease,
+    stroke 0.2s ease;
 }
 
 /* Global scrollbar styling */

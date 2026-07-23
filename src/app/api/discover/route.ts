@@ -1,13 +1,23 @@
 import { NextRequest } from "next/server";
 import { searchProfiles } from "@/lib/db";
 import { sanitizeString } from "@/lib/sanitizer";
-import { validatePagination, validateSortBy, createApiResponse, createErrorResponse } from "@/lib/validators/api";
+import {
+  validatePagination,
+  validateSortBy,
+  createApiResponse,
+  createErrorResponse,
+} from "@/lib/validators/api";
 
 export const runtime = "edge";
 
 const PAGE_SIZE = 20;
 const MAX_PAGE = 50;
-const VALID_SORT = ["score", "contributions", "followers", "improvement"] as const;
+const VALID_SORT = [
+  "score",
+  "contributions",
+  "followers",
+  "improvement",
+] as const;
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
@@ -15,7 +25,10 @@ export async function GET(request: NextRequest) {
   const query = sanitizeString(searchParams.get("q"), 100);
   const lang = sanitizeString(searchParams.get("lang"), 50);
   const rawMinScore = searchParams.get("min_score") || "0";
-  const minScore = Math.min(2147483647, Math.max(0, parseInt(rawMinScore, 10) || 0));
+  const minScore = Math.min(
+    2147483647,
+    Math.max(0, parseInt(rawMinScore, 10) || 0),
+  );
   const sortBy = validateSortBy(searchParams.get("sort"), VALID_SORT, "score");
 
   const { page } = validatePagination(searchParams.get("page"), null, MAX_PAGE);

@@ -4,7 +4,14 @@ import { useRef, useEffect, useState } from "react";
 import { updateProfileBadges } from "@/lib/db";
 import type { BadgeItem } from "@/types";
 
-const AVAILABLE_PROGRAMS = ["GSSoC", "Hacktoberfest", "EluSoC", "GSoC", "MLH Fellowship", "SWoC"];
+const AVAILABLE_PROGRAMS = [
+  "GSSoC",
+  "Hacktoberfest",
+  "EluSoC",
+  "GSoC",
+  "MLH Fellowship",
+  "SWoC",
+];
 
 interface ProfileBadgeModalProps {
   open: boolean;
@@ -67,7 +74,9 @@ export function ProfileBadgeModal({
     }
     setIsSaving(true);
     try {
-      const existingIndex = badgesList.findIndex((b) => b.program === selectedProgram);
+      const existingIndex = badgesList.findIndex(
+        (b) => b.program === selectedProgram,
+      );
       let updatedList: BadgeItem[];
 
       if (existingIndex > -1) {
@@ -76,17 +85,20 @@ export function ProfileBadgeModal({
           ? currentYears
           : [...currentYears, selectedYear].sort((a, b) => b - a);
         updatedList = badgesList.map((b, idx) =>
-          idx === existingIndex ? { ...b, years: updatedYears } : b
+          idx === existingIndex ? { ...b, years: updatedYears } : b,
         );
       } else {
-        updatedList = [...badgesList, { program: selectedProgram, years: [selectedYear] }];
+        updatedList = [
+          ...badgesList,
+          { program: selectedProgram, years: [selectedYear] },
+        ];
       }
 
       const { error } = await updateProfileBadges({
-          id: profileId,
-          username,
-          badges: updatedList,
-        });
+        id: profileId,
+        username,
+        badges: updatedList,
+      });
 
       if (error) {
         alert(`Failed to save badge: ${error.message}`);
@@ -117,16 +129,32 @@ export function ProfileBadgeModal({
         color: "var(--color-ink)",
         maxWidth: "400px",
         width: "calc(100% - 32px)",
-        boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)",
+        boxShadow:
+          "0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)",
       }}
     >
       <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-        <h3 style={{ fontSize: "18px", fontWeight: 600, margin: 0, color: "var(--color-ink)", letterSpacing: "-0.2px" }}>
+        <h3
+          style={{
+            fontSize: "18px",
+            fontWeight: 600,
+            margin: 0,
+            color: "var(--color-ink)",
+            letterSpacing: "-0.2px",
+          }}
+        >
           Add Program Badge
         </h3>
 
         <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-          <label htmlFor="program-select" style={{ fontSize: "13px", fontWeight: 500, color: "var(--color-ink-mute)" }}>
+          <label
+            htmlFor="program-select"
+            style={{
+              fontSize: "13px",
+              fontWeight: 500,
+              color: "var(--color-ink-mute)",
+            }}
+          >
             Program
           </label>
           <select
@@ -144,13 +172,22 @@ export function ProfileBadgeModal({
             }}
           >
             {AVAILABLE_PROGRAMS.map((p) => (
-              <option key={p} value={p}>{p}</option>
+              <option key={p} value={p}>
+                {p}
+              </option>
             ))}
           </select>
         </div>
 
         <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-          <label htmlFor="year-select" style={{ fontSize: "13px", fontWeight: 500, color: "var(--color-ink-mute)" }}>
+          <label
+            htmlFor="year-select"
+            style={{
+              fontSize: "13px",
+              fontWeight: 500,
+              color: "var(--color-ink-mute)",
+            }}
+          >
             Year
           </label>
           <select
@@ -167,13 +204,25 @@ export function ProfileBadgeModal({
               width: "100%",
             }}
           >
-            {Array.from({ length: currentYear - 2000 + 1 }, (_, i) => currentYear - i).map((y) => (
-              <option key={y} value={y}>{y}</option>
+            {Array.from(
+              { length: currentYear - 2000 + 1 },
+              (_, i) => currentYear - i,
+            ).map((y) => (
+              <option key={y} value={y}>
+                {y}
+              </option>
             ))}
           </select>
         </div>
 
-        <div style={{ display: "flex", justifyContent: "flex-end", gap: "8px", marginTop: "8px" }}>
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "flex-end",
+            gap: "8px",
+            marginTop: "8px",
+          }}
+        >
           <button
             type="button"
             onClick={onClose}

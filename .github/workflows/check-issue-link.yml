@@ -13,7 +13,7 @@ jobs:
         with:
           script: |
             const prBody = context.payload.pull_request.body || "";
-            
+
             // Regex to look for GitHub linking keywords followed by an issue number (e.g., Closes #123, Fixes #45)
             const regex = /(close|closes|closed|fix|fixes|fixed|resolve|resolves|resolved)\s+#\d+/i;
             const hasLink = regex.test(prBody);

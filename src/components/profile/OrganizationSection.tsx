@@ -12,7 +12,15 @@ export function OrganizationSection({ orgs }: OrganizationSectionProps) {
 
   return (
     <div style={{ marginTop: "44px" }}>
-      <h2 style={{ fontSize: "16px", fontWeight: 600, color: "var(--color-ink)", margin: "0 0 16px 0", letterSpacing: "-0.2px" }}>
+      <h2
+        style={{
+          fontSize: "16px",
+          fontWeight: 600,
+          color: "var(--color-ink)",
+          margin: "0 0 16px 0",
+          letterSpacing: "-0.2px",
+        }}
+      >
         Organizations
       </h2>
       <div style={{ display: "flex", flexWrap: "wrap", gap: "12px" }}>
@@ -32,7 +40,13 @@ export function OrganizationSection({ orgs }: OrganizationSectionProps) {
               transition: "border-color 0.15s",
             }}
           >
-            <Image src={org.avatarUrl} alt={org.login} width={36} height={36} style={{ display: "block" }} />
+            <Image
+              src={org.avatarUrl}
+              alt={org.login}
+              width={36}
+              height={36}
+              style={{ display: "block" }}
+            />
           </a>
         ))}
       </div>

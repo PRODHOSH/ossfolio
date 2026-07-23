@@ -59,7 +59,9 @@ export default function TermsOfServicePage() {
     <>
       <Navbar />
       <main style={{ backgroundColor: "#ffffff", minHeight: "100vh" }}>
-        <div style={{ maxWidth: "44rem", margin: "0 auto", padding: "56px 20px" }}>
+        <div
+          style={{ maxWidth: "44rem", margin: "0 auto", padding: "56px 20px" }}
+        >
           {/* Header */}
           <header style={{ marginBottom: "24px" }}>
             <h1
@@ -95,9 +97,16 @@ export default function TermsOfServicePage() {
               marginBottom: "40px",
             }}
           >
-            <p style={{ fontSize: "14px", lineHeight: 1.55, color: "#707070", margin: 0 }}>
-              This is a placeholder page - the full terms of service are being finalised.
-              The sections below outline what they will cover.
+            <p
+              style={{
+                fontSize: "14px",
+                lineHeight: 1.55,
+                color: "#707070",
+                margin: 0,
+              }}
+            >
+              This is a placeholder page - the full terms of service are being
+              finalised. The sections below outline what they will cover.
             </p>
           </div>
 
@@ -105,7 +114,9 @@ export default function TermsOfServicePage() {
           {SECTIONS.map((section, i) => (
             <section
               key={section.heading}
-              style={{ marginBottom: i === SECTIONS.length - 1 ? "40px" : "28px" }}
+              style={{
+                marginBottom: i === SECTIONS.length - 1 ? "40px" : "28px",
+              }}
             >
               <h2 style={sectionTitleStyle}>{section.heading}</h2>
               <p style={paragraphStyle}>{section.body}</p>

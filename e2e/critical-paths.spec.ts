@@ -29,7 +29,9 @@ test.describe("critical paths", () => {
     await expect(main).not.toBeEmpty();
 
     // The primary journey out of the homepage must exist.
-    const explore = page.getByRole("link", { name: /explore|discover|leaderboard/i }).first();
+    const explore = page
+      .getByRole("link", { name: /explore|discover|leaderboard/i })
+      .first();
     await expect(explore).toBeVisible();
   });
 
@@ -56,7 +58,9 @@ test.describe("critical paths", () => {
     await expect(page.getByText(/Building this profile/i)).toHaveCount(0);
   });
 
-  test("a profile with no snapshot yet shows the syncing state", async ({ page }) => {
+  test("a profile with no snapshot yet shows the syncing state", async ({
+    page,
+  }) => {
     // e2e-bob deliberately has no snapshot row. This covers the other half of #300: a cold
     // profile must respond immediately with the syncing state rather than blocking on GitHub.
     // It's the branch most likely to rot unnoticed, since it only appears on a first-ever view.

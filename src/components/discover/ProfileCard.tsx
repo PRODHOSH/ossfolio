@@ -51,7 +51,8 @@ function ProfileCardInner({
         borderRadius: "12px",
         textDecoration: "none",
         backgroundColor: "var(--color-canvas)",
-        transition: "border-color 0.15s, background-color 0.2s, box-shadow 0.2s ease",
+        transition:
+          "border-color 0.15s, background-color 0.2s, box-shadow 0.2s ease",
       }}
       onMouseEnter={(e) => {
         e.currentTarget.style.borderColor = "var(--color-primary)";
@@ -62,13 +63,24 @@ function ProfileCardInner({
         e.currentTarget.style.boxShadow = "none";
       }}
     >
-      <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "12px" }}>
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: "12px",
+          marginBottom: "12px",
+        }}
+      >
         <Image
           src={avatar}
           alt={`${displayName} avatar`}
           width={44}
           height={44}
-          style={{ borderRadius: "9999px", border: "1px solid var(--color-hairline)", flexShrink: 0 }}
+          style={{
+            borderRadius: "9999px",
+            border: "1px solid var(--color-hairline)",
+            flexShrink: 0,
+          }}
         />
         <div style={{ minWidth: 0, flex: 1 }}>
           <p
@@ -98,15 +110,39 @@ function ProfileCardInner({
           </p>
         </div>
         <div style={{ textAlign: "right", flexShrink: 0 }}>
-          <p style={{ fontSize: "20px", fontWeight: 600, color: "var(--color-ink)", margin: 0, lineHeight: 1 }}>
+          <p
+            style={{
+              fontSize: "20px",
+              fontWeight: 600,
+              color: "var(--color-ink)",
+              margin: 0,
+              lineHeight: 1,
+            }}
+          >
             {score}
           </p>
           {typeof scoreDelta30Days === "number" && scoreDelta30Days > 0 ? (
-            <p style={{ fontSize: "11px", color: "#10b981", fontWeight: 600, margin: "2px 0 0 0" }} title="Improvement over last 30 days">
+            <p
+              style={{
+                fontSize: "11px",
+                color: "#10b981",
+                fontWeight: 600,
+                margin: "2px 0 0 0",
+              }}
+              title="Improvement over last 30 days"
+            >
               📈 +{scoreDelta30Days}
             </p>
           ) : (
-            <p style={{ fontSize: "11px", color: "var(--color-ink-mute-2)", margin: "2px 0 0 0" }}>score</p>
+            <p
+              style={{
+                fontSize: "11px",
+                color: "var(--color-ink-mute-2)",
+                margin: "2px 0 0 0",
+              }}
+            >
+              score
+            </p>
           )}
         </div>
       </div>
@@ -129,7 +165,14 @@ function ProfileCardInner({
       )}
 
       {topLanguages.length > 0 && (
-        <div style={{ display: "flex", flexWrap: "wrap", gap: "6px", marginBottom: "12px" }}>
+        <div
+          style={{
+            display: "flex",
+            flexWrap: "wrap",
+            gap: "6px",
+            marginBottom: "12px",
+          }}
+        >
           {topLanguages.slice(0, 4).map((lang) => (
             <span
               key={lang}
@@ -148,9 +191,21 @@ function ProfileCardInner({
         </div>
       )}
 
-      <div style={{ display: "flex", flexWrap: "wrap", gap: "16px", fontSize: "12px", color: "var(--color-ink-mute-2)" }}>
-        <span aria-label={`${totalPrs} merged pull requests`}>{totalPrs} PRs</span>
-        <span aria-label={`${totalCommits} commits`}>{totalCommits} commits</span>
+      <div
+        style={{
+          display: "flex",
+          flexWrap: "wrap",
+          gap: "16px",
+          fontSize: "12px",
+          color: "var(--color-ink-mute-2)",
+        }}
+      >
+        <span aria-label={`${totalPrs} merged pull requests`}>
+          {totalPrs} PRs
+        </span>
+        <span aria-label={`${totalCommits} commits`}>
+          {totalCommits} commits
+        </span>
         <span aria-label={`${totalIssues} issues`}>{totalIssues} issues</span>
         <span aria-label={`${followers} followers`}>{followers} followers</span>
       </div>

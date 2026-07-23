@@ -5,10 +5,7 @@ import { useEffect, useRef } from "react";
  * Useful for pausing/resuming polling, intervals, or animations
  * when the user switches to another tab.
  */
-export function useVisibility(
-  onVisible?: () => void,
-  onHidden?: () => void
-) {
+export function useVisibility(onVisible?: () => void, onHidden?: () => void) {
   const visibleRef = useRef(onVisible);
   const hiddenRef = useRef(onHidden);
   useEffect(() => {

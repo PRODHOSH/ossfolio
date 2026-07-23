@@ -12,14 +12,16 @@ async function throwIfRateLimited(res: Response): Promise<void> {
   if (res.status !== 403 && res.status !== 429) return;
   try {
     const err = await res.clone().json();
-    if (typeof err?.message === "string" && err.message.toLowerCase().includes("rate limit")) {
+    if (
+      typeof err?.message === "string" &&
+      err.message.toLowerCase().includes("rate limit")
+    ) {
       throw new GitHubRateLimitError(err.message);
     }
   } catch (e) {
     if (e instanceof GitHubRateLimitError) throw e;
   }
 }
-
 
 /**
  * Live profile "extras" derived from the public (unauthenticated) GitHub REST
@@ -130,7 +132,7 @@ async function searchCount(query: string, accept?: string): Promise<number> {
         },
         next: { revalidate: 3600 },
       },
-      10_000
+      10_000,
     );
 
     if (!res.ok) return 0;
@@ -148,14 +150,16 @@ async function searchCount(query: string, accept?: string): Promise<number> {
  * authenticated GraphQL contributionsCollection, not unauthenticated REST.
  * totalContributions is left for the caller to fill from the (mock) heatmap.
  */
-export async function fetchLiveStats(username: string): Promise<ContributorStats> {
+export async function fetchLiveStats(
+  username: string,
+): Promise<ContributorStats> {
   const u = encodeURIComponent(username);
   const [totalPRs, totalIssues, totalCommits] = await Promise.all([
     searchCount(`issues?q=author:${u}+type:pr`),
     searchCount(`issues?q=author:${u}+type:issue`),
     searchCount(
       `commits?q=author:${u}`,
-      "application/vnd.github.cloak-preview+json"
+      "application/vnd.github.cloak-preview+json",
     ),
   ]);
   return {
@@ -182,7 +186,7 @@ export async function fetchOrganizations(username: string): Promise<Org[]> {
         headers: { Accept: "application/vnd.github.v3+json" },
         cache: "no-store",
       },
-      10_000
+      10_000,
     );
 
     if (!res.ok) {
@@ -206,7 +210,10 @@ export async function fetchOrganizations(username: string): Promise<Org[]> {
 }
 
 /** Fetch recent pull requests for a user, containing all states */
-export async function fetchMergedPRs(username: string, limit: number = 30): Promise<MergedPR[]> {
+export async function fetchMergedPRs(
+  username: string,
+  limit: number = 30,
+): Promise<MergedPR[]> {
   const query = `search/issues?q=author:${encodeURIComponent(username)}+type:pr&sort=updated&order=desc&per_page=${limit}`;
   try {
     const res = await fetchWithTimeout(
@@ -215,7 +222,7 @@ export async function fetchMergedPRs(username: string, limit: number = 30): Prom
         headers: { Accept: "application/vnd.github.v3+json" },
         cache: "no-store",
       },
-      10_000
+      10_000,
     );
 
     if (!res.ok) {
@@ -226,12 +233,14 @@ export async function fetchMergedPRs(username: string, limit: number = 30): Prom
     if (!Array.isArray(json.items)) return [];
     return json.items.map((item: any) => {
       const isMerged = !!item.pull_request?.merged_at;
-      const prState = item.state === "open" ? "open" : (isMerged ? "merged" : "closed");
+      const prState =
+        item.state === "open" ? "open" : isMerged ? "merged" : "closed";
       return {
         title: item.title,
         url: item.html_url,
-        repoName: item.repository_url.split('/').slice(-1)[0],
-        mergedAt: item.pull_request?.merged_at || item.closed_at || item.created_at,
+        repoName: item.repository_url.split("/").slice(-1)[0],
+        mergedAt:
+          item.pull_request?.merged_at || item.closed_at || item.created_at,
         state: prState,
         createdAt: item.created_at,
       };
@@ -263,7 +272,9 @@ export interface GitHubUser {
   twitter_username: string | null;
 }
 
-export async function fetchGitHubUser(username: string): Promise<GitHubUser | null> {
+export async function fetchGitHubUser(
+  username: string,
+): Promise<GitHubUser | null> {
   const res = await fetchWithTimeout(
     `https://api.github.com/users/${username}`,
     {
@@ -273,7 +284,7 @@ export async function fetchGitHubUser(username: string): Promise<GitHubUser | nu
       // an hour-old response, so it is deliberately disabled here.
       cache: "no-store",
     },
-    10_000
+    10_000,
   );
   if (!res.ok) {
     try {
@@ -290,14 +301,16 @@ export async function fetchGitHubUser(username: string): Promise<GitHubUser | nu
   return res.json() as Promise<GitHubUser>;
 }
 
-export async function fetchGitHubRepos(username: string): Promise<GitHubRepoPayload[]> {
+export async function fetchGitHubRepos(
+  username: string,
+): Promise<GitHubRepoPayload[]> {
   const res = await fetchWithTimeout(
     `https://api.github.com/users/${username}/repos?sort=stars&per_page=100&type=owner`,
     {
       headers: { Accept: "application/vnd.github.mercy-preview+json" },
       cache: "no-store",
     },
-    10_000
+    10_000,
   );
   if (!res.ok) {
     // Previously this swallowed every non-OK response into an empty list. That was

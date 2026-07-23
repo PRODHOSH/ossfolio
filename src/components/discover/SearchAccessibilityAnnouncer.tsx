@@ -14,11 +14,7 @@ export function SearchAccessibilityAnnouncer({
     : `Search completed. Found ${resultsCount} matching profile${resultsCount === 1 ? "" : "s"}.`;
 
   return (
-    <output
-      className="sr-only"
-      aria-live="polite"
-      aria-atomic="true"
-    >
+    <output className="sr-only" aria-live="polite" aria-atomic="true">
       {announcement}
     </output>
   );

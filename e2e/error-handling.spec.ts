@@ -1,7 +1,9 @@
 import { test, expect } from "@playwright/test";
 
 test.describe("structured API error responses", () => {
-  test("v1 users endpoint returns 404 with standard error shape for unknown user", async ({ request }) => {
+  test("v1 users endpoint returns 404 with standard error shape for unknown user", async ({
+    request,
+  }) => {
     const res = await request.get("/api/v1/users/this-user-does-not-exist-e2e");
     expect(res.status()).toBe(404);
 
@@ -14,7 +16,9 @@ test.describe("structured API error responses", () => {
     });
   });
 
-  test("v1 users endpoint returns 400 with standard error shape for invalid username", async ({ request }) => {
+  test("v1 users endpoint returns 400 with standard error shape for invalid username", async ({
+    request,
+  }) => {
     const res = await request.get("/api/v1/users/%00invalid");
     expect(res.status()).toBe(400);
 
@@ -27,7 +31,9 @@ test.describe("structured API error responses", () => {
     });
   });
 
-  test("refresh endpoint returns 429 with retryAfterSeconds for rate limited requests", async ({ request }) => {
+  test("refresh endpoint returns 429 with retryAfterSeconds for rate limited requests", async ({
+    request,
+  }) => {
     // First request should succeed (or 404 if user doesn't exist)
     const res1 = await request.post("/api/test/refresh");
     // We expect either 429 (rate limited) or 400 (invalid) — both should have structured errors

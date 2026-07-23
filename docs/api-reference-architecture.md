@@ -15,11 +15,11 @@ graph TD
 
 ## API Versioning
 
-| Prefix | Type | Auth | Stability |
-|--------|------|------|-----------|
-| `/api/v1/` | Public REST | Optional | Stable |
-| `/api/` | Internal | Varies | Unstable |
-| `/api/webhooks/` | Webhook | Signature | Stable |
+| Prefix           | Type        | Auth      | Stability |
+| ---------------- | ----------- | --------- | --------- |
+| `/api/v1/`       | Public REST | Optional  | Stable    |
+| `/api/`          | Internal    | Varies    | Unstable  |
+| `/api/webhooks/` | Webhook     | Signature | Stable    |
 
 ## Response Envelope
 
@@ -46,6 +46,7 @@ All endpoints are hosted under `/api/` and return JSON payloads.
 - **Authentication**: None (Public)
 - **Rate Limit**: 60 req/min per IP
 - **Response Shape**:
+
 ```json
 {
   "username": "string",
@@ -73,9 +74,10 @@ All endpoints are hosted under `/api/` and return JSON payloads.
 - **Authentication**: None (Public)
 - **Query Params**: `page` (number), `search` (string), `sort` (score|name), `type` (users|organizations)
 - **Response Shape**:
+
 ```json
 {
-  "rows": [ { "username": "...", "score": 120, "avatar_url": "..." } ],
+  "rows": [{ "username": "...", "score": 120, "avatar_url": "..." }],
   "hasNext": true
 }
 ```
@@ -105,6 +107,7 @@ All endpoints are hosted under `/api/` and return JSON payloads.
 - **Authentication**: Bearer token required
 - **Request Body (PUT)**: `{ "bio": "...", "headline": "...", "visibility": "public" }`
 - **Response Shape**:
+
 ```json
 {
   "settings": {
@@ -134,19 +137,20 @@ All endpoints are hosted under `/api/` and return JSON payloads.
 
 ## Error Responses
 
-| Status | Meaning | Example |
-|--------|---------|--------|
-| 400 | Bad request | `{ "error": "Missing required field" }` |
-| 401 | Unauthorized | `{ "error": "Authentication required" }` |
-| 404 | Not found | `{ "error": "User not found" }` |
-| 429 | Rate limited | `{ "error": "Too many requests" }` (with `Retry-After` header) |
-| 500 | Server error | `{ "error": "Internal server error" }` |
-| 502 | Upstream failure | `{ "error": "GitHub API unreachable" }` |
-| 503 | Service unavailable | `{ "error": "Service temporarily unavailable" }` |
+| Status | Meaning             | Example                                                        |
+| ------ | ------------------- | -------------------------------------------------------------- |
+| 400    | Bad request         | `{ "error": "Missing required field" }`                        |
+| 401    | Unauthorized        | `{ "error": "Authentication required" }`                       |
+| 404    | Not found           | `{ "error": "User not found" }`                                |
+| 429    | Rate limited        | `{ "error": "Too many requests" }` (with `Retry-After` header) |
+| 500    | Server error        | `{ "error": "Internal server error" }`                         |
+| 502    | Upstream failure    | `{ "error": "GitHub API unreachable" }`                        |
+| 503    | Service unavailable | `{ "error": "Service temporarily unavailable" }`               |
 
 ## Security Headers
 
 All API responses include:
+
 - `X-Content-Type-Options: nosniff`
 - `X-Frame-Options: DENY`
 - `Referrer-Policy: strict-origin-when-cross-origin`

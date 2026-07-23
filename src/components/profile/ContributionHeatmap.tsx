@@ -8,7 +8,10 @@ interface ContributionHeatmapProps {
   totalContributions: number;
 }
 
-export function ContributionHeatmap({ weeks, totalContributions }: ContributionHeatmapProps) {
+export function ContributionHeatmap({
+  weeks,
+  totalContributions,
+}: ContributionHeatmapProps) {
   return (
     <Card>
       <CardHeader>

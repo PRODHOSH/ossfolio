@@ -26,11 +26,11 @@ CSP headers are applied via Next.js middleware for page routes and inline header
 
 ## Rate Limiting
 
-| Endpoint | Limit | Window | Backend |
-|----------|-------|--------|---------|
-| `/api/[username]/refresh` | 1 request | 5 minutes | Upstash Redis (per IP) |
-| `/api/v1/users/[username]` | 60 requests | 1 minute | In-memory (per IP) |
-| Profile sync (per user) | 1 request | 10 minutes | Supabase DB |
+| Endpoint                   | Limit       | Window     | Backend                |
+| -------------------------- | ----------- | ---------- | ---------------------- |
+| `/api/[username]/refresh`  | 1 request   | 5 minutes  | Upstash Redis (per IP) |
+| `/api/v1/users/[username]` | 60 requests | 1 minute   | In-memory (per IP)     |
+| Profile sync (per user)    | 1 request   | 10 minutes | Supabase DB            |
 
 ## Authentication
 
@@ -40,10 +40,10 @@ CSP headers are applied via Next.js middleware for page routes and inline header
 
 ## Environment Variables
 
-| Variable | Required | Description |
-|----------|----------|-------------|
-| `NEXT_PUBLIC_SUPABASE_URL` | Yes | Supabase project URL |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Yes | Supabase anonymous key |
-| `SUPABASE_SERVICE_ROLE_KEY` | No | Admin key for server-side ops |
-| `UPSTASH_REDIS_REST_URL` | No | Redis URL for rate limiting |
-| `UPSTASH_REDIS_REST_TOKEN` | No | Redis token for rate limiting |
+| Variable                        | Required | Description                   |
+| ------------------------------- | -------- | ----------------------------- |
+| `NEXT_PUBLIC_SUPABASE_URL`      | Yes      | Supabase project URL          |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Yes      | Supabase anonymous key        |
+| `SUPABASE_SERVICE_ROLE_KEY`     | No       | Admin key for server-side ops |
+| `UPSTASH_REDIS_REST_URL`        | No       | Redis URL for rate limiting   |
+| `UPSTASH_REDIS_REST_TOKEN`      | No       | Redis token for rate limiting |

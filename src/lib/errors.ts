@@ -9,7 +9,7 @@ export class AppError extends Error {
     status: number,
     code: string,
     details?: Record<string, unknown>,
-    retryAfterSeconds?: number
+    retryAfterSeconds?: number,
   ) {
     super(message);
     this.name = "AppError";
@@ -21,7 +21,10 @@ export class AppError extends Error {
 }
 
 export class ValidationError extends AppError {
-  constructor(message = "Validation failed", details?: Record<string, unknown>) {
+  constructor(
+    message = "Validation failed",
+    details?: Record<string, unknown>,
+  ) {
     super(message, 400, "VALIDATION_ERROR", details);
     this.name = "ValidationError";
   }
@@ -35,7 +38,10 @@ export class AuthError extends AppError {
 }
 
 export class NotFoundError extends AppError {
-  constructor(message = "Resource not found", details?: Record<string, unknown>) {
+  constructor(
+    message = "Resource not found",
+    details?: Record<string, unknown>,
+  ) {
     super(message, 404, "NOT_FOUND", details);
     this.name = "NotFoundError";
   }
@@ -45,7 +51,7 @@ export class RateLimitError extends AppError {
   constructor(
     message = "Rate limit exceeded",
     retryAfterSeconds: number,
-    details?: Record<string, unknown>
+    details?: Record<string, unknown>,
   ) {
     super(message, 429, "RATE_LIMITED", details, retryAfterSeconds);
     this.name = "RateLimitError";
@@ -53,7 +59,10 @@ export class RateLimitError extends AppError {
 }
 
 export class UpstreamError extends AppError {
-  constructor(message = "Upstream service unavailable", details?: Record<string, unknown>) {
+  constructor(
+    message = "Upstream service unavailable",
+    details?: Record<string, unknown>,
+  ) {
     super(message, 502, "UPSTREAM_ERROR", details);
     this.name = "UpstreamError";
   }

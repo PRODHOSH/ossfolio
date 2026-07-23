@@ -92,7 +92,7 @@ function clientIp(request: NextRequest): string | null {
 async function keyFor(identifier: string): Promise<string> {
   const digest = await crypto.subtle.digest(
     "SHA-256",
-    new TextEncoder().encode(identifier)
+    new TextEncoder().encode(identifier),
   );
   const hex = Array.from(new Uint8Array(digest))
     .map((b) => b.toString(16).padStart(2, "0"))
@@ -110,7 +110,7 @@ async function keyFor(identifier: string): Promise<string> {
  * the one it was added to prevent, and the per-username limit is still underneath it.
  */
 export async function checkRefreshRateLimit(
-  request: NextRequest
+  request: NextRequest,
 ): Promise<RateLimitResult> {
   // No usable address (local dev, an odd proxy) — everything unidentifiable shares one
   // bucket rather than being waved through, so the absence of a header can't become a way
@@ -136,7 +136,9 @@ export async function checkRefreshRateLimit(
     // number rather than a guess.
     const storedResetAt = await redis.get<number>(key);
     const remainingMs =
-      typeof storedResetAt === "number" ? storedResetAt - now : WINDOW_SECONDS * 1000;
+      typeof storedResetAt === "number"
+        ? storedResetAt - now
+        : WINDOW_SECONDS * 1000;
 
     return {
       allowed: false,
@@ -147,7 +149,7 @@ export async function checkRefreshRateLimit(
   } catch (error) {
     console.error(
       "[rate-limit] refresh limiter unavailable, allowing request:",
-      error instanceof Error ? error.message : error
+      error instanceof Error ? error.message : error,
     );
     return { allowed: true, retryAfterSeconds: 0 };
   }

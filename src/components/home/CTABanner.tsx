@@ -83,8 +83,13 @@ export function CTABanner({ onGetStarted }: CTABannerProps) {
               cursor: "pointer",
               transition: "background-color 0.2s ease",
             }}
-            onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "var(--color-primary-deep)")}
-            onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "var(--color-primary)")}
+            onMouseEnter={(e) =>
+              (e.currentTarget.style.backgroundColor =
+                "var(--color-primary-deep)")
+            }
+            onMouseLeave={(e) =>
+              (e.currentTarget.style.backgroundColor = "var(--color-primary)")
+            }
           >
             Get started for free
             <ArrowRight size={15} />
@@ -105,11 +110,14 @@ export function CTABanner({ onGetStarted }: CTABannerProps) {
               fontWeight: 500,
               border: "1px solid var(--color-hairline)",
               textDecoration: "none",
-              transition: "background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease",
+              transition:
+                "background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease",
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = "var(--color-canvas-soft)";
-              e.currentTarget.style.borderColor = "var(--color-hairline-strong)";
+              e.currentTarget.style.backgroundColor =
+                "var(--color-canvas-soft)";
+              e.currentTarget.style.borderColor =
+                "var(--color-hairline-strong)";
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.backgroundColor = "var(--color-canvas)";

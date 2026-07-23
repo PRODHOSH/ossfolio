@@ -73,14 +73,30 @@ export function DiscoverPagination({
       <div>
         {hasPrev ? (
           <Link href={buildUrl(currentPage - 1)} style={btnStyle}>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              aria-hidden="true"
+            >
               <polyline points="15 18 9 12 15 6" />
             </svg>
             Previous
           </Link>
         ) : (
           <span style={disabledStyle}>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              aria-hidden="true"
+            >
               <polyline points="15 18 9 12 15 6" />
             </svg>
             Previous
@@ -91,7 +107,14 @@ export function DiscoverPagination({
       <div style={{ display: "flex", gap: "6px", alignItems: "center" }}>
         {pageNumbers.map((page, i) =>
           page === "..." ? (
-            <span key={`ellipsis-${i}`} style={{ fontSize: "13px", color: "var(--color-ink-mute-2)", padding: "0 4px" }}>
+            <span
+              key={`ellipsis-${i}`}
+              style={{
+                fontSize: "13px",
+                color: "var(--color-ink-mute-2)",
+                padding: "0 4px",
+              }}
+            >
               ...
             </span>
           ) : (
@@ -106,9 +129,16 @@ export function DiscoverPagination({
                 justifyContent: "center",
                 fontSize: "13px",
                 fontWeight: page === currentPage ? 600 : 400,
-                color: page === currentPage ? "var(--color-on-primary)" : "var(--color-ink)",
-                backgroundColor: page === currentPage ? "var(--color-primary)" : "transparent",
-                border: page === currentPage ? "none" : "1px solid var(--color-hairline)",
+                color:
+                  page === currentPage
+                    ? "var(--color-on-primary)"
+                    : "var(--color-ink)",
+                backgroundColor:
+                  page === currentPage ? "var(--color-primary)" : "transparent",
+                border:
+                  page === currentPage
+                    ? "none"
+                    : "1px solid var(--color-hairline)",
                 borderRadius: "var(--radius-sm)",
                 textDecoration: "none",
                 position: "relative",
@@ -124,7 +154,7 @@ export function DiscoverPagination({
               )}
               {page}
             </Link>
-          )
+          ),
         )}
       </div>
 
@@ -132,14 +162,30 @@ export function DiscoverPagination({
         {hasNext ? (
           <Link href={buildUrl(currentPage + 1)} style={btnStyle}>
             Next
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              aria-hidden="true"
+            >
               <polyline points="9 18 15 12 9 6" />
             </svg>
           </Link>
         ) : (
           <span style={disabledStyle}>
             Next
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              aria-hidden="true"
+            >
               <polyline points="9 18 15 12 9 6" />
             </svg>
           </span>

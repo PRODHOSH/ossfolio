@@ -18,7 +18,7 @@ async function sleep(ms: number): Promise<void> {
 async function githubGraphQL<T>(
   query: string,
   variables: Record<string, unknown>,
-  token: string
+  token: string,
 ): Promise<T> {
   let lastError: Error | null = null;
 
@@ -35,7 +35,7 @@ async function githubGraphQL<T>(
           body: JSON.stringify({ query, variables }),
           next: { revalidate: 3600 },
         },
-        10_000
+        10_000,
       );
 
       if (!res.ok) {
@@ -53,7 +53,7 @@ async function githubGraphQL<T>(
           if (attempt < RETRY_CONFIG.maxRetries) {
             const delay = Math.min(
               RETRY_CONFIG.baseDelayMs * 2 ** attempt,
-              RETRY_CONFIG.maxDelayMs
+              RETRY_CONFIG.maxDelayMs,
             );
             await sleep(delay);
             continue;
@@ -74,7 +74,7 @@ async function githubGraphQL<T>(
         if (attempt < RETRY_CONFIG.maxRetries) {
           const delay = Math.min(
             RETRY_CONFIG.baseDelayMs * 2 ** attempt,
-            RETRY_CONFIG.maxDelayMs
+            RETRY_CONFIG.maxDelayMs,
           );
           await sleep(delay);
           continue;
@@ -88,7 +88,7 @@ async function githubGraphQL<T>(
         if (attempt < RETRY_CONFIG.maxRetries) {
           const delay = Math.min(
             RETRY_CONFIG.baseDelayMs * 2 ** attempt,
-            RETRY_CONFIG.maxDelayMs
+            RETRY_CONFIG.maxDelayMs,
           );
           await sleep(delay);
           continue;
@@ -226,7 +226,7 @@ export interface GitHubContributor {
 /** Fetch a contributor's full GitHub profile and contributions via the GraphQL API, caching results in Redis for 2 hours. */
 export async function fetchContributorProfile(
   login: string,
-  token: string
+  token: string,
 ): Promise<GitHubContributor> {
   const cacheKey = `github:profile:${login.toLowerCase()}`;
 
@@ -244,7 +244,7 @@ export async function fetchContributorProfile(
   const data = await githubGraphQL<{ user: GitHubContributor }>(
     CONTRIBUTOR_QUERY,
     { login },
-    token
+    token,
   );
 
   if (data?.user) {
@@ -259,9 +259,10 @@ export async function fetchContributorProfile(
   return data.user;
 }
 
-export function contributorToScoreInputs(
-  c: GitHubContributor
-): { stats: ContributorStats; repos: Repo[] } {
+export function contributorToScoreInputs(c: GitHubContributor): {
+  stats: ContributorStats;
+  repos: Repo[];
+} {
   const cc = c.contributionsCollection;
   const stats: ContributorStats = {
     totalCommits: cc.totalCommitContributions,
@@ -314,7 +315,7 @@ export interface ContributionCalendar {
 
 export async function fetchContributionCalendar(
   username: string,
-  from?: string
+  from?: string,
 ): Promise<ContributionCalendar | null> {
   const cacheKey = `github:calendar:${username.toLowerCase()}${from ? `:${from}` : ""}`;
 
@@ -340,14 +341,15 @@ export async function fetchContributionCalendar(
         },
         next: { revalidate: 3600 },
       },
-      10_000
+      10_000,
     );
 
     if (!res.ok) return null;
 
     const html = await res.text();
     const countById = new Map<string, number>();
-    const tipRe = /<tool-tip[^>]*\bfor="(contribution-day-component-\d+-\d+)"[^>]*>([^<]*)<\/tool-tip>/g;
+    const tipRe =
+      /<tool-tip[^>]*\bfor="(contribution-day-component-\d+-\d+)"[^>]*>([^<]*)<\/tool-tip>/g;
     let tip: RegExpExecArray | null;
     while ((tip = tipRe.exec(html)) !== null) {
       const id = tip[1];
@@ -391,7 +393,7 @@ export async function fetchContributionCalendar(
 
     const totalContributions = weeks.reduce(
       (sum, week) => sum + week.days.reduce((s, d) => s + d.count, 0),
-      0
+      0,
     );
 
     const result: ContributionCalendar = { weeks, totalContributions };

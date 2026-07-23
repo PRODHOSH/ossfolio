@@ -27,7 +27,10 @@ const AUTH_WAIT_TIMEOUT_MS = 10000;
  * written with the service-role key. The browser no longer computes, sends, or is
  * permitted to write any of those columns.
  */
-async function requestScoreSync(accessToken: string, providerToken?: string): Promise<void> {
+async function requestScoreSync(
+  accessToken: string,
+  providerToken?: string,
+): Promise<void> {
   const res = await fetch("/api/profile/sync", {
     method: "POST",
     headers: {
@@ -51,7 +54,8 @@ export default function AuthCallbackPage() {
     let cancelled = false;
 
     async function handleSession(session: Session) {
-      const username = session.user.user_metadata?.user_name as string | undefined;
+      const username = session.user.user_metadata?.user_name as
+        string | undefined;
       // provider_token is only present immediately after the OAuth redirect.
       const providerToken = session.provider_token ?? undefined;
 
@@ -73,14 +77,14 @@ export default function AuthCallbackPage() {
     // instead, which fires only after the exchange succeeds and the session is
     // stored. We also fall back to INITIAL_SESSION in case the session was
     // already established before the listener attached (e.g., rapid re-mount).
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        if (cancelled || !session) return;
-        if (event === "SIGNED_IN" || event === "INITIAL_SESSION") {
-          await handleSession(session);
-        }
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (cancelled || !session) return;
+      if (event === "SIGNED_IN" || event === "INITIAL_SESSION") {
+        await handleSession(session);
       }
-    );
+    });
 
     // Safety net: if no auth event arrives within AUTH_WAIT_TIMEOUT_MS, redirect
     // home so the user isn't stuck on the spinner indefinitely.

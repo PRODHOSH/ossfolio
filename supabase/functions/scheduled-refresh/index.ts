@@ -9,10 +9,13 @@ const LOCK_TTL_MS = 10 * 60 * 1000; // 10 minutes — same as column default
 serve(async (req) => {
   const schedulerSecret = Deno.env.get("SCHEDULER_SECRET");
   if (!schedulerSecret) {
-    return new Response(JSON.stringify({ error: "SCHEDULER_SECRET not configured" }), {
-      status: 500,
-      headers: { "Content-Type": "application/json" },
-    });
+    return new Response(
+      JSON.stringify({ error: "SCHEDULER_SECRET not configured" }),
+      {
+        status: 500,
+        headers: { "Content-Type": "application/json" },
+      },
+    );
   }
 
   const authHeader = req.headers.get("Authorization") || "";
@@ -35,8 +38,12 @@ serve(async (req) => {
     const { data: lock } = await supabase
       .from("scheduler_locks")
       .upsert(
-        { key: LOCK_KEY, locked_at: now, expires_at: new Date(now.getTime() + LOCK_TTL_MS) },
-        { onConflict: "key", ignoreDuplicates: true }
+        {
+          key: LOCK_KEY,
+          locked_at: now,
+          expires_at: new Date(now.getTime() + LOCK_TTL_MS),
+        },
+        { onConflict: "key", ignoreDuplicates: true },
       )
       .select("locked_at")
       .single();
@@ -53,8 +60,11 @@ serve(async (req) => {
 
       if (existing && new Date(existing.expires_at) > now) {
         return new Response(
-          JSON.stringify({ skipped: true, reason: "concurrent run in progress" }),
-          { status: 200, headers: { "Content-Type": "application/json" } }
+          JSON.stringify({
+            skipped: true,
+            reason: "concurrent run in progress",
+          }),
+          { status: 200, headers: { "Content-Type": "application/json" } },
         );
       }
 
@@ -62,8 +72,12 @@ serve(async (req) => {
       await supabase
         .from("scheduler_locks")
         .upsert(
-          { key: LOCK_KEY, locked_at: now, expires_at: new Date(now.getTime() + LOCK_TTL_MS) },
-          { onConflict: "key" }
+          {
+            key: LOCK_KEY,
+            locked_at: now,
+            expires_at: new Date(now.getTime() + LOCK_TTL_MS),
+          },
+          { onConflict: "key" },
         );
     }
 
@@ -79,7 +93,7 @@ serve(async (req) => {
       await supabase.from("scheduler_locks").delete().eq("key", LOCK_KEY);
       return new Response(
         JSON.stringify({ error: error?.message || "No profiles found" }),
-        { status: 500, headers: { "Content-Type": "application/json" } }
+        { status: 500, headers: { "Content-Type": "application/json" } },
       );
     }
 
@@ -87,12 +101,18 @@ serve(async (req) => {
 
     for (const profile of profiles) {
       try {
-        const ghRes = await fetch(`${GITHUB_API}/users/${encodeURIComponent(profile.username)}`, {
-          headers: { Accept: "application/vnd.github.v3+json" },
-        });
+        const ghRes = await fetch(
+          `${GITHUB_API}/users/${encodeURIComponent(profile.username)}`,
+          {
+            headers: { Accept: "application/vnd.github.v3+json" },
+          },
+        );
 
         if (!ghRes.ok) {
-          results.push({ username: profile.username, status: `github_error_${ghRes.status}` });
+          results.push({
+            username: profile.username,
+            status: `github_error_${ghRes.status}`,
+          });
           continue;
         }
 
@@ -111,7 +131,10 @@ serve(async (req) => {
           .eq("username", profile.username);
 
         if (updateError) {
-          results.push({ username: profile.username, status: "db_write_failed" });
+          results.push({
+            username: profile.username,
+            status: "db_write_failed",
+          });
         } else {
           results.push({ username: profile.username, status: "refreshed" });
         }
@@ -129,7 +152,7 @@ serve(async (req) => {
         total: profiles.length,
         results,
       }),
-      { status: 200, headers: { "Content-Type": "application/json" } }
+      { status: 200, headers: { "Content-Type": "application/json" } },
     );
   } catch (err) {
     // Best-effort lock release so the cron doesn't stay stuck on error.
@@ -144,7 +167,7 @@ serve(async (req) => {
 
     return new Response(
       JSON.stringify({ error: err.message || "Internal error" }),
-      { status: 500, headers: { "Content-Type": "application/json" } }
+      { status: 500, headers: { "Content-Type": "application/json" } },
     );
   }
 });

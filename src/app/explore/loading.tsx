@@ -14,7 +14,9 @@ export default function ExploreLoading() {
           transition: "background-color 0.2s ease, color 0.2s ease",
         }}
       >
-        <div style={{ maxWidth: "56rem", margin: "0 auto", padding: "56px 20px" }}>
+        <div
+          style={{ maxWidth: "56rem", margin: "0 auto", padding: "56px 20px" }}
+        >
           <header style={{ marginBottom: "32px" }}>
             <div
               style={{

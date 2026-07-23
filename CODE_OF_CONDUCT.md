@@ -7,6 +7,7 @@ We as members, contributors, and maintainers pledge to make participation in OSS
 ## Our Standards
 
 **Positive behavior includes:**
+
 - Using welcoming and inclusive language
 - Being respectful of differing viewpoints and experiences
 - Gracefully accepting constructive criticism
@@ -14,6 +15,7 @@ We as members, contributors, and maintainers pledge to make participation in OSS
 - Showing empathy towards other community members
 
 **Unacceptable behavior includes:**
+
 - Trolling, insulting or derogatory comments, and personal or political attacks
 - Public or private harassment
 - Publishing others' private information without explicit permission

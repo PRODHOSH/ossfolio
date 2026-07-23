@@ -4,7 +4,13 @@ const CSP_DIRECTIVES = {
   "default-src": ["'self'"],
   "script-src": ["'self'", "'unsafe-inline'", "'unsafe-eval'"],
   "style-src": ["'self'", "'unsafe-inline'"],
-  "img-src": ["'self'", "data:", "blob:", "https://avatars.githubusercontent.com", "https://github.com"],
+  "img-src": [
+    "'self'",
+    "data:",
+    "blob:",
+    "https://avatars.githubusercontent.com",
+    "https://github.com",
+  ],
   "font-src": ["'self'", "data:"],
   "connect-src": ["'self'", "https://api.github.com", "https://github.com"],
   "frame-src": ["'none'"],
@@ -33,7 +39,8 @@ const SECURITY_HEADERS: Record<string, string> = {
 const API_CORS_HEADERS: Record<string, string> = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
-  "Access-Control-Allow-Headers": "Content-Type, Authorization, If-None-Match, Cache-Control",
+  "Access-Control-Allow-Headers":
+    "Content-Type, Authorization, If-None-Match, Cache-Control",
   "Access-Control-Max-Age": "86400",
 };
 
@@ -68,7 +75,5 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: [
-    "/((?!_next/static|_next/image).*)",
-  ],
+  matcher: ["/((?!_next/static|_next/image).*)"],
 };

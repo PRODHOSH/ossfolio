@@ -44,6 +44,7 @@ If you used AI to help write or fix code, that is completely fine. But you need 
 **Mention it clearly.** In your PR description, add a line like: "Used Claude Code for coding" or whichever tool you used. This is not optional.
 
 **Actually understand what you changed.** Before submitting, you should be able to answer these three questions yourself:
+
 - Which function or module did you change?
 - Why did you change it?
 - What side effects could that change create?
@@ -59,18 +60,23 @@ If you cannot answer those, do not submit yet. Go back, understand the code, the
 ## How Can I Contribute?
 
 ### Fix a bug
+
 Open issues labelled [`bug`](../../issues?q=label%3Abug+is%3Aopen). Comment to claim one before starting.
 
 ### Build a feature
+
 Open issues labelled [`enhancement`](../../issues?q=label%3Aenhancement+is%3Aopen). Comment explaining your approach and wait to be assigned.
 
 ### Improve docs
+
 Typos, unclear sections, missing info — no issue needed for small doc fixes. Just open a PR.
 
 ### Report a bug
+
 Open an issue using the **Bug Report** template. Include steps to reproduce, expected behaviour, and screenshots if relevant.
 
 ### Suggest a feature
+
 Open an issue using the **Feature Request** template. Describe the problem it solves, not just what you want built.
 
 ---
@@ -80,6 +86,7 @@ Open an issue using the **Feature Request** template. Describe the problem it so
 OSSfolio has a design system documented in [`DESIGN.md`](DESIGN.md). If your contribution touches any UI — a new component, a page section, buttons, colors, spacing, typography — you need to read it before you start coding.
 
 It covers:
+
 - Color tokens (primary green, ink, canvas, hairline values)
 - Typography scale and font weights
 - Spacing and border radius values
@@ -156,13 +163,13 @@ cp .env.example .env.local
 
 Open `.env.local` and fill in:
 
-| Variable | Where to find it |
-|---|---|
-| `NEXT_PUBLIC_SUPABASE_URL` | Supabase dashboard → Project Settings → API |
+| Variable                        | Where to find it                                                                                                                                           |
+| ------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `NEXT_PUBLIC_SUPABASE_URL`      | Supabase dashboard → Project Settings → API                                                                                                                |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase dashboard → Project Settings → API → **Project API keys** → `anon` `public` (this is a safe, public key used to access Supabase from the browser) |
-| `SUPABASE_SERVICE_ROLE_KEY` | Supabase dashboard → Project Settings → API |
-| `NEXTAUTH_SECRET` | Run `openssl rand -base64 32` in your terminal |
-| `NEXTAUTH_URL` | `http://localhost:3000` for local dev |
+| `SUPABASE_SERVICE_ROLE_KEY`     | Supabase dashboard → Project Settings → API                                                                                                                |
+| `NEXTAUTH_SECRET`               | Run `openssl rand -base64 32` in your terminal                                                                                                             |
+| `NEXTAUTH_URL`                  | `http://localhost:3000` for local dev                                                                                                                      |
 
 GitHub OAuth is configured directly inside Supabase — go to **Authentication → Providers → GitHub** in your Supabase dashboard and enter your GitHub OAuth app credentials there. You do not need to add them to `.env.local`.
 
@@ -182,10 +189,10 @@ Open `http://localhost:3000`.
 
 The database schema lives in two places that are always kept in sync:
 
-| File | Purpose |
-|---|---|
-| `supabase/schema.sql` | Single master file — paste this into Supabase dashboard to set up everything at once |
-| `supabase/migrations/` | Individual migration files — used by the Supabase CLI, one file per change |
+| File                   | Purpose                                                                              |
+| ---------------------- | ------------------------------------------------------------------------------------ |
+| `supabase/schema.sql`  | Single master file — paste this into Supabase dashboard to set up everything at once |
+| `supabase/migrations/` | Individual migration files — used by the Supabase CLI, one file per change           |
 
 ### If your PR changes the database schema
 
@@ -214,6 +221,7 @@ This section explains how the two most complex systems in the codebase operate: 
 OSSfolio uses GitHub OAuth integrated with Supabase for user authentication.
 
 #### End-to-End OAuth Lifecycle
+
 1. **Initiation**: The user clicks "Sign in with GitHub" in the frontend (e.g., [AuthModal.tsx](file:///c:/Users/Rushabh%20Mahajan/Documents/GitHub/ossfolio/src/components/auth/AuthModal.tsx)).
 2. **Supabase Redirection**: Supabase redirects the browser to GitHub's OAuth server.
 3. **GitHub Authentication**: The user authorizes the application, and GitHub redirects back to the configured callback URI: `/auth/callback`.
@@ -222,6 +230,7 @@ OSSfolio uses GitHub OAuth integrated with Supabase for user authentication.
 6. **Final Redirect**: The user is redirected to their public profile page (`/[username]`) or the home page (`/`) if the username metadata is missing.
 
 #### PKCE Flow & Client Initialization
+
 - **What is PKCE?**: OSSfolio uses the standard **PKCE (Proof Key for Code Exchange)** OAuth flow (default in Supabase v2). Under PKCE, the authorization code (`?code=...`) in the callback URL is exchanged client-side for an access and refresh token.
 - **Asynchronous Execution**: This code exchange happens asynchronously during the Supabase client library's initialization.
 - **`onAuthStateChange` vs `getSession`**: Because the exchange is asynchronous, calling `supabase.auth.getSession()` immediately upon page load can return `null` before the exchange completes. To prevent race conditions, the callback page subscribes to auth state changes using `supabase.auth.onAuthStateChange`. It listens for `SIGNED_IN` and `INITIAL_SESSION` events to ensure that the session is established and active before executing the score sync.
@@ -232,19 +241,24 @@ OSSfolio uses GitHub OAuth integrated with Supabase for user authentication.
 The score sync pipeline calculates the user's contributor score by pulling activity data from GitHub and caching it in the database.
 
 #### Recalculation Timing
+
 1. **At Login**: Calculated and stored automatically during the post-login OAuth callback phase.
 2. **On-Demand**: Regenerated when a user clicks the profile refresh/sync action (which hits `/api/[username]/refresh` endpoint).
 3. **Timeout Constraint**: During the OAuth callback, the `syncScore` pipeline is raced against a 4-second timeout (`SYNC_TIMEOUT_MS = 4000`) to guarantee that slow API requests do not block the user from accessing their profile.
 
 #### GraphQL vs REST Fallback Path
+
 When syncing the score, the application checks for the user's GitHub provider token (saved immediately after OAuth login):
+
 - **GraphQL Path (Authenticated)**: If `providerToken` is available, it queries the GitHub GraphQL API using `fetchContributorProfile`. The GraphQL API exposes the `contributionsCollection` query, which is the only source that returns the user's Pull Request review counts (`totalPullRequestReviewContributions`).
 - **REST Path (Unauthenticated Fallback)**: If the token is missing or if the GraphQL query fails (due to rate limits, expired tokens, or scope issues), the pipeline falls back to `statsFromRest(username)`. This runs three parallel REST Search API requests (`fetchLiveStats(username)`) to retrieve PR, issue, and commit counts. Because code review counts cannot be retrieved from unauthenticated REST or search APIs, the `totalReviews` count defaults to `0` in this fallback path.
 
 For full architectural flows and sequence diagrams of these pipelines, consult the [System Flow Diagrams](docs/system-diagrams.md) and [API Reference Architecture](docs/api-reference-architecture.md).
 
 #### Database Profile Schema
+
 The calculated score and activity stats are cached in the `public.profiles` database table. The table columns are:
+
 - `id` (uuid, primary key): References `auth.users(id)` in Supabase auth system.
 - `username` (text, unique): User's GitHub login handle.
 - `name` (text): Display name.
@@ -274,14 +288,14 @@ The calculated score and activity stats are cached in the `public.profiles` data
 
 Use the format `type/short-description`:
 
-| Prefix | When to use |
-|---|---|
-| `feat/` | New feature |
-| `fix/` | Bug fix |
-| `docs/` | Documentation only |
+| Prefix      | When to use                       |
+| ----------- | --------------------------------- |
+| `feat/`     | New feature                       |
+| `fix/`      | Bug fix                           |
+| `docs/`     | Documentation only                |
 | `refactor/` | Code cleanup, no behaviour change |
-| `chore/` | Tooling, CI, config |
-| `test/` | Tests only |
+| `chore/`    | Tooling, CI, config               |
+| `test/`     | Tests only                        |
 
 Examples: `feat/contribution-heatmap`, `fix/github-api-rate-limit`, `docs/supabase-setup`
 
@@ -299,6 +313,7 @@ npm run lint:fix      # Auto-fix where possible
 ```
 
 The ESLint config is in `eslint.config.mjs` at the root. Key rules:
+
 - `no-console`: Warn on `console.log` (allow `warn`/`error`)
 - `prefer-const`: Error on `let` that is never reassigned
 - `no-unused-vars`: Warn on unused variables (ignore `_`-prefixed)
@@ -321,6 +336,7 @@ type(scope): short summary under 72 chars
 ```
 
 Examples:
+
 - `feat(profile): add merged PR count display`
 - `fix(api): handle GitHub rate limit gracefully`
 - `docs(contributing): clarify supabase setup options`

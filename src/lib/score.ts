@@ -31,7 +31,7 @@ export function getScoreBreakdown(
     totalIssues: number;
     totalReviews: number;
   },
-  totalStars: number
+  totalStars: number,
 ): ScoreBreakdown {
   const commitsContribution = stats.totalCommits * SCORE_WEIGHTS.COMMIT;
   const prsContribution = stats.totalPRs * SCORE_WEIGHTS.PR;
@@ -41,10 +41,10 @@ export function getScoreBreakdown(
 
   const total = Math.round(
     commitsContribution +
-    prsContribution +
-    issuesContribution +
-    reviewsContribution +
-    starsContribution
+      prsContribution +
+      issuesContribution +
+      reviewsContribution +
+      starsContribution,
   );
 
   return {
@@ -68,5 +68,3 @@ export function calculateScore(stats: ContributorStats, repos: Repo[]): number {
   const breakdown = getScoreBreakdown(stats, totalStars);
   return breakdown.total;
 }
-
-

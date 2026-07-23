@@ -42,7 +42,15 @@ const tokens = {
 };
 
 /** Circular GitHub avatar with a graceful initial-letter fallback. */
-function Avatar({ src, name, size }: { src?: string; name?: string; size: number }) {
+function Avatar({
+  src,
+  name,
+  size,
+}: {
+  src?: string;
+  name?: string;
+  size: number;
+}) {
   // A `src` can be present but still fail to load (e.g. the GitHub avatar URL
   // 404s), which previously rendered a broken-image icon. Remember *which* src
   // failed rather than a bare boolean: that way a new avatar URL is retried
@@ -58,11 +66,11 @@ function Avatar({ src, name, size }: { src?: string; name?: string; size: number
         width={size}
         height={size}
         onError={() => setFailedSrc(src)}
-        style={{ 
-          borderRadius: "50%", 
-          border: "1px solid var(--color-hairline-strong)", 
+        style={{
+          borderRadius: "50%",
+          border: "1px solid var(--color-hairline-strong)",
           flexShrink: 0,
-          objectFit: "cover"
+          objectFit: "cover",
         }}
       />
     );
@@ -84,7 +92,7 @@ function Avatar({ src, name, size }: { src?: string; name?: string; size: number
         fontSize: Math.round(size * 0.45),
         fontWeight: 600,
         flexShrink: 0,
-        border: "1px solid var(--color-primary)"
+        border: "1px solid var(--color-primary)",
       }}
     >
       {initial}
@@ -172,7 +180,16 @@ export function Navbar({ onSignIn, onGetStarted }: NavbarProps) {
           justifyContent: "space-between",
         }}
       >
-        <Link href="/" style={{ display: "flex", alignItems: "center", gap: "8px", textDecoration: "none" }} aria-label={t("home")}>
+        <Link
+          href="/"
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "8px",
+            textDecoration: "none",
+          }}
+          aria-label={t("home")}
+        >
           <Image
             src="/logo.png"
             alt="OSSfolio Logo"
@@ -187,57 +204,209 @@ export function Navbar({ onSignIn, onGetStarted }: NavbarProps) {
             }}
           />
           <span style={{ display: "flex", alignItems: "baseline" }}>
-            <span style={{ fontSize: "15px", fontWeight: 600, color: "var(--color-ink)", letterSpacing: "-0.3px" }}>OSS</span>
-            <span style={{ fontSize: "15px", fontWeight: 600, color: tokens.primary, letterSpacing: "-0.3px" }}>folio</span>
+            <span
+              style={{
+                fontSize: "15px",
+                fontWeight: 600,
+                color: "var(--color-ink)",
+                letterSpacing: "-0.3px",
+              }}
+            >
+              OSS
+            </span>
+            <span
+              style={{
+                fontSize: "15px",
+                fontWeight: 600,
+                color: tokens.primary,
+                letterSpacing: "-0.3px",
+              }}
+            >
+              folio
+            </span>
           </span>
         </Link>
 
-        <nav aria-label={t("mainNav")} style={{ display: "flex", alignItems: "center", gap: "28px" }} className="hide-on-mobile hover:text-primary transition-colors duration-200">
+        <nav
+          aria-label={t("mainNav")}
+          style={{ display: "flex", alignItems: "center", gap: "28px" }}
+          className="hide-on-mobile hover:text-primary transition-colors duration-200"
+        >
           {navLinks.map((item) => (
             <Link
               key={item.key}
               href={item.href}
-              style={{ fontSize: "14px", fontWeight: 500, color: "var(--color-ink-mute)", textDecoration: "none" }}
+              style={{
+                fontSize: "14px",
+                fontWeight: 500,
+                color: "var(--color-ink-mute)",
+                textDecoration: "none",
+              }}
             >
               {t(item.key)}
             </Link>
           ))}
         </nav>
 
-        <div style={{ display: "flex", alignItems: "center", gap: "16px" }} className="hide-on-mobile hover:text-primary transition-colors duration-200">
+        <div
+          style={{ display: "flex", alignItems: "center", gap: "16px" }}
+          className="hide-on-mobile hover:text-primary transition-colors duration-200"
+        >
           <LanguageSwitcher />
           <button
             type="button"
             onClick={toggleTheme}
-            aria-label={!mounted ? t("toggleTheme") : isDarkMode ? t("switchToLight") : t("switchToDark")}
-            style={{ background: "none", border: "none", cursor: "pointer", color: "var(--color-ink-mute)", display: "flex", alignItems: "center", justifyContent: "center", padding: "6px", borderRadius: "6px" }}
+            aria-label={
+              !mounted
+                ? t("toggleTheme")
+                : isDarkMode
+                  ? t("switchToLight")
+                  : t("switchToDark")
+            }
+            style={{
+              background: "none",
+              border: "none",
+              cursor: "pointer",
+              color: "var(--color-ink-mute)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              padding: "6px",
+              borderRadius: "6px",
+            }}
           >
-            <Moon size={18} className="nav-theme-moon hover:text-primary transition-colors duration-200" />
-            <Sun size={18} className="nav-theme-sun hover:text-primary transition-colors duration-200" />
+            <Moon
+              size={18}
+              className="nav-theme-moon hover:text-primary transition-colors duration-200"
+            />
+            <Sun
+              size={18}
+              className="nav-theme-sun hover:text-primary transition-colors duration-200"
+            />
           </button>
 
           {user ? (
-            <div ref={menuRef} style={{ position: "relative", display: "flex", alignItems: "center" }}>
+            <div
+              ref={menuRef}
+              style={{
+                position: "relative",
+                display: "flex",
+                alignItems: "center",
+              }}
+            >
               <button
                 type="button"
                 onClick={() => setMenuOpen((v) => !v)}
-                style={{ display: "flex", alignItems: "center", gap: "8px", background: "var(--color-canvas-soft)", border: "1px solid var(--color-hairline-strong)", borderRadius: "9999px", padding: "4px 12px 4px 4px", cursor: "pointer" }}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "8px",
+                  background: "var(--color-canvas-soft)",
+                  border: "1px solid var(--color-hairline-strong)",
+                  borderRadius: "9999px",
+                  padding: "4px 12px 4px 4px",
+                  cursor: "pointer",
+                }}
               >
                 <Avatar src={avatarUrl} name={username} size={28} />
-                <span style={{ fontSize: "14px", fontWeight: 500, color: "var(--color-ink)" }}>{username ?? t("account")}</span>
+                <span
+                  style={{
+                    fontSize: "14px",
+                    fontWeight: 500,
+                    color: "var(--color-ink)",
+                  }}
+                >
+                  {username ?? t("account")}
+                </span>
               </button>
 
               {menuOpen && (
-                <div role="menu" style={{ position: "absolute", top: "calc(100% + 8px)", right: 0, minWidth: "180px", backgroundColor: "var(--color-canvas-soft)", border: "1px solid var(--color-hairline)", borderRadius: "8px", boxShadow: "0 4px 16px rgba(0, 0, 0, 0.08)", padding: "6px", zIndex: 50 }}>
-                  <Link href={profileHref} role="menuitem" onClick={() => setMenuOpen(false)} style={{ display: "block", padding: "8px 10px", fontSize: "14px", fontWeight: 500, color: "var(--color-ink)", textDecoration: "none" }}>{t("myPortfolio")}</Link>
-                  <button type="button" role="menuitem" onClick={handleLogout} style={{ display: "block", width: "100%", textAlign: "left", padding: "8px 10px", fontSize: "14px", fontWeight: 500, color: "var(--color-ink)", background: "none", border: "none", cursor: "pointer" }}>{t("logOut")}</button>
+                <div
+                  role="menu"
+                  style={{
+                    position: "absolute",
+                    top: "calc(100% + 8px)",
+                    right: 0,
+                    minWidth: "180px",
+                    backgroundColor: "var(--color-canvas-soft)",
+                    border: "1px solid var(--color-hairline)",
+                    borderRadius: "8px",
+                    boxShadow: "0 4px 16px rgba(0, 0, 0, 0.08)",
+                    padding: "6px",
+                    zIndex: 50,
+                  }}
+                >
+                  <Link
+                    href={profileHref}
+                    role="menuitem"
+                    onClick={() => setMenuOpen(false)}
+                    style={{
+                      display: "block",
+                      padding: "8px 10px",
+                      fontSize: "14px",
+                      fontWeight: 500,
+                      color: "var(--color-ink)",
+                      textDecoration: "none",
+                    }}
+                  >
+                    {t("myPortfolio")}
+                  </Link>
+                  <button
+                    type="button"
+                    role="menuitem"
+                    onClick={handleLogout}
+                    style={{
+                      display: "block",
+                      width: "100%",
+                      textAlign: "left",
+                      padding: "8px 10px",
+                      fontSize: "14px",
+                      fontWeight: 500,
+                      color: "var(--color-ink)",
+                      background: "none",
+                      border: "none",
+                      cursor: "pointer",
+                    }}
+                  >
+                    {t("logOut")}
+                  </button>
                 </div>
               )}
             </div>
           ) : (
             <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-              <button type="button" onClick={() => onSignIn?.()} style={{ fontSize: "14px", fontWeight: 500, color: "var(--color-ink)", background: "transparent", border: "1px solid var(--color-hairline-strong)", cursor: "pointer", padding: "7px 16px", borderRadius: "6px" }}>{t("signIn")}</button>
-              <button type="button" onClick={() => onGetStarted?.()} style={{ fontSize: "14px", fontWeight: 500, backgroundColor: tokens.primary, color: tokens.ink, padding: "7px 16px", borderRadius: "6px", border: "none", cursor: "pointer" }}>{t("getStarted")}</button>
+              <button
+                type="button"
+                onClick={() => onSignIn?.()}
+                style={{
+                  fontSize: "14px",
+                  fontWeight: 500,
+                  color: "var(--color-ink)",
+                  background: "transparent",
+                  border: "1px solid var(--color-hairline-strong)",
+                  cursor: "pointer",
+                  padding: "7px 16px",
+                  borderRadius: "6px",
+                }}
+              >
+                {t("signIn")}
+              </button>
+              <button
+                type="button"
+                onClick={() => onGetStarted?.()}
+                style={{
+                  fontSize: "14px",
+                  fontWeight: 500,
+                  backgroundColor: tokens.primary,
+                  color: tokens.ink,
+                  padding: "7px 16px",
+                  borderRadius: "6px",
+                  border: "none",
+                  cursor: "pointer",
+                }}
+              >
+                {t("getStarted")}
+              </button>
             </div>
           )}
         </div>
@@ -304,13 +473,22 @@ export function Navbar({ onSignIn, onGetStarted }: NavbarProps) {
               <Link
                 href={`/${username}`}
                 onClick={() => setMobileOpen(false)}
-                style={{ fontSize: "16px", fontWeight: 500, color: "var(--color-ink)", textDecoration: "none", padding: "10px 0" }}
+                style={{
+                  fontSize: "16px",
+                  fontWeight: 500,
+                  color: "var(--color-ink)",
+                  textDecoration: "none",
+                  padding: "10px 0",
+                }}
               >
                 {t("myPortfolio")}
               </Link>
               <button
                 type="button"
-                onClick={() => { handleLogout(); setMobileOpen(false); }}
+                onClick={() => {
+                  handleLogout();
+                  setMobileOpen(false);
+                }}
                 style={{
                   fontSize: "16px",
                   fontWeight: 500,
@@ -326,16 +504,61 @@ export function Navbar({ onSignIn, onGetStarted }: NavbarProps) {
               </button>
             </>
           ) : (
-            <div style={{ display: "flex", flexDirection: "column", gap: "12px", marginTop: "12px" }}>
-              <button type="button" onClick={() => { onSignIn?.(); setMobileOpen(false); }} style={{ fontSize: "16px", fontWeight: 500, color: "var(--color-ink)", background: "transparent", border: "1px solid var(--color-hairline-strong)", cursor: "pointer", padding: "12px 16px", borderRadius: "6px" }}>
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                gap: "12px",
+                marginTop: "12px",
+              }}
+            >
+              <button
+                type="button"
+                onClick={() => {
+                  onSignIn?.();
+                  setMobileOpen(false);
+                }}
+                style={{
+                  fontSize: "16px",
+                  fontWeight: 500,
+                  color: "var(--color-ink)",
+                  background: "transparent",
+                  border: "1px solid var(--color-hairline-strong)",
+                  cursor: "pointer",
+                  padding: "12px 16px",
+                  borderRadius: "6px",
+                }}
+              >
                 {t("signIn")}
               </button>
-              <button type="button" onClick={() => { onGetStarted?.(); setMobileOpen(false); }} style={{ fontSize: "16px", fontWeight: 500, backgroundColor: tokens.primary, color: tokens.ink, padding: "12px 16px", borderRadius: "6px", border: "none", cursor: "pointer" }}>
+              <button
+                type="button"
+                onClick={() => {
+                  onGetStarted?.();
+                  setMobileOpen(false);
+                }}
+                style={{
+                  fontSize: "16px",
+                  fontWeight: 500,
+                  backgroundColor: tokens.primary,
+                  color: tokens.ink,
+                  padding: "12px 16px",
+                  borderRadius: "6px",
+                  border: "none",
+                  cursor: "pointer",
+                }}
+              >
                 {t("getStarted")}
               </button>
             </div>
           )}
-          <div style={{ marginTop: "8px", paddingTop: "12px", borderTop: "1px solid var(--color-hairline)" }}>
+          <div
+            style={{
+              marginTop: "8px",
+              paddingTop: "12px",
+              borderTop: "1px solid var(--color-hairline)",
+            }}
+          >
             <LanguageSwitcher />
           </div>
         </nav>

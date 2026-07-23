@@ -34,15 +34,25 @@ export function Hero({ onGetStarted }: HeroProps) {
   }
 
   return (
-    <section style={{ width: "100%", backgroundColor: "var(--color-canvas)", transition: "background-color 0.2s ease" }}>
+    <section
+      style={{
+        width: "100%",
+        backgroundColor: "var(--color-canvas)",
+        transition: "background-color 0.2s ease",
+      }}
+    >
       {/* 💡 Explicit pseudo-selector styling to link the placeholder directly to our dynamic theme typography layer */}
-      <style dangerouslySetInnerHTML={{__html: `
+      <style
+        dangerouslySetInnerHTML={{
+          __html: `
         .hero-search-input::placeholder {
           color: var(--color-ink-mute) !important;
           opacity: 0.85;
           transition: color 0.2s ease;
         }
-      `}} />
+      `,
+        }}
+      />
 
       <motion.div
         initial="hidden"
@@ -167,11 +177,17 @@ export function Hero({ onGetStarted }: HeroProps) {
                 border: "1px solid var(--color-hairline-strong)",
                 borderRadius: "var(--radius-sm) 0 0 var(--radius-sm)",
                 outline: "none",
-                transition: "background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease",
+                transition:
+                  "background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease",
                 boxSizing: "border-box",
               }}
-              onFocus={(e) => (e.currentTarget.style.borderColor = "var(--color-primary)")}
-              onBlur={(e) => (e.currentTarget.style.borderColor = "var(--color-hairline-strong)")}
+              onFocus={(e) =>
+                (e.currentTarget.style.borderColor = "var(--color-primary)")
+              }
+              onBlur={(e) =>
+                (e.currentTarget.style.borderColor =
+                  "var(--color-hairline-strong)")
+              }
             />
           </div>
           <button
@@ -190,13 +206,16 @@ export function Hero({ onGetStarted }: HeroProps) {
               borderRadius: "0 var(--radius-sm) var(--radius-sm) 0",
               cursor: "pointer",
               whiteSpace: "nowrap",
-              transition: "background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease",
+              transition:
+                "background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease",
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = "var(--color-hairline-cool)";
+              e.currentTarget.style.backgroundColor =
+                "var(--color-hairline-cool)";
             }}
             onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = "var(--color-canvas-soft)";
+              e.currentTarget.style.backgroundColor =
+                "var(--color-canvas-soft)";
             }}
           >
             View profile
@@ -222,7 +241,7 @@ export function Hero({ onGetStarted }: HeroProps) {
               alignItems: "center",
               gap: "8px",
               backgroundColor: "var(--color-primary)",
-              color: "var(--color-on-primary)", 
+              color: "var(--color-on-primary)",
               padding: "10px 20px",
               borderRadius: "var(--radius-sm)",
               fontSize: "14px",
@@ -232,11 +251,19 @@ export function Hero({ onGetStarted }: HeroProps) {
               transition: "background-color 0.2s ease",
               WebkitFontSmoothing: "antialiased",
             }}
-            onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "var(--color-primary-deep)")}
-            onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "var(--color-primary)")}
+            onMouseEnter={(e) =>
+              (e.currentTarget.style.backgroundColor =
+                "var(--color-primary-deep)")
+            }
+            onMouseLeave={(e) =>
+              (e.currentTarget.style.backgroundColor = "var(--color-primary)")
+            }
           >
             Get your profile free
-            <ArrowRight size={15} style={{ color: "var(--color-on-primary)" }} />
+            <ArrowRight
+              size={15}
+              style={{ color: "var(--color-on-primary)" }}
+            />
           </button>
           <a
             href="#how-it-works"
@@ -252,10 +279,16 @@ export function Hero({ onGetStarted }: HeroProps) {
               fontWeight: 500,
               border: "1px solid var(--color-hairline-strong)",
               textDecoration: "none",
-              transition: "background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease",
+              transition:
+                "background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease",
             }}
-            onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "var(--color-canvas-soft)")}
-            onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "var(--color-canvas)")}
+            onMouseEnter={(e) =>
+              (e.currentTarget.style.backgroundColor =
+                "var(--color-canvas-soft)")
+            }
+            onMouseLeave={(e) =>
+              (e.currentTarget.style.backgroundColor = "var(--color-canvas)")
+            }
           >
             See how it works
           </a>
@@ -294,7 +327,14 @@ export function Hero({ onGetStarted }: HeroProps) {
               >
                 {value}
               </p>
-              <p style={{ marginTop: "2px", fontSize: "13px", color: "var(--color-ink-mute)", transition: "color 0.2s ease" }}>
+              <p
+                style={{
+                  marginTop: "2px",
+                  fontSize: "13px",
+                  color: "var(--color-ink-mute)",
+                  transition: "color 0.2s ease",
+                }}
+              >
                 {label}
               </p>
             </div>
