@@ -1,4 +1,4 @@
-import { useEffect, useCallback, useRef } from "react";
+import { useEffect, useCallback, useRef } from 'react';
 
 type MessageHandler<T> = (data: T) => void;
 
@@ -21,7 +21,7 @@ export function useBroadcastChannel<T = unknown>(
   });
 
   useEffect(() => {
-    if (typeof BroadcastChannel === "undefined") return;
+    if (typeof BroadcastChannel === 'undefined') return;
 
     const channel = new BroadcastChannel(channelName);
     channel.onmessage = (event: MessageEvent<T>) => {
@@ -35,7 +35,7 @@ export function useBroadcastChannel<T = unknown>(
 
   const postMessage = useCallback(
     (data: T) => {
-      if (typeof BroadcastChannel === "undefined") return;
+      if (typeof BroadcastChannel === 'undefined') return;
       try {
         const channel = new BroadcastChannel(channelName);
         channel.postMessage(data);

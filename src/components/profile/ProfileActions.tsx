@@ -1,7 +1,7 @@
-"use client";
+'use client';
 
-import { useState } from "react";
-import type { ContributorStats } from "@/types";
+import { useState } from 'react';
+import type { ContributorStats } from '@/types';
 
 interface ProfileActionsProps {
   username: string;
@@ -21,23 +21,23 @@ export function ProfileActions({
   const [copied, setCopied] = useState(false);
   const [copiedMarkdown, setCopiedMarkdown] = useState(false);
   const [refreshState, setRefreshState] = useState<
-    "idle" | "loading" | "success" | "error"
-  >("idle");
+    'idle' | 'loading' | 'success' | 'error'
+  >('idle');
 
   const btnBase: React.CSSProperties = {
-    display: "inline-flex",
-    alignItems: "center",
-    gap: "6px",
-    padding: "7px 14px",
-    fontSize: "13px",
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '6px',
+    padding: '7px 14px',
+    fontSize: '13px',
     fontWeight: 500,
-    color: "var(--color-ink)",
-    backgroundColor: "var(--color-canvas-soft)",
-    border: "1px solid var(--color-hairline-strong)",
-    borderRadius: "6px",
-    cursor: "pointer",
+    color: 'var(--color-ink)',
+    backgroundColor: 'var(--color-canvas-soft)',
+    border: '1px solid var(--color-hairline-strong)',
+    borderRadius: '6px',
+    cursor: 'pointer',
     lineHeight: 1,
-    transition: "all 0.15s ease",
+    transition: 'all 0.15s ease',
   };
 
   const handleShareX = () => {
@@ -45,8 +45,8 @@ export function ProfileActions({
     const text = `My open source contributor score is ${score} on OSSfolio: ${profileUrl} #opensource`;
     window.open(
       `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`,
-      "_blank",
-      "noopener,noreferrer",
+      '_blank',
+      'noopener,noreferrer',
     );
   };
 
@@ -56,7 +56,7 @@ export function ProfileActions({
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch (err) {
-      console.error("Copy to clipboard failed:", err);
+      console.error('Copy to clipboard failed:', err);
     }
   };
 
@@ -68,48 +68,48 @@ export function ProfileActions({
       `[![PRs](https://img.shields.io/badge/PRs-${stats.totalPRs}-7057ff?style=flat-square)](${profileUrl})`,
       `[![Issues](https://img.shields.io/badge/Issues-${stats.totalIssues}-fb8f44?style=flat-square)](${profileUrl})`,
       `[![Reviews](https://img.shields.io/badge/Reviews-${stats.totalReviews}-0075ca?style=flat-square)](${profileUrl})`,
-    ].join(" ");
+    ].join(' ');
 
     try {
       await navigator.clipboard.writeText(markdown);
       setCopiedMarkdown(true);
       setTimeout(() => setCopiedMarkdown(false), 2000);
     } catch (err) {
-      console.error("Copy markdown to clipboard failed:", err);
+      console.error('Copy markdown to clipboard failed:', err);
     }
   };
 
   const handleRefreshClick = async () => {
-    setRefreshState("loading");
+    setRefreshState('loading');
     try {
       await onRefresh();
-      setRefreshState("success");
-      setTimeout(() => setRefreshState("idle"), 2500);
+      setRefreshState('success');
+      setTimeout(() => setRefreshState('idle'), 2500);
     } catch (err) {
-      setRefreshState("error");
-      setTimeout(() => setRefreshState("idle"), 2500);
+      setRefreshState('error');
+      setTimeout(() => setRefreshState('idle'), 2500);
     }
   };
 
   return (
     <div
       style={{
-        display: "flex",
-        gap: "8px",
-        flexWrap: "wrap",
-        alignItems: "center",
+        display: 'flex',
+        gap: '8px',
+        flexWrap: 'wrap',
+        alignItems: 'center',
       }}
     >
       <button
         type="button"
-        disabled={isRefreshing || refreshState === "loading"}
+        disabled={isRefreshing || refreshState === 'loading'}
         onClick={handleRefreshClick}
         style={{
           ...btnBase,
           backgroundColor:
-            refreshState === "loading"
-              ? "var(--color-canvas-soft)"
-              : "var(--color-canvas)",
+            refreshState === 'loading'
+              ? 'var(--color-canvas-soft)'
+              : 'var(--color-canvas)',
         }}
         aria-label="Refresh GitHub profile statistics"
       >
@@ -122,19 +122,19 @@ export function ProfileActions({
           strokeWidth="2"
           style={{
             animation:
-              refreshState === "loading" ? "spin 1s linear infinite" : "none",
+              refreshState === 'loading' ? 'spin 1s linear infinite' : 'none',
           }}
           aria-hidden="true"
         >
           <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67" />
         </svg>
-        {refreshState === "loading"
-          ? "Refreshing..."
-          : refreshState === "success"
-            ? "Refreshed!"
-            : refreshState === "error"
-              ? "Error"
-              : "Sync GitHub"}
+        {refreshState === 'loading'
+          ? 'Refreshing...'
+          : refreshState === 'success'
+            ? 'Refreshed!'
+            : refreshState === 'error'
+              ? 'Error'
+              : 'Sync GitHub'}
       </button>
 
       <button
@@ -160,8 +160,8 @@ export function ProfileActions({
         onClick={handleCopyLink}
         style={{
           ...btnBase,
-          color: copied ? "#3ecf8e" : "var(--color-ink)",
-          borderColor: copied ? "#3ecf8e" : "var(--color-hairline-strong)",
+          color: copied ? '#3ecf8e' : 'var(--color-ink)',
+          borderColor: copied ? '#3ecf8e' : 'var(--color-hairline-strong)',
         }}
         aria-label="Copy profile link to clipboard"
       >
@@ -204,10 +204,10 @@ export function ProfileActions({
         onClick={handleCopyMarkdown}
         style={{
           ...btnBase,
-          color: copiedMarkdown ? "#3ecf8e" : "var(--color-ink)",
+          color: copiedMarkdown ? '#3ecf8e' : 'var(--color-ink)',
           borderColor: copiedMarkdown
-            ? "#3ecf8e"
-            : "var(--color-hairline-strong)",
+            ? '#3ecf8e'
+            : 'var(--color-hairline-strong)',
         }}
         aria-label="Copy profile stats markdown badge code to clipboard"
       >

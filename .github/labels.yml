@@ -1,70 +1,70 @@
 # GitHub Labels for OSSfolio
 # Apply with: gh label create --force (or use a labels sync action)
 
-- name: "elusoc"
-  color: "7B2FBE"
-  description: "ELUSOC project submission"
+- name: 'elusoc'
+  color: '7B2FBE'
+  description: 'ELUSOC project submission'
 
-- name: "beginner"
-  color: "2da44e"
-  description: "Good for newcomers to open source"
+- name: 'beginner'
+  color: '2da44e'
+  description: 'Good for newcomers to open source'
 
-- name: "intermediate"
-  color: "fb8f44"
-  description: "Some prior experience required"
+- name: 'intermediate'
+  color: 'fb8f44'
+  description: 'Some prior experience required'
 
-- name: "advanced"
-  color: "d93f0b"
-  description: "Requires deep understanding of the codebase"
+- name: 'advanced'
+  color: 'd93f0b'
+  description: 'Requires deep understanding of the codebase'
 
-- name: "good first issue"
-  color: "7057ff"
-  description: "Great for first-time contributors"
+- name: 'good first issue'
+  color: '7057ff'
+  description: 'Great for first-time contributors'
 
-- name: "bug"
-  color: "d73a4a"
+- name: 'bug'
+  color: 'd73a4a'
   description: "Something isn't working"
 
-- name: "enhancement"
-  color: "a2eeef"
-  description: "New feature or improvement"
+- name: 'enhancement'
+  color: 'a2eeef'
+  description: 'New feature or improvement'
 
-- name: "frontend"
-  color: "0075ca"
-  description: "Related to UI / Next.js / Tailwind"
+- name: 'frontend'
+  color: '0075ca'
+  description: 'Related to UI / Next.js / Tailwind'
 
-- name: "backend"
-  color: "e4e669"
-  description: "Related to Supabase / API / database"
+- name: 'backend'
+  color: 'e4e669'
+  description: 'Related to Supabase / API / database'
 
-- name: "documentation"
-  color: "0075ca"
-  description: "Improvements or additions to docs"
+- name: 'documentation'
+  color: '0075ca'
+  description: 'Improvements or additions to docs'
 
-- name: "AI"
-  color: "f9d0c4"
-  description: "AI features — contributor summary, scoring"
+- name: 'AI'
+  color: 'f9d0c4'
+  description: 'AI features — contributor summary, scoring'
 
-- name: "UI"
-  color: "bfd4f2"
-  description: "Visual / design changes"
+- name: 'UI'
+  color: 'bfd4f2'
+  description: 'Visual / design changes'
 
-- name: "help wanted"
-  color: "008672"
-  description: "Extra attention needed — open for anyone"
+- name: 'help wanted'
+  color: '008672'
+  description: 'Extra attention needed — open for anyone'
 
-- name: "wontfix"
-  color: "ffffff"
-  description: "This will not be worked on"
+- name: 'wontfix'
+  color: 'ffffff'
+  description: 'This will not be worked on'
 
-- name: "duplicate"
-  color: "cfd3d7"
-  description: "This issue or PR already exists"
+- name: 'duplicate'
+  color: 'cfd3d7'
+  description: 'This issue or PR already exists'
 
-- name: "invalid"
-  color: "e4e669"
+- name: 'invalid'
+  color: 'e4e669'
   description: "This doesn't seem right"
 
-- name: "stale"
-  color: "6e7681"
-  description: "Extra attention needed — stale and inactive"
+- name: 'stale'
+  color: '6e7681'
+  description: 'Extra attention needed — stale and inactive'

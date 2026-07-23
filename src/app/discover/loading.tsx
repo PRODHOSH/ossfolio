@@ -1,23 +1,23 @@
-import { SkeletonCard } from "@/components/ui/skeleton-card";
+import { SkeletonCard } from '@/components/ui/skeleton-card';
 
 export default function DiscoverLoading() {
   return (
-    <div style={{ padding: "24px 0" }}>
+    <div style={{ padding: '24px 0' }}>
       <div
         style={{
-          width: "100%",
-          height: "44px",
-          backgroundColor: "var(--color-hairline-cool)",
-          borderRadius: "6px",
-          animation: "sk-pulse 1.5s ease-in-out infinite",
-          marginBottom: "24px",
+          width: '100%',
+          height: '44px',
+          backgroundColor: 'var(--color-hairline-cool)',
+          borderRadius: '6px',
+          animation: 'sk-pulse 1.5s ease-in-out infinite',
+          marginBottom: '24px',
         }}
       />
       <div
         style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))",
-          gap: "16px",
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
+          gap: '16px',
         }}
       >
         {Array.from({ length: 6 }).map((_, i) => (

@@ -1,7 +1,7 @@
-import type { ContributorStats, Org, Repo, TechEntry, MergedPR } from "@/types";
-import { LANG_COLORS } from "@/lib/languages";
-import { fetchWithTimeout } from "@/lib/fetch-with-timeout";
-import { GitHubRateLimitError } from "@/lib/errors";
+import type { ContributorStats, Org, Repo, TechEntry, MergedPR } from '@/types';
+import { LANG_COLORS } from '@/lib/languages';
+import { fetchWithTimeout } from '@/lib/fetch-with-timeout';
+import { GitHubRateLimitError } from '@/lib/errors';
 
 /**
  * GitHub answers a rate limit with 403/429 and a "rate limit" message. Raise it as
@@ -13,8 +13,8 @@ async function throwIfRateLimited(res: Response): Promise<void> {
   try {
     const err = await res.clone().json();
     if (
-      typeof err?.message === "string" &&
-      err.message.toLowerCase().includes("rate limit")
+      typeof err?.message === 'string' &&
+      err.message.toLowerCase().includes('rate limit')
     ) {
       throw new GitHubRateLimitError(err.message);
     }
@@ -40,27 +40,27 @@ async function throwIfRateLimited(res: Response): Promise<void> {
  * 0 rather than guessed.
  */
 const LANGUAGE_DISPLAY_NAMES: Record<string, string> = {
-  javascript: "JavaScript",
-  typescript: "TypeScript",
-  python: "Python",
-  java: "Java",
-  go: "Go",
-  rust: "Rust",
-  php: "PHP",
-  html: "HTML",
-  css: "CSS",
-  shell: "Shell",
-  kotlin: "Kotlin",
-  swift: "Swift",
-  dart: "Dart",
-  ruby: "Ruby",
-  vue: "Vue",
-  svelte: "Svelte",
-  dockerfile: "Dockerfile",
-  "jupyter notebook": "Jupyter Notebook",
-  c: "C",
-  "c++": "C++",
-  "c#": "C#",
+  javascript: 'JavaScript',
+  typescript: 'TypeScript',
+  python: 'Python',
+  java: 'Java',
+  go: 'Go',
+  rust: 'Rust',
+  php: 'PHP',
+  html: 'HTML',
+  css: 'CSS',
+  shell: 'Shell',
+  kotlin: 'Kotlin',
+  swift: 'Swift',
+  dart: 'Dart',
+  ruby: 'Ruby',
+  vue: 'Vue',
+  svelte: 'Svelte',
+  dockerfile: 'Dockerfile',
+  'jupyter notebook': 'Jupyter Notebook',
+  c: 'C',
+  'c++': 'C++',
+  'c#': 'C#',
 };
 
 export function normalizeLanguageName(language: string): string {
@@ -69,7 +69,7 @@ export function normalizeLanguageName(language: string): string {
 /** Return the hex colour for a programming language name, or null if the language is not in the built-in map. */
 export function languageColor(language: string | null): string | null {
   if (!language) return null;
-  return LANG_COLORS[normalizeLanguageName(language)] ?? "#9a9a9a";
+  return LANG_COLORS[normalizeLanguageName(language)] ?? '#9a9a9a';
 }
 
 export interface GitHubRepoLike {
@@ -128,7 +128,7 @@ async function searchCount(query: string, accept?: string): Promise<number> {
       `https://api.github.com/search/${query}&per_page=1`,
       {
         headers: {
-          Accept: accept ?? "application/vnd.github.v3+json",
+          Accept: accept ?? 'application/vnd.github.v3+json',
         },
         next: { revalidate: 3600 },
       },
@@ -137,7 +137,7 @@ async function searchCount(query: string, accept?: string): Promise<number> {
 
     if (!res.ok) return 0;
     const json = await res.json();
-    return typeof json.total_count === "number" ? json.total_count : 0;
+    return typeof json.total_count === 'number' ? json.total_count : 0;
   } catch {
     return 0;
   }
@@ -159,7 +159,7 @@ export async function fetchLiveStats(
     searchCount(`issues?q=author:${u}+type:issue`),
     searchCount(
       `commits?q=author:${u}`,
-      "application/vnd.github.cloak-preview+json",
+      'application/vnd.github.cloak-preview+json',
     ),
   ]);
   return {
@@ -183,8 +183,8 @@ export async function fetchOrganizations(username: string): Promise<Org[]> {
     const res = await fetchWithTimeout(
       `https://api.github.com/users/${encodeURIComponent(username)}/orgs`,
       {
-        headers: { Accept: "application/vnd.github.v3+json" },
-        cache: "no-store",
+        headers: { Accept: 'application/vnd.github.v3+json' },
+        cache: 'no-store',
       },
       10_000,
     );
@@ -219,8 +219,8 @@ export async function fetchMergedPRs(
     const res = await fetchWithTimeout(
       `https://api.github.com/${query}`,
       {
-        headers: { Accept: "application/vnd.github.v3+json" },
-        cache: "no-store",
+        headers: { Accept: 'application/vnd.github.v3+json' },
+        cache: 'no-store',
       },
       10_000,
     );
@@ -234,11 +234,11 @@ export async function fetchMergedPRs(
     return json.items.map((item: any) => {
       const isMerged = !!item.pull_request?.merged_at;
       const prState =
-        item.state === "open" ? "open" : isMerged ? "merged" : "closed";
+        item.state === 'open' ? 'open' : isMerged ? 'merged' : 'closed';
       return {
         title: item.title,
         url: item.html_url,
-        repoName: item.repository_url.split("/").slice(-1)[0],
+        repoName: item.repository_url.split('/').slice(-1)[0],
         mergedAt:
           item.pull_request?.merged_at || item.closed_at || item.created_at,
         state: prState,
@@ -278,18 +278,18 @@ export async function fetchGitHubUser(
   const res = await fetchWithTimeout(
     `https://api.github.com/users/${username}`,
     {
-      headers: { Accept: "application/vnd.github.v3+json" },
+      headers: { Accept: 'application/vnd.github.v3+json' },
       // The snapshot TTL in the DB is now the single source of freshness. A second,
       // independent Next Data Cache in front of it would let a "stale" sync be served
       // an hour-old response, so it is deliberately disabled here.
-      cache: "no-store",
+      cache: 'no-store',
     },
     10_000,
   );
   if (!res.ok) {
     try {
       const err = await res.json();
-      if (err.message && err.message.toLowerCase().includes("rate limit")) {
+      if (err.message && err.message.toLowerCase().includes('rate limit')) {
         throw new GitHubRateLimitError(err.message);
       }
     } catch (e) {
@@ -307,8 +307,8 @@ export async function fetchGitHubRepos(
   const res = await fetchWithTimeout(
     `https://api.github.com/users/${username}/repos?sort=stars&per_page=100&type=owner`,
     {
-      headers: { Accept: "application/vnd.github.mercy-preview+json" },
-      cache: "no-store",
+      headers: { Accept: 'application/vnd.github.mercy-preview+json' },
+      cache: 'no-store',
     },
     10_000,
   );

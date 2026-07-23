@@ -9,17 +9,17 @@
  * Rules: inline styles only, no Tailwind, no TypeScript errors. (Issue #42)
  */
 
-import type { CSSProperties } from "react";
+import type { CSSProperties } from 'react';
 
 // Shimmer base style — reused by every skeleton block.
 // The 800px backgroundSize combined with the keyframe position sweep
 // produces the left-to-right highlight that reads as a loading state.
 const shimmer: CSSProperties = {
   background:
-    "linear-gradient(90deg, var(--color-hairline) 25%, var(--color-hairline-strong) 50%, var(--color-hairline) 75%)",
-  backgroundSize: "800px 100%",
-  animation: "shimmer 1.4s infinite linear",
-  borderRadius: "6px",
+    'linear-gradient(90deg, var(--color-hairline) 25%, var(--color-hairline-strong) 50%, var(--color-hairline) 75%)',
+  backgroundSize: '800px 100%',
+  animation: 'shimmer 1.4s infinite linear',
+  borderRadius: '6px',
 };
 
 // Reusable shimmer block. Accepts explicit dimensions and optional style
@@ -59,56 +59,56 @@ export default function ProfileLoading() {
       `}</style>
 
       <main
-        style={{ backgroundColor: "var(--color-canvas)", minHeight: "100vh" }}
+        style={{ backgroundColor: 'var(--color-canvas)', minHeight: '100vh' }}
       >
         {/* Outer container mirrors ProfileView's maxWidth + padding exactly */}
         <div
           style={{
-            maxWidth: "56rem",
-            margin: "0 auto",
-            padding: "48px 20px 80px",
+            maxWidth: '56rem',
+            margin: '0 auto',
+            padding: '48px 20px 80px',
           }}
         >
           {/* ── Profile header ──────────────────────────────────────── */}
           {/* Mirrors: flex row (avatar + info column), borderBottom */}
           <div
             style={{
-              display: "flex",
-              alignItems: "flex-start",
-              gap: "24px",
-              flexWrap: "wrap",
-              paddingBottom: "40px",
-              borderBottom: "1px solid var(--color-hairline)",
+              display: 'flex',
+              alignItems: 'flex-start',
+              gap: '24px',
+              flexWrap: 'wrap',
+              paddingBottom: '40px',
+              borderBottom: '1px solid var(--color-hairline)',
             }}
           >
             {/* Avatar — 88×88 circle matching Image dimensions in ProfileView */}
-            <Block width={88} height={88} style={{ borderRadius: "9999px" }} />
+            <Block width={88} height={88} style={{ borderRadius: '9999px' }} />
 
             {/* Name / username / bio / links / follower counts */}
             <div
               style={{
                 flex: 1,
-                minWidth: "200px",
-                display: "flex",
-                flexDirection: "column",
-                gap: "0px",
+                minWidth: '200px',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '0px',
               }}
             >
               {/* Display name — h1 24px */}
               <Block width={180} height={20} />
               {/* @username — 14px muted */}
-              <Block width={110} height={14} style={{ marginTop: "8px" }} />
+              <Block width={110} height={14} style={{ marginTop: '8px' }} />
               {/* Bio — two lines */}
-              <Block width="90%" height={14} style={{ marginTop: "14px" }} />
-              <Block width="65%" height={14} style={{ marginTop: "6px" }} />
+              <Block width="90%" height={14} style={{ marginTop: '14px' }} />
+              <Block width="65%" height={14} style={{ marginTop: '6px' }} />
 
               {/* Location / website / twitter / github link row */}
               <div
                 style={{
-                  display: "flex",
-                  flexWrap: "wrap",
-                  gap: "12px",
-                  marginTop: "14px",
+                  display: 'flex',
+                  flexWrap: 'wrap',
+                  gap: '12px',
+                  marginTop: '14px',
                 }}
               >
                 {([88, 110, 78, 68] as number[]).map((w, i) => (
@@ -119,9 +119,9 @@ export default function ProfileLoading() {
               {/* Followers · following · repos row */}
               <div
                 style={{
-                  display: "flex",
-                  gap: "20px",
-                  marginTop: "14px",
+                  display: 'flex',
+                  gap: '20px',
+                  marginTop: '14px',
                 }}
               >
                 {([72, 72, 56] as number[]).map((w, i) => (
@@ -133,26 +133,26 @@ export default function ProfileLoading() {
 
           {/* ── Popular repositories ────────────────────────────────── */}
           {/* Mirrors: heading + repeat(auto-fill, minmax(280px, 1fr)) grid */}
-          <div style={{ marginTop: "40px" }}>
-            <Block width={158} height={16} style={{ marginBottom: "20px" }} />
+          <div style={{ marginTop: '40px' }}>
+            <Block width={158} height={16} style={{ marginBottom: '20px' }} />
             <div
               style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
-                gap: "16px",
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
+                gap: '16px',
               }}
             >
               {Array.from({ length: 6 }).map((_, i) => (
                 <div
                   key={i}
                   style={{
-                    display: "flex",
-                    flexDirection: "column",
-                    gap: "10px",
-                    padding: "20px",
-                    border: "1px solid var(--color-hairline)",
-                    borderRadius: "12px",
-                    backgroundColor: "var(--color-canvas-soft)",
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '10px',
+                    padding: '20px',
+                    border: '1px solid var(--color-hairline)',
+                    borderRadius: '12px',
+                    backgroundColor: 'var(--color-canvas-soft)',
                   }}
                 >
                   {/* Repo name */}
@@ -163,9 +163,9 @@ export default function ProfileLoading() {
                   {/* Language dot + stars + forks */}
                   <div
                     style={{
-                      display: "flex",
-                      gap: "12px",
-                      marginTop: "4px",
+                      display: 'flex',
+                      gap: '12px',
+                      marginTop: '4px',
                     }}
                   >
                     <Block width={52} height={12} />
@@ -179,26 +179,26 @@ export default function ProfileLoading() {
 
           {/* ── Contribution stats ──────────────────────────────────── */}
           {/* Mirrors: heading + repeat(auto-fit, minmax(140px, 1fr)) grid */}
-          <div style={{ marginTop: "44px" }}>
-            <Block width={148} height={16} style={{ marginBottom: "20px" }} />
+          <div style={{ marginTop: '44px' }}>
+            <Block width={148} height={16} style={{ marginBottom: '20px' }} />
             <div
               style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))",
-                gap: "12px",
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))',
+                gap: '12px',
               }}
             >
               {Array.from({ length: 6 }).map((_, i) => (
                 <div
                   key={i}
                   style={{
-                    display: "flex",
-                    flexDirection: "column",
-                    gap: "10px",
-                    padding: "16px",
-                    border: "1px solid var(--color-hairline)",
-                    borderRadius: "8px",
-                    backgroundColor: "var(--color-canvas-soft)",
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '10px',
+                    padding: '16px',
+                    border: '1px solid var(--color-hairline)',
+                    borderRadius: '8px',
+                    backgroundColor: 'var(--color-canvas-soft)',
                   }}
                 >
                   {/* Stat number */}
@@ -212,15 +212,15 @@ export default function ProfileLoading() {
 
           {/* ── Tech stack ──────────────────────────────────────────── */}
           {/* Mirrors: heading + flex-wrap pill row */}
-          <div style={{ marginTop: "44px" }}>
-            <Block width={96} height={16} style={{ marginBottom: "16px" }} />
-            <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
+          <div style={{ marginTop: '44px' }}>
+            <Block width={96} height={16} style={{ marginBottom: '16px' }} />
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
               {([72, 90, 68, 80, 64, 88, 74, 66] as number[]).map((w, i) => (
                 <Block
                   key={i}
                   width={w}
                   height={28}
-                  style={{ borderRadius: "9999px" }}
+                  style={{ borderRadius: '9999px' }}
                 />
               ))}
             </div>
@@ -228,27 +228,27 @@ export default function ProfileLoading() {
 
           {/* ── Organizations ───────────────────────────────────────── */}
           {/* Mirrors: heading + flex-wrap row of avatar + name chips */}
-          <div style={{ marginTop: "44px" }}>
-            <Block width={118} height={16} style={{ marginBottom: "16px" }} />
-            <div style={{ display: "flex", flexWrap: "wrap", gap: "12px" }}>
+          <div style={{ marginTop: '44px' }}>
+            <Block width={118} height={16} style={{ marginBottom: '16px' }} />
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px' }}>
               {([80, 96, 72, 88, 76] as number[]).map((w, i) => (
                 <div
                   key={i}
                   style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "8px",
-                    padding: "6px 12px 6px 6px",
-                    border: "1px solid var(--color-hairline)",
-                    borderRadius: "8px",
-                    backgroundColor: "var(--color-canvas-soft)",
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    padding: '6px 12px 6px 6px',
+                    border: '1px solid var(--color-hairline)',
+                    borderRadius: '8px',
+                    backgroundColor: 'var(--color-canvas-soft)',
                   }}
                 >
                   {/* Org avatar circle — 36×36 matching Image size in ProfileView */}
                   <Block
                     width={36}
                     height={36}
-                    style={{ borderRadius: "9999px" }}
+                    style={{ borderRadius: '9999px' }}
                   />
                   {/* Org handle */}
                   <Block width={w} height={13} />
@@ -259,10 +259,10 @@ export default function ProfileLoading() {
 
           {/* ── Contribution activity (heatmap) ─────────────────────── */}
           {/* Mirrors the heatmap section heading + the grid of week columns */}
-          <div style={{ marginTop: "44px" }}>
-            <Block width={178} height={16} style={{ marginBottom: "16px" }} />
+          <div style={{ marginTop: '44px' }}>
+            <Block width={178} height={16} style={{ marginBottom: '16px' }} />
             {/* Single shimmer rectangle represents the 52-week heatmap */}
-            <Block width="100%" height={88} style={{ borderRadius: "8px" }} />
+            <Block width="100%" height={88} style={{ borderRadius: '8px' }} />
           </div>
         </div>
       </main>

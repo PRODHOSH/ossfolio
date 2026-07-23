@@ -1,47 +1,47 @@
-import { NextResponse, type NextRequest } from "next/server";
+import { NextResponse, type NextRequest } from 'next/server';
 
 const CSP_DIRECTIVES = {
-  "default-src": ["'self'"],
-  "script-src": ["'self'", "'unsafe-inline'", "'unsafe-eval'"],
-  "style-src": ["'self'", "'unsafe-inline'"],
-  "img-src": [
+  'default-src': ["'self'"],
+  'script-src': ["'self'", "'unsafe-inline'", "'unsafe-eval'"],
+  'style-src': ["'self'", "'unsafe-inline'"],
+  'img-src': [
     "'self'",
-    "data:",
-    "blob:",
-    "https://avatars.githubusercontent.com",
-    "https://github.com",
+    'data:',
+    'blob:',
+    'https://avatars.githubusercontent.com',
+    'https://github.com',
   ],
-  "font-src": ["'self'", "data:"],
-  "connect-src": ["'self'", "https://api.github.com", "https://github.com"],
-  "frame-src": ["'none'"],
-  "object-src": ["'none'"],
-  "base-uri": ["'self'"],
-  "form-action": ["'self'"],
-  "frame-ancestors": ["'none'"],
+  'font-src': ["'self'", 'data:'],
+  'connect-src': ["'self'", 'https://api.github.com', 'https://github.com'],
+  'frame-src': ["'none'"],
+  'object-src': ["'none'"],
+  'base-uri': ["'self'"],
+  'form-action': ["'self'"],
+  'frame-ancestors': ["'none'"],
 };
 
 function cspToString(directives: Record<string, string[]>): string {
   return Object.entries(directives)
-    .map(([key, values]) => `${key} ${values.join(" ")}`)
-    .join("; ");
+    .map(([key, values]) => `${key} ${values.join(' ')}`)
+    .join('; ');
 }
 
 const SECURITY_HEADERS: Record<string, string> = {
-  "X-Content-Type-Options": "nosniff",
-  "X-Frame-Options": "DENY",
-  "X-XSS-Protection": "0",
-  "Referrer-Policy": "strict-origin-when-cross-origin",
-  "Permissions-Policy": "camera=(), microphone=(), geolocation=()",
-  "Content-Security-Policy": cspToString(CSP_DIRECTIVES),
-  "Strict-Transport-Security": "max-age=63072000; includeSubDomains; preload",
+  'X-Content-Type-Options': 'nosniff',
+  'X-Frame-Options': 'DENY',
+  'X-XSS-Protection': '0',
+  'Referrer-Policy': 'strict-origin-when-cross-origin',
+  'Permissions-Policy': 'camera=(), microphone=(), geolocation=()',
+  'Content-Security-Policy': cspToString(CSP_DIRECTIVES),
+  'Strict-Transport-Security': 'max-age=63072000; includeSubDomains; preload',
 };
 
 const API_CORS_HEADERS: Record<string, string> = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
-  "Access-Control-Allow-Headers":
-    "Content-Type, Authorization, If-None-Match, Cache-Control",
-  "Access-Control-Max-Age": "86400",
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+  'Access-Control-Allow-Headers':
+    'Content-Type, Authorization, If-None-Match, Cache-Control',
+  'Access-Control-Max-Age': '86400',
 };
 
 export function middleware(request: NextRequest) {
@@ -49,10 +49,10 @@ export function middleware(request: NextRequest) {
 
   // Skip middleware for static files and Next.js internals.
   if (
-    pathname.startsWith("/_next/") ||
-    pathname.startsWith("/favicon") ||
-    pathname === "/sw.js" ||
-    pathname.startsWith("/manifest")
+    pathname.startsWith('/_next/') ||
+    pathname.startsWith('/favicon') ||
+    pathname === '/sw.js' ||
+    pathname.startsWith('/manifest')
   ) {
     return NextResponse.next();
   }
@@ -65,7 +65,7 @@ export function middleware(request: NextRequest) {
   }
 
   // Apply CORS headers for API routes.
-  if (pathname.startsWith("/api/")) {
+  if (pathname.startsWith('/api/')) {
     for (const [key, value] of Object.entries(API_CORS_HEADERS)) {
       response.headers.set(key, value);
     }
@@ -75,5 +75,5 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/((?!_next/static|_next/image).*)"],
+  matcher: ['/((?!_next/static|_next/image).*)'],
 };

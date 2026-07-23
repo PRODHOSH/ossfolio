@@ -1,9 +1,9 @@
-import type { ContributorStats, Repo } from "@/types";
-import { redis } from "./redis";
-import { fetchWithTimeout, FetchTimeoutError } from "@/lib/fetch-with-timeout";
-import { GitHubRateLimitError } from "@/lib/errors";
+import type { ContributorStats, Repo } from '@/types';
+import { redis } from './redis';
+import { fetchWithTimeout, FetchTimeoutError } from '@/lib/fetch-with-timeout';
+import { GitHubRateLimitError } from '@/lib/errors';
 
-const GITHUB_GRAPHQL_URL = "https://api.github.com/graphql";
+const GITHUB_GRAPHQL_URL = 'https://api.github.com/graphql';
 
 const RETRY_CONFIG = {
   maxRetries: 3,
@@ -27,10 +27,10 @@ async function githubGraphQL<T>(
       const res = await fetchWithTimeout(
         GITHUB_GRAPHQL_URL,
         {
-          method: "POST",
+          method: 'POST',
           headers: {
             Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
+            'Content-Type': 'application/json',
           },
           body: JSON.stringify({ query, variables }),
           next: { revalidate: 3600 },
@@ -41,8 +41,8 @@ async function githubGraphQL<T>(
       if (!res.ok) {
         if (res.status === 403) {
           const isRateLimit =
-            res.headers.get("x-ratelimit-remaining") === "0" ||
-            res.headers.has("retry-after");
+            res.headers.get('x-ratelimit-remaining') === '0' ||
+            res.headers.has('retry-after');
           if (isRateLimit) {
             throw new GitHubRateLimitError();
           }
@@ -66,7 +66,7 @@ async function githubGraphQL<T>(
       if (json.errors?.length) {
         const firstErr = json.errors[0];
         // GitHub GraphQL signals quota exhaustion with a structured type field.
-        if (firstErr.type === "RATE_LIMITED") {
+        if (firstErr.type === 'RATE_LIMITED') {
           throw new GitHubRateLimitError(firstErr.message);
         }
         lastError = new Error(firstErr.message);
@@ -98,7 +98,7 @@ async function githubGraphQL<T>(
     }
   }
 
-  throw lastError ?? new Error("GitHub API request failed after retries");
+  throw lastError ?? new Error('GitHub API request failed after retries');
 }
 
 export const CONTRIBUTOR_QUERY = `
@@ -237,7 +237,7 @@ export async function fetchContributorProfile(
       return cachedData;
     }
   } catch (err) {
-    console.error("Redis read error gracefully bypassed:", err);
+    console.error('Redis read error gracefully bypassed:', err);
   }
 
   // 2. Cache Miss - Query live GraphQL API
@@ -252,7 +252,7 @@ export async function fetchContributorProfile(
       // 3. Save response to Redis with 2 hours TTL (7200 seconds)
       await redis.set(cacheKey, data.user, { ex: 7200 });
     } catch (err) {
-      console.error("Redis write error gracefully bypassed:", err);
+      console.error('Redis write error gracefully bypassed:', err);
     }
   }
 
@@ -288,7 +288,7 @@ export function contributorToScoreInputs(c: GitHubContributor): {
 /* Public contribution calendar (no token required)                           */
 /* -------------------------------------------------------------------------- */
 
-const HEATMAP_COLORS = ["#ebedf0", "#9be9a8", "#40c463", "#30a14e", "#216e39"];
+const HEATMAP_COLORS = ['#ebedf0', '#9be9a8', '#40c463', '#30a14e', '#216e39'];
 
 function colorForCount(count: number): string {
   if (count === 0) return HEATMAP_COLORS[0];
@@ -317,14 +317,14 @@ export async function fetchContributionCalendar(
   username: string,
   from?: string,
 ): Promise<ContributionCalendar | null> {
-  const cacheKey = `github:calendar:${username.toLowerCase()}${from ? `:${from}` : ""}`;
+  const cacheKey = `github:calendar:${username.toLowerCase()}${from ? `:${from}` : ''}`;
 
   try {
     // 1. Try Cache-aside Strategy on Scraper endpoint
     const cachedCalendar = await redis.get<ContributionCalendar>(cacheKey);
     if (cachedCalendar) return cachedCalendar;
   } catch (err) {
-    console.error("Redis calendar read error gracefully bypassed:", err);
+    console.error('Redis calendar read error gracefully bypassed:', err);
   }
 
   try {
@@ -336,8 +336,8 @@ export async function fetchContributionCalendar(
       url,
       {
         headers: {
-          Accept: "text/html",
-          "User-Agent": "ossfolio (+https://ossfolio.qzz.io)",
+          Accept: 'text/html',
+          'User-Agent': 'ossfolio (+https://ossfolio.qzz.io)',
         },
         next: { revalidate: 3600 },
       },
@@ -355,7 +355,7 @@ export async function fetchContributionCalendar(
       const id = tip[1];
       const label = tip[2].trim();
       const numMatch = label.match(/^([\d,]+)\s+contribution/);
-      const count = numMatch ? parseInt(numMatch[1].replace(/,/g, ""), 10) : 0;
+      const count = numMatch ? parseInt(numMatch[1].replace(/,/g, ''), 10) : 0;
       countById.set(id, count);
     }
 
@@ -402,7 +402,7 @@ export async function fetchContributionCalendar(
       // 2. Cache calendar results as well for 2 hours (7200s)
       await redis.set(cacheKey, result, { ex: 7200 });
     } catch (err) {
-      console.error("Redis calendar write error gracefully bypassed:", err);
+      console.error('Redis calendar write error gracefully bypassed:', err);
     }
 
     return result;

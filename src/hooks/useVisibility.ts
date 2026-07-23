@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef } from 'react';
 
 /**
  * Fires callbacks when the page visibility changes.
@@ -14,17 +14,17 @@ export function useVisibility(onVisible?: () => void, onHidden?: () => void) {
   });
 
   useEffect(() => {
-    if (typeof document === "undefined") return;
+    if (typeof document === 'undefined') return;
 
     const handler = () => {
-      if (document.visibilityState === "visible") {
+      if (document.visibilityState === 'visible') {
         visibleRef.current?.();
       } else {
         hiddenRef.current?.();
       }
     };
 
-    document.addEventListener("visibilitychange", handler);
-    return () => document.removeEventListener("visibilitychange", handler);
+    document.addEventListener('visibilitychange', handler);
+    return () => document.removeEventListener('visibilitychange', handler);
   }, []);
 }

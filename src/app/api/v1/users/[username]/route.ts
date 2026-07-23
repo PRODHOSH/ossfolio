@@ -1,12 +1,12 @@
-import { NextRequest, NextResponse } from "next/server";
-import { getPublicProfileByUsername } from "@/lib/db";
+import { NextRequest, NextResponse } from 'next/server';
+import { getPublicProfileByUsername } from '@/lib/db';
 import {
   sanitizeUsername,
   createApiResponse,
   createErrorResponse,
-} from "@/lib/validators/api";
+} from '@/lib/validators/api';
 
-export const runtime = "edge";
+export const runtime = 'edge';
 
 // Public, cross-origin REST endpoint for third-party consumers of a profile's
 // aggregated score/stats. Reads are open because profiles are already publicly
@@ -16,11 +16,11 @@ export const runtime = "edge";
 // follow-up (see the PR description).
 
 const CORS_HEADERS: Record<string, string> = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Methods": "GET, OPTIONS",
-  "Access-Control-Allow-Headers":
-    "Content-Type, Authorization, If-None-Match, Cache-Control",
-  "Access-Control-Max-Age": "86400",
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'GET, OPTIONS',
+  'Access-Control-Allow-Headers':
+    'Content-Type, Authorization, If-None-Match, Cache-Control',
+  'Access-Control-Max-Age': '86400',
 };
 
 function withCors(res: NextResponse): NextResponse {
@@ -61,7 +61,7 @@ function ensureCleanup(): void {
     }
   }, 60_000);
   // Allow the process to exit even if the interval is still active.
-  if (typeof cleanupInterval === "object" && "unref" in cleanupInterval) {
+  if (typeof cleanupInterval === 'object' && 'unref' in cleanupInterval) {
     cleanupInterval.unref();
   }
 }
@@ -69,13 +69,13 @@ function ensureCleanup(): void {
 function getClientIp(request: NextRequest): string {
   // Prefer the platform-set header (unspoofable on Cloudflare) so a client can't
   // forge x-forwarded-for to bypass the limiter or inflate key cardinality.
-  const cfIp = request.headers.get("cf-connecting-ip");
+  const cfIp = request.headers.get('cf-connecting-ip');
   if (cfIp) return cfIp;
-  const realIp = request.headers.get("x-real-ip");
+  const realIp = request.headers.get('x-real-ip');
   if (realIp) return realIp;
-  const forwarded = request.headers.get("x-forwarded-for");
-  if (forwarded) return forwarded.split(",")[0].trim();
-  return "unknown";
+  const forwarded = request.headers.get('x-forwarded-for');
+  if (forwarded) return forwarded.split(',')[0].trim();
+  return 'unknown';
 }
 
 function checkRateLimit(ip: string): { limited: boolean; retryAfter: number } {
@@ -118,9 +118,9 @@ function checkRateLimit(ip: string): { limited: boolean; retryAfter: number } {
 // Columns exposed publicly. Internal fields (id, visibility, view_count,
 // search_text, timestamps) are deliberately excluded.
 const PUBLIC_COLUMNS =
-  "username, name, avatar_url, github_url, bio, headline, score, followers, " +
-  "top_languages, total_commits, total_prs, total_issues, total_reviews, " +
-  "badges, last_refreshed_at";
+  'username, name, avatar_url, github_url, bio, headline, score, followers, ' +
+  'top_languages, total_commits, total_prs, total_issues, total_reviews, ' +
+  'badges, last_refreshed_at';
 
 export async function OPTIONS() {
   return new NextResponse(null, { status: 204, headers: CORS_HEADERS });
@@ -133,11 +133,11 @@ export async function GET(
   const { limited, retryAfter } = checkRateLimit(getClientIp(request));
   if (limited) {
     const res = withCors(
-      createErrorResponse("Rate limit exceeded. Please slow down.", 429, {
+      createErrorResponse('Rate limit exceeded. Please slow down.', 429, {
         retryAfterSeconds: retryAfter,
       }),
     );
-    res.headers.set("Retry-After", String(retryAfter));
+    res.headers.set('Retry-After', String(retryAfter));
     return res;
   }
 
@@ -145,7 +145,7 @@ export async function GET(
   const username = sanitizeUsername(rawUsername);
 
   if (!username) {
-    return withCors(createErrorResponse("Invalid username format", 400));
+    return withCors(createErrorResponse('Invalid username format', 400));
   }
 
   const { data, error } = await getPublicProfileByUsername(
@@ -154,14 +154,14 @@ export async function GET(
   );
 
   if (error) {
-    return withCors(createErrorResponse("Failed to fetch profile", 502));
+    return withCors(createErrorResponse('Failed to fetch profile', 502));
   }
 
   // No row means either the username doesn't exist or the profile is unlisted.
   // We return the same 404 for both so the API never reveals that an unlisted
   // profile exists.
   if (!data) {
-    return withCors(createErrorResponse("Profile not found", 404));
+    return withCors(createErrorResponse('Profile not found', 404));
   }
 
   const profile = data as unknown as {
@@ -204,7 +204,7 @@ export async function GET(
 
   return withCors(
     createApiResponse(body, 200, {
-      "Cache-Control": "public, s-maxage=300, stale-while-revalidate=600",
+      'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=600',
     }),
   );
 }

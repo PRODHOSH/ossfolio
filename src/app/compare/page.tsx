@@ -1,31 +1,31 @@
-import Image from "next/image";
-import Link from "next/link";
-import type { Metadata } from "next";
-import { Navbar } from "@/components/layout/Navbar";
-import { Footer } from "@/components/layout/Footer";
+import Image from 'next/image';
+import Link from 'next/link';
+import type { Metadata } from 'next';
+import { Navbar } from '@/components/layout/Navbar';
+import { Footer } from '@/components/layout/Footer';
 import {
   fetchLiveStats,
   fetchOrganizations,
   deriveTechStack,
   mapRepos,
-} from "@/lib/profile-data";
-import { fetchContributionCalendar } from "@/lib/github";
-import { generateMockHeatmap } from "@/lib/mock";
-import { calculateScore } from "@/lib/score";
-import { getProfileByUsername } from "@/lib/db";
-import type { ContributorStats, Repo } from "@/types";
-import { CompareForm } from "@/components/profile/CompareForm";
-import { CompareCharts } from "@/components/profile/CompareCharts";
+} from '@/lib/profile-data';
+import { fetchContributionCalendar } from '@/lib/github';
+import { generateMockHeatmap } from '@/lib/mock';
+import { calculateScore } from '@/lib/score';
+import { getProfileByUsername } from '@/lib/db';
+import type { ContributorStats, Repo } from '@/types';
+import { CompareForm } from '@/components/profile/CompareForm';
+import { CompareCharts } from '@/components/profile/CompareCharts';
 
-export const runtime = "edge";
+export const runtime = 'edge';
 
 export const metadata: Metadata = {
-  title: "Compare Contributors",
+  title: 'Compare Contributors',
   description:
-    "Compare two open-source contributor profiles side by side on OSSfolio. See who has more commits, PRs, issues, and the higher contributor score.",
+    'Compare two open-source contributor profiles side by side on OSSfolio. See who has more commits, PRs, issues, and the higher contributor score.',
   openGraph: {
-    title: "Compare Contributors - OSSfolio",
-    description: "Side-by-side comparison of open-source contributor stats.",
+    title: 'Compare Contributors - OSSfolio',
+    description: 'Side-by-side comparison of open-source contributor stats.',
   },
 };
 
@@ -43,7 +43,7 @@ interface ProfileData {
 async function fetchGitHubUser(username: string) {
   const encodedUsername = encodeURIComponent(username);
   const res = await fetch(`https://api.github.com/users/${encodedUsername}`, {
-    headers: { Accept: "application/vnd.github.v3+json" },
+    headers: { Accept: 'application/vnd.github.v3+json' },
     next: { revalidate: 3600 },
   });
   if (res.status === 404) return null;
@@ -60,7 +60,7 @@ async function fetchGitHubRepos(username: string) {
   const res = await fetch(
     `https://api.github.com/users/${encodeURIComponent(username)}/repos?sort=updated&per_page=100&type=owner`,
     {
-      headers: { Accept: "application/vnd.github.v3+json" },
+      headers: { Accept: 'application/vnd.github.v3+json' },
       next: { revalidate: 3600 },
     },
   );
@@ -102,7 +102,7 @@ async function fetchProfile(username: string): Promise<ProfileData> {
   try {
     const { data: profileRow, error } = await getProfileByUsername(
       username,
-      "score, visibility",
+      'score, visibility',
     );
 
     // The Supabase client resolves with `{ data: null, error }` rather than throwing, so the catch
@@ -112,10 +112,10 @@ async function fetchProfile(username: string): Promise<ProfileData> {
       visibilityUnknown = true;
     } else if (profileRow) {
       visibility =
-        typeof profileRow.visibility === "string"
+        typeof profileRow.visibility === 'string'
           ? profileRow.visibility
           : null;
-      if (typeof profileRow.score === "number") {
+      if (typeof profileRow.score === 'number') {
         score = profileRow.score;
       }
     }
@@ -144,7 +144,7 @@ async function fetchProfile(username: string): Promise<ProfileData> {
     );
   }
 
-  if (visibility === "private") {
+  if (visibility === 'private') {
     throw new Error(`GitHub user "${username}" not found`);
   }
 
@@ -174,26 +174,26 @@ export default async function ComparePage({ searchParams }: ComparePageProps) {
         <main
           id="main-content"
           style={{
-            backgroundColor: "var(--color-canvas)",
-            color: "var(--color-ink)",
-            minHeight: "100vh",
-            transition: "background-color 0.2s ease, color 0.2s ease",
+            backgroundColor: 'var(--color-canvas)',
+            color: 'var(--color-ink)',
+            minHeight: '100vh',
+            transition: 'background-color 0.2s ease, color 0.2s ease',
           }}
         >
           <div
             style={{
-              maxWidth: "72rem",
-              margin: "0 auto",
-              padding: "56px 20px",
+              maxWidth: '72rem',
+              margin: '0 auto',
+              padding: '56px 20px',
             }}
           >
-            <header style={{ marginBottom: "32px" }}>
+            <header style={{ marginBottom: '32px' }}>
               <h1
                 style={{
-                  fontSize: "28px",
+                  fontSize: '28px',
                   fontWeight: 500,
-                  color: "var(--color-ink)",
-                  letterSpacing: "-0.42px",
+                  color: 'var(--color-ink)',
+                  letterSpacing: '-0.42px',
                   margin: 0,
                 }}
               >
@@ -201,9 +201,9 @@ export default async function ComparePage({ searchParams }: ComparePageProps) {
               </h1>
               <p
                 style={{
-                  fontSize: "15px",
-                  color: "var(--color-ink-mute)",
-                  margin: "8px 0 0 0",
+                  fontSize: '15px',
+                  color: 'var(--color-ink-mute)',
+                  margin: '8px 0 0 0',
                 }}
               >
                 Enter two GitHub usernames to compare their open-source stats
@@ -221,7 +221,7 @@ export default async function ComparePage({ searchParams }: ComparePageProps) {
 
   // ── Fetch both profiles in parallel; each wrapped in its own try/catch ───
   const normalizeError = (err: unknown) =>
-    err instanceof Error ? err : new Error("Failed to load profile");
+    err instanceof Error ? err : new Error('Failed to load profile');
 
   const [resultA, resultB] = await Promise.all([
     fetchProfile(a).catch(normalizeError),
@@ -235,21 +235,21 @@ export default async function ComparePage({ searchParams }: ComparePageProps) {
 
   // ── Stat rows to compare ────────────────────────────────────────────────
   const statRows: { label: string; key: keyof ContributorStats }[] = [
-    { label: "Commits", key: "totalCommits" },
-    { label: "Pull Requests", key: "totalPRs" },
-    { label: "Issues", key: "totalIssues" },
-    { label: "Reviews", key: "totalReviews" },
-    { label: "Contributions", key: "totalContributions" },
+    { label: 'Commits', key: 'totalCommits' },
+    { label: 'Pull Requests', key: 'totalPRs' },
+    { label: 'Issues', key: 'totalIssues' },
+    { label: 'Reviews', key: 'totalReviews' },
+    { label: 'Contributions', key: 'totalContributions' },
   ];
 
-  const numberFormatter = new Intl.NumberFormat("en-US");
+  const numberFormatter = new Intl.NumberFormat('en-US');
 
   const winnerScore =
     profileA && profileB
       ? profileA.score > profileB.score
-        ? "a"
+        ? 'a'
         : profileA.score < profileB.score
-          ? "b"
+          ? 'b'
           : null
       : null;
 
@@ -258,23 +258,23 @@ export default async function ComparePage({ searchParams }: ComparePageProps) {
       <Navbar />
       <main
         style={{
-          backgroundColor: "var(--color-canvas)",
-          color: "var(--color-ink)",
-          minHeight: "100vh",
-          transition: "background-color 0.2s ease, color 0.2s ease",
+          backgroundColor: 'var(--color-canvas)',
+          color: 'var(--color-ink)',
+          minHeight: '100vh',
+          transition: 'background-color 0.2s ease, color 0.2s ease',
         }}
       >
         <div
-          style={{ maxWidth: "72rem", margin: "0 auto", padding: "56px 20px" }}
+          style={{ maxWidth: '72rem', margin: '0 auto', padding: '56px 20px' }}
         >
           {/* Header */}
-          <header style={{ marginBottom: "32px" }}>
+          <header style={{ marginBottom: '32px' }}>
             <h1
               style={{
-                fontSize: "28px",
+                fontSize: '28px',
                 fontWeight: 500,
-                color: "var(--color-ink)",
-                letterSpacing: "-0.42px",
+                color: 'var(--color-ink)',
+                letterSpacing: '-0.42px',
                 margin: 0,
               }}
             >
@@ -282,9 +282,9 @@ export default async function ComparePage({ searchParams }: ComparePageProps) {
             </h1>
             <p
               style={{
-                fontSize: "15px",
-                color: "var(--color-ink-mute)",
-                margin: "8px 0 0 0",
+                fontSize: '15px',
+                color: 'var(--color-ink-mute)',
+                margin: '8px 0 0 0',
               }}
             >
               {a} vs {b}
@@ -297,10 +297,10 @@ export default async function ComparePage({ searchParams }: ComparePageProps) {
           {/* Two-column profile headers */}
           <div
             style={{
-              display: "grid",
-              gridTemplateColumns: "1fr 1fr",
-              gap: "24px",
-              marginTop: "32px",
+              display: 'grid',
+              gridTemplateColumns: '1fr 1fr',
+              gap: '24px',
+              marginTop: '32px',
             }}
             className="compare-grid"
           >
@@ -308,17 +308,17 @@ export default async function ComparePage({ searchParams }: ComparePageProps) {
             {errorA ? (
               <div
                 style={{
-                  border: "1px solid var(--color-hairline)",
-                  borderRadius: "12px",
-                  padding: "32px 24px",
-                  textAlign: "center",
+                  border: '1px solid var(--color-hairline)',
+                  borderRadius: '12px',
+                  padding: '32px 24px',
+                  textAlign: 'center',
                 }}
               >
                 <p
                   style={{
-                    fontSize: "15px",
+                    fontSize: '15px',
                     fontWeight: 500,
-                    color: "var(--color-ink)",
+                    color: 'var(--color-ink)',
                     margin: 0,
                   }}
                 >
@@ -326,9 +326,9 @@ export default async function ComparePage({ searchParams }: ComparePageProps) {
                 </p>
                 <p
                   style={{
-                    fontSize: "13px",
-                    color: "var(--color-ink-mute)",
-                    margin: "6px 0 0 0",
+                    fontSize: '13px',
+                    color: 'var(--color-ink-mute)',
+                    margin: '6px 0 0 0',
                   }}
                 >
                   {errorA}
@@ -338,7 +338,7 @@ export default async function ComparePage({ searchParams }: ComparePageProps) {
               <ProfileColumn
                 user={profileA.user}
                 score={profileA.score}
-                isWinner={winnerScore === "a"}
+                isWinner={winnerScore === 'a'}
               />
             ) : null}
 
@@ -346,17 +346,17 @@ export default async function ComparePage({ searchParams }: ComparePageProps) {
             {errorB ? (
               <div
                 style={{
-                  border: "1px solid var(--color-hairline)",
-                  borderRadius: "12px",
-                  padding: "32px 24px",
-                  textAlign: "center",
+                  border: '1px solid var(--color-hairline)',
+                  borderRadius: '12px',
+                  padding: '32px 24px',
+                  textAlign: 'center',
                 }}
               >
                 <p
                   style={{
-                    fontSize: "15px",
+                    fontSize: '15px',
                     fontWeight: 500,
-                    color: "var(--color-ink)",
+                    color: 'var(--color-ink)',
                     margin: 0,
                   }}
                 >
@@ -364,9 +364,9 @@ export default async function ComparePage({ searchParams }: ComparePageProps) {
                 </p>
                 <p
                   style={{
-                    fontSize: "13px",
-                    color: "var(--color-ink-mute)",
-                    margin: "6px 0 0 0",
+                    fontSize: '13px',
+                    color: 'var(--color-ink-mute)',
+                    margin: '6px 0 0 0',
                   }}
                 >
                   {errorB}
@@ -376,7 +376,7 @@ export default async function ComparePage({ searchParams }: ComparePageProps) {
               <ProfileColumn
                 user={profileB.user}
                 score={profileB.score}
-                isWinner={winnerScore === "b"}
+                isWinner={winnerScore === 'b'}
               />
             ) : null}
           </div>
@@ -385,59 +385,59 @@ export default async function ComparePage({ searchParams }: ComparePageProps) {
           {profileA && profileB && (
             <div
               style={{
-                marginTop: "32px",
-                border: "1px solid var(--color-hairline)",
-                borderRadius: "12px",
-                overflow: "hidden",
+                marginTop: '32px',
+                border: '1px solid var(--color-hairline)',
+                borderRadius: '12px',
+                overflow: 'hidden',
               }}
             >
               {/* Score row */}
               <div
                 style={{
-                  display: "grid",
-                  gridTemplateColumns: "1fr 1fr 1fr",
-                  borderBottom: "1px solid var(--color-hairline)",
-                  backgroundColor: "var(--color-canvas-soft)",
+                  display: 'grid',
+                  gridTemplateColumns: '1fr 1fr 1fr',
+                  borderBottom: '1px solid var(--color-hairline)',
+                  backgroundColor: 'var(--color-canvas-soft)',
                 }}
               >
                 <span
                   style={{
-                    padding: "14px 18px",
-                    fontSize: "18px",
+                    padding: '14px 18px',
+                    fontSize: '18px',
                     fontWeight: 600,
                     color:
-                      winnerScore === "a"
-                        ? "var(--color-primary)"
-                        : "var(--color-ink)",
-                    textAlign: "center",
+                      winnerScore === 'a'
+                        ? 'var(--color-primary)'
+                        : 'var(--color-ink)',
+                    textAlign: 'center',
                   }}
                 >
                   {profileA.score}
                 </span>
                 <span
                   style={{
-                    padding: "14px 18px",
-                    fontSize: "14px",
+                    padding: '14px 18px',
+                    fontSize: '14px',
                     fontWeight: 500,
-                    color: "var(--color-ink-mute)",
-                    textAlign: "center",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
+                    color: 'var(--color-ink-mute)',
+                    textAlign: 'center',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
                   }}
                 >
                   Score
                 </span>
                 <span
                   style={{
-                    padding: "14px 18px",
-                    fontSize: "18px",
+                    padding: '14px 18px',
+                    fontSize: '18px',
                     fontWeight: 600,
                     color:
-                      winnerScore === "b"
-                        ? "var(--color-primary)"
-                        : "var(--color-ink)",
-                    textAlign: "center",
+                      winnerScore === 'b'
+                        ? 'var(--color-primary)'
+                        : 'var(--color-ink)',
+                    textAlign: 'center',
                   }}
                 >
                   {profileB.score}
@@ -455,47 +455,47 @@ export default async function ComparePage({ searchParams }: ComparePageProps) {
                   <div
                     key={row.key}
                     style={{
-                      display: "grid",
-                      gridTemplateColumns: "1fr 1fr 1fr",
-                      borderBottom: "1px solid var(--color-hairline)",
+                      display: 'grid',
+                      gridTemplateColumns: '1fr 1fr 1fr',
+                      borderBottom: '1px solid var(--color-hairline)',
                     }}
                   >
                     <span
                       style={{
-                        padding: "12px 18px",
-                        fontSize: "15px",
+                        padding: '12px 18px',
+                        fontSize: '15px',
                         fontWeight: aWins ? 600 : 400,
                         color: aWins
-                          ? "var(--color-primary)"
-                          : "var(--color-ink)",
-                        textAlign: "center",
+                          ? 'var(--color-primary)'
+                          : 'var(--color-ink)',
+                        textAlign: 'center',
                       }}
                     >
                       {numberFormatter.format(valA)}
                     </span>
                     <span
                       style={{
-                        padding: "12px 18px",
-                        fontSize: "13px",
+                        padding: '12px 18px',
+                        fontSize: '13px',
                         fontWeight: 500,
-                        color: "var(--color-ink-mute)",
-                        textAlign: "center",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
+                        color: 'var(--color-ink-mute)',
+                        textAlign: 'center',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
                       }}
                     >
                       {row.label}
                     </span>
                     <span
                       style={{
-                        padding: "12px 18px",
-                        fontSize: "15px",
+                        padding: '12px 18px',
+                        fontSize: '15px',
                         fontWeight: bWins ? 600 : 400,
                         color: bWins
-                          ? "var(--color-primary)"
-                          : "var(--color-ink)",
-                        textAlign: "center",
+                          ? 'var(--color-primary)'
+                          : 'var(--color-ink)',
+                        textAlign: 'center',
                       }}
                     >
                       {numberFormatter.format(valB)}
@@ -560,15 +560,15 @@ function ProfileColumn({
   return (
     <div
       style={{
-        border: `1px solid ${isWinner ? "var(--color-primary)" : "var(--color-hairline)"}`,
-        borderRadius: "12px",
-        padding: "24px",
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        gap: "12px",
-        textAlign: "center",
-        transition: "border-color 0.2s ease",
+        border: `1px solid ${isWinner ? 'var(--color-primary)' : 'var(--color-hairline)'}`,
+        borderRadius: '12px',
+        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        gap: '12px',
+        textAlign: 'center',
+        transition: 'border-color 0.2s ease',
       }}
     >
       <Link href={`/${username}`}>
@@ -578,8 +578,8 @@ function ProfileColumn({
           width={72}
           height={72}
           style={{
-            borderRadius: "9999px",
-            border: "1px solid var(--color-hairline)",
+            borderRadius: '9999px',
+            border: '1px solid var(--color-hairline)',
           }}
         />
       </Link>
@@ -587,19 +587,19 @@ function ProfileColumn({
         <Link
           href={`/${username}`}
           style={{
-            fontSize: "16px",
+            fontSize: '16px',
             fontWeight: 600,
-            color: "var(--color-ink)",
-            textDecoration: "none",
+            color: 'var(--color-ink)',
+            textDecoration: 'none',
           }}
         >
           {name}
         </Link>
         <p
           style={{
-            fontSize: "13px",
-            color: "var(--color-ink-mute)",
-            margin: "2px 0 0 0",
+            fontSize: '13px',
+            color: 'var(--color-ink-mute)',
+            margin: '2px 0 0 0',
           }}
         >
           @{username}
@@ -608,19 +608,19 @@ function ProfileColumn({
       <div>
         <span
           style={{
-            fontSize: "22px",
+            fontSize: '22px',
             fontWeight: 500,
-            color: isWinner ? "var(--color-primary)" : "var(--color-ink)",
-            letterSpacing: "-0.42px",
+            color: isWinner ? 'var(--color-primary)' : 'var(--color-ink)',
+            letterSpacing: '-0.42px',
           }}
         >
           {score}
         </span>
         <p
           style={{
-            fontSize: "12px",
-            color: "var(--color-ink-mute)",
-            margin: "2px 0 0 0",
+            fontSize: '12px',
+            color: 'var(--color-ink-mute)',
+            margin: '2px 0 0 0',
           }}
         >
           contributor score

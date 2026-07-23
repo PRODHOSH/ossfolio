@@ -9,6 +9,6 @@
  * Note: `runtime` must be declared directly here — Next.js does not allow
  * route-segment config values to be re-exported from another module.
  */
-export { default, alt, size, contentType } from "./opengraph-image";
+export { default, alt, size, contentType } from './opengraph-image';
 
-export const runtime = "edge";
+export const runtime = 'edge';

@@ -1,11 +1,11 @@
-"use client";
+'use client';
 
-import type { MergedPR, BadgeItem } from "@/types";
-import { useMemo, useState } from "react";
+import type { MergedPR, BadgeItem } from '@/types';
+import { useMemo, useState } from 'react';
 
 interface TimelineEvent {
   id: string;
-  type: "first_pr" | "pr" | "badge";
+  type: 'first_pr' | 'pr' | 'badge';
   title: string;
   description: string;
   date: string; // Used for chronological sorting
@@ -26,7 +26,7 @@ export function ContributionTimeline({
   const PAGE_SIZE = 10;
 
   const mergedOnlyPRs = useMemo(() => {
-    return (mergedPRs || []).filter((pr) => !pr.state || pr.state === "merged");
+    return (mergedPRs || []).filter((pr) => !pr.state || pr.state === 'merged');
   }, [mergedPRs]);
 
   // 1. Gather and construct timeline events
@@ -41,19 +41,19 @@ export function ContributionTimeline({
 
     sortedAscPRs.forEach((pr, index) => {
       const isOldest = index === 0;
-      const formattedDate = new Date(pr.mergedAt).toLocaleDateString("en-US", {
-        month: "short",
-        day: "numeric",
-        year: "numeric",
-        timeZone: "UTC",
+      const formattedDate = new Date(pr.mergedAt).toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric',
+        timeZone: 'UTC',
       });
 
       events.push({
         id: `pr-${pr.url}`,
-        type: isOldest ? "first_pr" : "pr",
+        type: isOldest ? 'first_pr' : 'pr',
         title: isOldest
-          ? "🚀 Earliest Merged Pull Request (recent)"
-          : "Merged Pull Request",
+          ? '🚀 Earliest Merged Pull Request (recent)'
+          : 'Merged Pull Request',
         description: pr.title,
         date: pr.mergedAt,
         displayDate: formattedDate,
@@ -71,7 +71,7 @@ export function ContributionTimeline({
       const badgeDate = `${year}-12-31T23:59:59.999Z`;
       events.push({
         id: `badge-${badge.program}-${year}`,
-        type: "badge",
+        type: 'badge',
         title: `🏆 Earned ${badge.program} Badge`,
         description: `Recognized for outstanding contributions to ${badge.program}`,
         date: badgeDate,
@@ -98,14 +98,14 @@ export function ContributionTimeline({
   const hasMore = visibleCount < sortedEvents.length;
 
   return (
-    <section style={{ marginTop: "44px" }}>
+    <section style={{ marginTop: '44px' }}>
       <h2
         style={{
-          fontSize: "16px",
+          fontSize: '16px',
           fontWeight: 600,
-          color: "var(--color-ink)",
-          margin: "0 0 20px 0",
-          letterSpacing: "-0.2px",
+          color: 'var(--color-ink)',
+          margin: '0 0 20px 0',
+          letterSpacing: '-0.2px',
         }}
       >
         Contribution Timeline
@@ -113,111 +113,111 @@ export function ContributionTimeline({
 
       <div
         style={{
-          position: "relative",
-          paddingLeft: "24px",
-          marginLeft: "8px",
-          display: "flex",
-          flexDirection: "column",
-          gap: "24px",
+          position: 'relative',
+          paddingLeft: '24px',
+          marginLeft: '8px',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '24px',
         }}
       >
         {/* Timeline vertical thread line */}
         <div
           style={{
-            position: "absolute",
+            position: 'absolute',
             left: 0,
-            top: "8px",
-            bottom: "8px",
-            width: "2px",
-            backgroundColor: "var(--color-hairline-strong)",
+            top: '8px',
+            bottom: '8px',
+            width: '2px',
+            backgroundColor: 'var(--color-hairline-strong)',
             opacity: 0.8,
           }}
         />
 
         {visibleEvents.map((event) => {
           const isHighlight =
-            event.type === "first_pr" || event.type === "badge";
+            event.type === 'first_pr' || event.type === 'badge';
           return (
             <div
               key={event.id}
               style={{
-                position: "relative",
-                display: "flex",
-                flexDirection: "column",
-                gap: "6px",
+                position: 'relative',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '6px',
               }}
             >
               {/* Timeline marker node dot */}
               <div
                 style={{
-                  position: "absolute",
-                  left: "-31px", // Centered exactly over the 2px thread line at left: 0
-                  top: "4px",
-                  width: "12px",
-                  height: "12px",
-                  borderRadius: "50%",
-                  border: `2px solid ${isHighlight ? "var(--color-primary)" : "var(--color-hairline-strong)"}`,
+                  position: 'absolute',
+                  left: '-31px', // Centered exactly over the 2px thread line at left: 0
+                  top: '4px',
+                  width: '12px',
+                  height: '12px',
+                  borderRadius: '50%',
+                  border: `2px solid ${isHighlight ? 'var(--color-primary)' : 'var(--color-hairline-strong)'}`,
                   backgroundColor: isHighlight
-                    ? "var(--color-primary)"
-                    : "var(--color-canvas)",
+                    ? 'var(--color-primary)'
+                    : 'var(--color-canvas)',
                   boxShadow: isHighlight
-                    ? "0 0 8px var(--color-primary)"
-                    : "none",
+                    ? '0 0 8px var(--color-primary)'
+                    : 'none',
                   zIndex: 2,
-                  transition: "all 0.2s ease",
+                  transition: 'all 0.2s ease',
                 }}
               />
 
               {/* Event Content card */}
               <div
                 style={{
-                  display: "flex",
-                  flexDirection: "column",
-                  padding: "16px",
-                  borderRadius: "8px",
-                  border: `1px solid ${isHighlight ? "var(--color-hairline-strong)" : "var(--color-hairline)"}`,
-                  backgroundColor: "var(--color-canvas-soft)",
-                  transition: "border-color 0.2s ease, box-shadow 0.2s ease",
+                  display: 'flex',
+                  flexDirection: 'column',
+                  padding: '16px',
+                  borderRadius: '8px',
+                  border: `1px solid ${isHighlight ? 'var(--color-hairline-strong)' : 'var(--color-hairline)'}`,
+                  backgroundColor: 'var(--color-canvas-soft)',
+                  transition: 'border-color 0.2s ease, box-shadow 0.2s ease',
                 }}
                 onMouseEnter={(e) => {
                   e.currentTarget.style.borderColor =
-                    "var(--color-hairline-strong)";
+                    'var(--color-hairline-strong)';
                   e.currentTarget.style.boxShadow =
-                    "0 2px 6px rgba(0, 0, 0, 0.05)";
+                    '0 2px 6px rgba(0, 0, 0, 0.05)';
                 }}
                 onMouseLeave={(e) => {
                   e.currentTarget.style.borderColor = isHighlight
-                    ? "var(--color-hairline-strong)"
-                    : "var(--color-hairline)";
-                  e.currentTarget.style.boxShadow = "none";
+                    ? 'var(--color-hairline-strong)'
+                    : 'var(--color-hairline)';
+                  e.currentTarget.style.boxShadow = 'none';
                 }}
               >
                 <div
                   style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "flex-start",
-                    flexWrap: "wrap",
-                    gap: "8px",
-                    marginBottom: "4px",
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'flex-start',
+                    flexWrap: 'wrap',
+                    gap: '8px',
+                    marginBottom: '4px',
                   }}
                 >
                   <span
                     style={{
-                      fontSize: "14px",
+                      fontSize: '14px',
                       fontWeight: 600,
                       color: isHighlight
-                        ? "var(--color-primary)"
-                        : "var(--color-ink)",
+                        ? 'var(--color-primary)'
+                        : 'var(--color-ink)',
                     }}
                   >
                     {event.title}
                   </span>
                   <span
                     style={{
-                      fontSize: "12px",
-                      color: "var(--color-ink-mute)",
-                      fontFamily: "ui-monospace, Menlo, Monaco, monospace",
+                      fontSize: '12px',
+                      color: 'var(--color-ink-mute)',
+                      fontFamily: 'ui-monospace, Menlo, Monaco, monospace',
                     }}
                   >
                     {event.displayDate}
@@ -230,30 +230,30 @@ export function ContributionTimeline({
                     target="_blank"
                     rel="noopener noreferrer"
                     style={{
-                      fontSize: "13px",
-                      color: "var(--color-ink)",
-                      textDecoration: "none",
+                      fontSize: '13px',
+                      color: 'var(--color-ink)',
+                      textDecoration: 'none',
                       fontWeight: 500,
-                      marginBottom: "4px",
-                      display: "inline-flex",
-                      alignItems: "center",
-                      gap: "4px",
+                      marginBottom: '4px',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '4px',
                     }}
                     onMouseEnter={(e) => {
-                      e.currentTarget.style.textDecoration = "underline";
-                      e.currentTarget.style.color = "var(--color-primary)";
+                      e.currentTarget.style.textDecoration = 'underline';
+                      e.currentTarget.style.color = 'var(--color-primary)';
                     }}
                     onMouseLeave={(e) => {
-                      e.currentTarget.style.textDecoration = "none";
-                      e.currentTarget.style.color = "var(--color-ink)";
+                      e.currentTarget.style.textDecoration = 'none';
+                      e.currentTarget.style.color = 'var(--color-ink)';
                     }}
                     onFocus={(e) => {
-                      e.currentTarget.style.textDecoration = "underline";
-                      e.currentTarget.style.color = "var(--color-primary)";
+                      e.currentTarget.style.textDecoration = 'underline';
+                      e.currentTarget.style.color = 'var(--color-primary)';
                     }}
                     onBlur={(e) => {
-                      e.currentTarget.style.textDecoration = "none";
-                      e.currentTarget.style.color = "var(--color-ink)";
+                      e.currentTarget.style.textDecoration = 'none';
+                      e.currentTarget.style.color = 'var(--color-ink)';
                     }}
                   >
                     {event.description}
@@ -274,9 +274,9 @@ export function ContributionTimeline({
                 ) : (
                   <span
                     style={{
-                      fontSize: "13px",
-                      color: "var(--color-ink)",
-                      marginBottom: "4px",
+                      fontSize: '13px',
+                      color: 'var(--color-ink)',
+                      marginBottom: '4px',
                     }}
                   >
                     {event.description}
@@ -286,11 +286,11 @@ export function ContributionTimeline({
                 {event.meta && (
                   <span
                     style={{
-                      fontSize: "11px",
-                      color: "var(--color-ink-mute)",
+                      fontSize: '11px',
+                      color: 'var(--color-ink-mute)',
                       fontWeight: 500,
-                      textTransform: "uppercase",
-                      letterSpacing: "0.05em",
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.05em',
                     }}
                   >
                     {event.meta}
@@ -303,28 +303,28 @@ export function ContributionTimeline({
       </div>
 
       {hasMore && (
-        <div style={{ marginTop: "20px", paddingLeft: "8px" }}>
+        <div style={{ marginTop: '20px', paddingLeft: '8px' }}>
           <button
             type="button"
             onClick={() => setVisibleCount((c) => c + PAGE_SIZE)}
             style={{
-              fontSize: "14px",
+              fontSize: '14px',
               fontWeight: 600,
-              color: "var(--color-ink)",
-              backgroundColor: "var(--color-canvas)",
-              border: "1px solid var(--color-hairline-strong)",
-              borderRadius: "8px",
-              padding: "10px 16px",
-              cursor: "pointer",
-              transition: "transform 0.05s ease, box-shadow 0.2s ease",
-              boxShadow: "none",
+              color: 'var(--color-ink)',
+              backgroundColor: 'var(--color-canvas)',
+              border: '1px solid var(--color-hairline-strong)',
+              borderRadius: '8px',
+              padding: '10px 16px',
+              cursor: 'pointer',
+              transition: 'transform 0.05s ease, box-shadow 0.2s ease',
+              boxShadow: 'none',
             }}
             onMouseEnter={(e) => {
               e.currentTarget.style.boxShadow =
-                "0 2px 10px rgba(0, 0, 0, 0.05)";
+                '0 2px 10px rgba(0, 0, 0, 0.05)';
             }}
             onMouseLeave={(e) => {
-              e.currentTarget.style.boxShadow = "none";
+              e.currentTarget.style.boxShadow = 'none';
             }}
           >
             Load More
@@ -334,32 +334,32 @@ export function ContributionTimeline({
       {sortedEvents.length === 0 ? (
         <div
           style={{
-            marginTop: "16px",
-            padding: "32px",
-            border: "1px solid var(--color-hairline)",
-            borderRadius: "12px",
-            backgroundColor: "var(--color-canvas)",
-            textAlign: "center",
-            color: "var(--color-ink-mute)",
-            boxShadow: "0 1px 3px rgba(0,0,0,0.06)",
+            marginTop: '16px',
+            padding: '32px',
+            border: '1px solid var(--color-hairline)',
+            borderRadius: '12px',
+            backgroundColor: 'var(--color-canvas)',
+            textAlign: 'center',
+            color: 'var(--color-ink-mute)',
+            boxShadow: '0 1px 3px rgba(0,0,0,0.06)',
           }}
         >
           <p
             style={{
               margin: 0,
-              fontSize: "16px",
+              fontSize: '16px',
               fontWeight: 500,
-              color: "var(--color-ink)",
+              color: 'var(--color-ink)',
             }}
           >
             No contribution activity yet
           </p>
           <p
             style={{
-              marginTop: "8px",
-              fontSize: "13px",
+              marginTop: '8px',
+              fontSize: '13px',
               lineHeight: 1.45,
-              color: "var(--color-ink-mute)",
+              color: 'var(--color-ink-mute)',
             }}
           >
             Your merged pull requests will appear here as you contribute.

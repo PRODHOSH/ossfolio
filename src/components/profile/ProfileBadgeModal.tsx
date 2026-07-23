@@ -1,16 +1,16 @@
-"use client";
+'use client';
 
-import { useRef, useEffect, useState } from "react";
-import { updateProfileBadges } from "@/lib/db";
-import type { BadgeItem } from "@/types";
+import { useRef, useEffect, useState } from 'react';
+import { updateProfileBadges } from '@/lib/db';
+import type { BadgeItem } from '@/types';
 
 const AVAILABLE_PROGRAMS = [
-  "GSSoC",
-  "Hacktoberfest",
-  "EluSoC",
-  "GSoC",
-  "MLH Fellowship",
-  "SWoC",
+  'GSSoC',
+  'Hacktoberfest',
+  'EluSoC',
+  'GSoC',
+  'MLH Fellowship',
+  'SWoC',
 ];
 
 interface ProfileBadgeModalProps {
@@ -31,7 +31,7 @@ export function ProfileBadgeModal({
   username,
 }: ProfileBadgeModalProps) {
   const dialogRef = useRef<HTMLDialogElement>(null);
-  const [selectedProgram, setSelectedProgram] = useState("GSSoC");
+  const [selectedProgram, setSelectedProgram] = useState('GSSoC');
   const currentYear = new Date().getFullYear();
   const [selectedYear, setSelectedYear] = useState(currentYear);
   const [isSaving, setIsSaving] = useState(false);
@@ -59,17 +59,17 @@ export function ProfileBadgeModal({
       }
     };
 
-    dialog.addEventListener("close", handleClose);
-    dialog.addEventListener("click", handleClick);
+    dialog.addEventListener('close', handleClose);
+    dialog.addEventListener('click', handleClick);
     return () => {
-      dialog.removeEventListener("close", handleClose);
-      dialog.removeEventListener("click", handleClick);
+      dialog.removeEventListener('close', handleClose);
+      dialog.removeEventListener('click', handleClick);
     };
   }, [open, onClose]);
 
   const handleAddBadge = async () => {
     if (!profileId) {
-      alert("Please sync your profile first before adding badges.");
+      alert('Please sync your profile first before adding badges.');
       return;
     }
     setIsSaving(true);
@@ -107,7 +107,7 @@ export function ProfileBadgeModal({
         onClose();
       }
     } catch (err) {
-      console.error("Error saving badge:", err);
+      console.error('Error saving badge:', err);
     } finally {
       setIsSaving(false);
     }
@@ -117,42 +117,42 @@ export function ProfileBadgeModal({
     <dialog
       ref={dialogRef}
       style={{
-        position: "fixed",
-        top: "50%",
-        left: "50%",
-        transform: "translate(-50%, -50%)",
+        position: 'fixed',
+        top: '50%',
+        left: '50%',
+        transform: 'translate(-50%, -50%)',
         margin: 0,
-        border: "1px solid var(--color-hairline)",
-        borderRadius: "12px",
-        padding: "24px",
-        backgroundColor: "var(--color-canvas)",
-        color: "var(--color-ink)",
-        maxWidth: "400px",
-        width: "calc(100% - 32px)",
+        border: '1px solid var(--color-hairline)',
+        borderRadius: '12px',
+        padding: '24px',
+        backgroundColor: 'var(--color-canvas)',
+        color: 'var(--color-ink)',
+        maxWidth: '400px',
+        width: 'calc(100% - 32px)',
         boxShadow:
-          "0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)",
+          '0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)',
       }}
     >
-      <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
         <h3
           style={{
-            fontSize: "18px",
+            fontSize: '18px',
             fontWeight: 600,
             margin: 0,
-            color: "var(--color-ink)",
-            letterSpacing: "-0.2px",
+            color: 'var(--color-ink)',
+            letterSpacing: '-0.2px',
           }}
         >
           Add Program Badge
         </h3>
 
-        <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
           <label
             htmlFor="program-select"
             style={{
-              fontSize: "13px",
+              fontSize: '13px',
               fontWeight: 500,
-              color: "var(--color-ink-mute)",
+              color: 'var(--color-ink-mute)',
             }}
           >
             Program
@@ -162,13 +162,13 @@ export function ProfileBadgeModal({
             value={selectedProgram}
             onChange={(e) => setSelectedProgram(e.target.value)}
             style={{
-              padding: "8px 12px",
-              borderRadius: "6px",
-              border: "1px solid var(--color-hairline-strong)",
-              backgroundColor: "var(--color-canvas)",
-              color: "var(--color-ink)",
-              fontSize: "14px",
-              width: "100%",
+              padding: '8px 12px',
+              borderRadius: '6px',
+              border: '1px solid var(--color-hairline-strong)',
+              backgroundColor: 'var(--color-canvas)',
+              color: 'var(--color-ink)',
+              fontSize: '14px',
+              width: '100%',
             }}
           >
             {AVAILABLE_PROGRAMS.map((p) => (
@@ -179,13 +179,13 @@ export function ProfileBadgeModal({
           </select>
         </div>
 
-        <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
           <label
             htmlFor="year-select"
             style={{
-              fontSize: "13px",
+              fontSize: '13px',
               fontWeight: 500,
-              color: "var(--color-ink-mute)",
+              color: 'var(--color-ink-mute)',
             }}
           >
             Year
@@ -195,13 +195,13 @@ export function ProfileBadgeModal({
             value={selectedYear}
             onChange={(e) => setSelectedYear(Number(e.target.value))}
             style={{
-              padding: "8px 12px",
-              borderRadius: "6px",
-              border: "1px solid var(--color-hairline-strong)",
-              backgroundColor: "var(--color-canvas)",
-              color: "var(--color-ink)",
-              fontSize: "14px",
-              width: "100%",
+              padding: '8px 12px',
+              borderRadius: '6px',
+              border: '1px solid var(--color-hairline-strong)',
+              backgroundColor: 'var(--color-canvas)',
+              color: 'var(--color-ink)',
+              fontSize: '14px',
+              width: '100%',
             }}
           >
             {Array.from(
@@ -217,24 +217,24 @@ export function ProfileBadgeModal({
 
         <div
           style={{
-            display: "flex",
-            justifyContent: "flex-end",
-            gap: "8px",
-            marginTop: "8px",
+            display: 'flex',
+            justifyContent: 'flex-end',
+            gap: '8px',
+            marginTop: '8px',
           }}
         >
           <button
             type="button"
             onClick={onClose}
             style={{
-              padding: "8px 14px",
-              fontSize: "13px",
+              padding: '8px 14px',
+              fontSize: '13px',
               fontWeight: 500,
-              color: "var(--color-ink)",
-              backgroundColor: "var(--color-canvas)",
-              border: "1px solid var(--color-hairline-strong)",
-              borderRadius: "6px",
-              cursor: "pointer",
+              color: 'var(--color-ink)',
+              backgroundColor: 'var(--color-canvas)',
+              border: '1px solid var(--color-hairline-strong)',
+              borderRadius: '6px',
+              cursor: 'pointer',
             }}
           >
             Cancel
@@ -244,17 +244,17 @@ export function ProfileBadgeModal({
             onClick={handleAddBadge}
             disabled={isSaving}
             style={{
-              padding: "8px 14px",
-              fontSize: "13px",
+              padding: '8px 14px',
+              fontSize: '13px',
               fontWeight: 500,
-              color: "#ffffff",
-              backgroundColor: "#3ecf8e",
-              border: "none",
-              borderRadius: "6px",
-              cursor: isSaving ? "not-allowed" : "pointer",
+              color: '#ffffff',
+              backgroundColor: '#3ecf8e',
+              border: 'none',
+              borderRadius: '6px',
+              cursor: isSaving ? 'not-allowed' : 'pointer',
             }}
           >
-            {isSaving ? "Saving..." : "Add"}
+            {isSaving ? 'Saving...' : 'Add'}
           </button>
         </div>
       </div>

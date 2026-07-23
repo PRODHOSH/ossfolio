@@ -1,4 +1,4 @@
-import type { HeatmapWeek } from "@/types";
+import type { HeatmapWeek } from '@/types';
 
 /**
  * Heatmap fallback.
@@ -14,7 +14,7 @@ import type { HeatmapWeek } from "@/types";
  * placeholder rather than reshuffling on every request.
  */
 
-const HEATMAP_COLORS = ["#ebedf0", "#9be9a8", "#40c463", "#30a14e", "#216e39"];
+const HEATMAP_COLORS = ['#ebedf0', '#9be9a8', '#40c463', '#30a14e', '#216e39'];
 
 function colorForCount(count: number): string {
   if (count === 0) return HEATMAP_COLORS[0];

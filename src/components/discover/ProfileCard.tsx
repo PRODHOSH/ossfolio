@@ -1,8 +1,8 @@
-"use client";
+'use client';
 
-import { memo } from "react";
-import Link from "next/link";
-import Image from "next/image";
+import { memo } from 'react';
+import Link from 'next/link';
+import Image from 'next/image';
 
 interface ProfileCardProps {
   username: string;
@@ -34,8 +34,8 @@ function ProfileCardInner({
   const displayName = name || username;
   const avatar =
     avatarUrl &&
-    (avatarUrl.startsWith("https://avatars.githubusercontent.com/") ||
-      avatarUrl.startsWith("https://github.com/"))
+    (avatarUrl.startsWith('https://avatars.githubusercontent.com/') ||
+      avatarUrl.startsWith('https://github.com/'))
       ? avatarUrl
       : `https://github.com/${encodeURIComponent(username)}.png`;
 
@@ -45,23 +45,23 @@ function ProfileCardInner({
       aria-label={`View ${displayName}'s profile, score is ${score}`}
       className="profile-card"
       style={{
-        display: "flex",
-        flexDirection: "column",
-        padding: "20px",
-        border: "1px solid var(--color-hairline)",
-        borderRadius: "12px",
-        textDecoration: "none",
-        backgroundColor: "var(--color-canvas)",
+        display: 'flex',
+        flexDirection: 'column',
+        padding: '20px',
+        border: '1px solid var(--color-hairline)',
+        borderRadius: '12px',
+        textDecoration: 'none',
+        backgroundColor: 'var(--color-canvas)',
         transition:
-          "border-color 0.15s, background-color 0.2s, box-shadow 0.2s ease",
+          'border-color 0.15s, background-color 0.2s, box-shadow 0.2s ease',
       }}
     >
       <div
         style={{
-          display: "flex",
-          alignItems: "center",
-          gap: "12px",
-          marginBottom: "12px",
+          display: 'flex',
+          alignItems: 'center',
+          gap: '12px',
+          marginBottom: '12px',
         }}
       >
         <Image
@@ -70,57 +70,57 @@ function ProfileCardInner({
           width={44}
           height={44}
           style={{
-            borderRadius: "9999px",
-            border: "1px solid var(--color-hairline)",
+            borderRadius: '9999px',
+            border: '1px solid var(--color-hairline)',
             flexShrink: 0,
           }}
         />
         <div style={{ minWidth: 0, flex: 1 }}>
           <p
             style={{
-              fontSize: "15px",
+              fontSize: '15px',
               fontWeight: 600,
-              color: "var(--color-ink)",
+              color: 'var(--color-ink)',
               margin: 0,
-              overflow: "hidden",
-              textOverflow: "ellipsis",
-              whiteSpace: "nowrap",
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              whiteSpace: 'nowrap',
             }}
           >
             {displayName}
           </p>
           <p
             style={{
-              fontSize: "13px",
-              color: "var(--color-ink-mute-2)",
-              margin: "2px 0 0 0",
-              overflow: "hidden",
-              textOverflow: "ellipsis",
-              whiteSpace: "nowrap",
+              fontSize: '13px',
+              color: 'var(--color-ink-mute-2)',
+              margin: '2px 0 0 0',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              whiteSpace: 'nowrap',
             }}
           >
             @{username}
           </p>
         </div>
-        <div style={{ textAlign: "right", flexShrink: 0 }}>
+        <div style={{ textAlign: 'right', flexShrink: 0 }}>
           <p
             style={{
-              fontSize: "20px",
+              fontSize: '20px',
               fontWeight: 600,
-              color: "var(--color-ink)",
+              color: 'var(--color-ink)',
               margin: 0,
               lineHeight: 1,
             }}
           >
             {score}
           </p>
-          {typeof scoreDelta30Days === "number" && scoreDelta30Days > 0 ? (
+          {typeof scoreDelta30Days === 'number' && scoreDelta30Days > 0 ? (
             <p
               style={{
-                fontSize: "11px",
-                color: "#10b981",
+                fontSize: '11px',
+                color: '#10b981',
                 fontWeight: 600,
-                margin: "2px 0 0 0",
+                margin: '2px 0 0 0',
               }}
               title="Improvement over last 30 days"
             >
@@ -129,9 +129,9 @@ function ProfileCardInner({
           ) : (
             <p
               style={{
-                fontSize: "11px",
-                color: "var(--color-ink-mute-2)",
-                margin: "2px 0 0 0",
+                fontSize: '11px',
+                color: 'var(--color-ink-mute-2)',
+                margin: '2px 0 0 0',
               }}
             >
               score
@@ -143,14 +143,14 @@ function ProfileCardInner({
       {bio && (
         <p
           style={{
-            fontSize: "13px",
-            color: "var(--color-ink-mute)",
-            margin: "0 0 12px 0",
-            overflow: "hidden",
-            textOverflow: "ellipsis",
-            display: "-webkit-box",
+            fontSize: '13px',
+            color: 'var(--color-ink-mute)',
+            margin: '0 0 12px 0',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            display: '-webkit-box',
             WebkitLineClamp: 2,
-            WebkitBoxOrient: "vertical",
+            WebkitBoxOrient: 'vertical',
           }}
         >
           {bio}
@@ -160,22 +160,22 @@ function ProfileCardInner({
       {topLanguages.length > 0 && (
         <div
           style={{
-            display: "flex",
-            flexWrap: "wrap",
-            gap: "6px",
-            marginBottom: "12px",
+            display: 'flex',
+            flexWrap: 'wrap',
+            gap: '6px',
+            marginBottom: '12px',
           }}
         >
           {topLanguages.slice(0, 4).map((lang) => (
             <span
               key={lang}
               style={{
-                fontSize: "11px",
+                fontSize: '11px',
                 fontWeight: 500,
-                color: "var(--color-ink-mute)",
-                backgroundColor: "var(--color-canvas-soft)",
-                borderRadius: "4px",
-                padding: "2px 8px",
+                color: 'var(--color-ink-mute)',
+                backgroundColor: 'var(--color-canvas-soft)',
+                borderRadius: '4px',
+                padding: '2px 8px',
               }}
             >
               {lang}
@@ -186,11 +186,11 @@ function ProfileCardInner({
 
       <div
         style={{
-          display: "flex",
-          flexWrap: "wrap",
-          gap: "16px",
-          fontSize: "12px",
-          color: "var(--color-ink-mute-2)",
+          display: 'flex',
+          flexWrap: 'wrap',
+          gap: '16px',
+          fontSize: '12px',
+          color: 'var(--color-ink-mute-2)',
         }}
       >
         <span aria-label={`${totalPrs} merged pull requests`}>

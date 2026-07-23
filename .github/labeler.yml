@@ -1,43 +1,43 @@
 frontend:
   - changed-files:
       - any-glob-to-any-file:
-          - "src/app/**"
-          - "src/components/**"
-          - "**/*.css"
-          - "tailwind.config.*"
-          - "postcss.config.*"
-          - "next.config.*"
-          - "public/**"
+          - 'src/app/**'
+          - 'src/components/**'
+          - '**/*.css'
+          - 'tailwind.config.*'
+          - 'postcss.config.*'
+          - 'next.config.*'
+          - 'public/**'
 
 UI:
   - changed-files:
       - any-glob-to-any-file:
-          - "src/components/ui/**"
-          - "src/components/home/**"
-          - "src/components/layout/**"
-          - "src/components/profile/**"
-          - "**/*.css"
+          - 'src/components/ui/**'
+          - 'src/components/home/**'
+          - 'src/components/layout/**'
+          - 'src/components/profile/**'
+          - '**/*.css'
 
 backend:
   - changed-files:
       - any-glob-to-any-file:
-          - "src/lib/**"
-          - "src/server/**"
-          - "src/app/api/**"
-          - "supabase/**"
-          - "src/types/**"
+          - 'src/lib/**'
+          - 'src/server/**'
+          - 'src/app/api/**'
+          - 'supabase/**'
+          - 'src/types/**'
 
 documentation:
   - changed-files:
       - any-glob-to-any-file:
-          - "**/*.md"
-          - "docs/**"
-          - ".github/PULL_REQUEST_TEMPLATE.md"
-          - "CONTRIBUTING.md"
-          - "CODE_OF_CONDUCT.md"
+          - '**/*.md'
+          - 'docs/**'
+          - '.github/PULL_REQUEST_TEMPLATE.md'
+          - 'CONTRIBUTING.md'
+          - 'CODE_OF_CONDUCT.md'
 
 AI:
   - changed-files:
       - any-glob-to-any-file:
-          - "src/lib/ai/**"
-          - "src/app/api/ai/**"
+          - 'src/lib/ai/**'
+          - 'src/app/api/ai/**'

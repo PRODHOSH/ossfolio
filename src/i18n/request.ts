@@ -1,6 +1,6 @@
-import { getRequestConfig } from "next-intl/server";
-import { cookies, headers } from "next/headers";
-import { defaultLocale, isLocale, LOCALE_COOKIE } from "./config";
+import { getRequestConfig } from 'next-intl/server';
+import { cookies, headers } from 'next/headers';
+import { defaultLocale, isLocale, LOCALE_COOKIE } from './config';
 
 // Cookie-based locale resolution (no locale-prefixed routing), so existing
 // routes — including `[username]` profiles and `api/*` — are left untouched.
@@ -13,10 +13,10 @@ export default getRequestConfig(async () => {
   if (!locale) {
     // Scan the Accept-Language header in preference order and pick the first
     // supported locale, rather than only checking the first token.
-    const header = (await headers()).get("accept-language");
+    const header = (await headers()).get('accept-language');
     if (header) {
-      for (const part of header.split(",")) {
-        const tag = part.split(";")[0]?.split("-")[0]?.trim();
+      for (const part of header.split(',')) {
+        const tag = part.split(';')[0]?.split('-')[0]?.trim();
         if (isLocale(tag)) {
           locale = tag;
           break;

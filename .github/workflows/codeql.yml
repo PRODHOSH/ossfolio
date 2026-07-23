@@ -6,7 +6,7 @@ on:
   pull_request:
     branches: [main]
   schedule:
-    - cron: "0 6 * * 1"
+    - cron: '0 6 * * 1'
 
 jobs:
   analyze:
@@ -32,4 +32,4 @@ jobs:
       - name: Run CodeQL Analysis
         uses: github/codeql-action/analyze@v3
         with:
-          category: "/language:javascript-typescript"
+          category: '/language:javascript-typescript'

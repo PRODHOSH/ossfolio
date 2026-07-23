@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect } from 'react';
 
 interface KeyboardShortcutMap {
   onSlash?: () => void;
@@ -17,27 +17,27 @@ export function useKeyboardShortcuts(handlers: KeyboardShortcutMap) {
     function handleKeyDown(e: KeyboardEvent) {
       const target = e.target as HTMLElement;
       const isInput =
-        target.tagName === "INPUT" ||
-        target.tagName === "TEXTAREA" ||
-        target.tagName === "SELECT" ||
+        target.tagName === 'INPUT' ||
+        target.tagName === 'TEXTAREA' ||
+        target.tagName === 'SELECT' ||
         target.isContentEditable;
 
-      if (e.key === "/" && !isInput) {
+      if (e.key === '/' && !isInput) {
         e.preventDefault();
         handlers.onSlash?.();
       }
 
-      if (e.key === "Escape") {
+      if (e.key === 'Escape') {
         handlers.onEscape?.();
       }
 
-      if (e.key === "?" && !isInput) {
+      if (e.key === '?' && !isInput) {
         e.preventDefault();
         handlers.onQuestionMark?.();
       }
 
       if (
-        (e.key === "d" || e.key === "D") &&
+        (e.key === 'd' || e.key === 'D') &&
         !isInput &&
         (e.metaKey || e.ctrlKey)
       ) {
@@ -46,7 +46,7 @@ export function useKeyboardShortcuts(handlers: KeyboardShortcutMap) {
       }
 
       if (
-        (e.key === "r" || e.key === "R") &&
+        (e.key === 'r' || e.key === 'R') &&
         !isInput &&
         (e.metaKey || e.ctrlKey)
       ) {
@@ -55,7 +55,7 @@ export function useKeyboardShortcuts(handlers: KeyboardShortcutMap) {
       }
     }
 
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
   }, [handlers]);
 }

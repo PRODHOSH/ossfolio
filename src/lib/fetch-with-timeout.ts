@@ -3,15 +3,15 @@ export class FetchTimeoutError extends Error {
 
   constructor(message: string, timeoutMs: number) {
     super(message);
-    this.name = "FetchTimeoutError";
+    this.name = 'FetchTimeoutError';
     this.timeoutMs = timeoutMs;
   }
 }
 
 function isAbortLikeError(err: unknown): boolean {
   if (!err) return false;
-  if (err instanceof DOMException && err.name === "AbortError") return true;
-  if (err instanceof Error && err.name === "AbortError") return true;
+  if (err instanceof DOMException && err.name === 'AbortError') return true;
+  if (err instanceof Error && err.name === 'AbortError') return true;
   return false;
 }
 

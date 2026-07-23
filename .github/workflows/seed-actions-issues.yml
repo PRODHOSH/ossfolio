@@ -21,7 +21,7 @@ jobs:
           gh label create "enhancement" --color "a2eeef" --force --repo "$REPO" || true
           gh label create "github-actions" --color "000000" --description "CI/CD & Workflows" --force --repo "$REPO" || true
 
-      - name: "Issue 1 - Auto Label"
+      - name: 'Issue 1 - Auto Label'
         continue-on-error: true
         run: |
           cat > /tmp/body.md << 'ENDBODY'
@@ -39,7 +39,7 @@ jobs:
           ENDBODY
           gh issue create --repo "$REPO" --title "[FEAT] Auto-Label all new issues and PRs with ELUSOC" --label "ADVENTURER,ELUSOC,enhancement,github-actions" --body-file /tmp/body.md
 
-      - name: "Issue 2 - Auto Merge"
+      - name: 'Issue 2 - Auto Merge'
         continue-on-error: true
         run: |
           cat > /tmp/body.md << 'ENDBODY'
@@ -57,7 +57,7 @@ jobs:
           ENDBODY
           gh issue create --repo "$REPO" --title "[FEAT] Auto-merge PRs immediately upon maintainer approval" --label "VETERAN,ELUSOC,enhancement,github-actions" --body-file /tmp/body.md
 
-      - name: "Issue 3 - Thank You Message"
+      - name: 'Issue 3 - Thank You Message'
         continue-on-error: true
         run: |
           cat > /tmp/body.md << 'ENDBODY'
@@ -75,7 +75,7 @@ jobs:
           ENDBODY
           gh issue create --repo "$REPO" --title "[FEAT] Automated Thank You message when an issue is resolved" --label "ADVENTURER,ELUSOC,enhancement,github-actions" --body-file /tmp/body.md
 
-      - name: "Issue 4 - Auto Assign"
+      - name: 'Issue 4 - Auto Assign'
         continue-on-error: true
         run: |
           cat > /tmp/body.md << 'ENDBODY'
@@ -93,7 +93,7 @@ jobs:
           ENDBODY
           gh issue create --repo "$REPO" --title "[FEAT] Auto-Assign issues when a user comments 'assign me'" --label "VETERAN,ELUSOC,enhancement,github-actions" --body-file /tmp/body.md
 
-      - name: "Issue 5 - PR Issue Linking Check"
+      - name: 'Issue 5 - PR Issue Linking Check'
         continue-on-error: true
         run: |
           cat > /tmp/body.md << 'ENDBODY'
@@ -111,7 +111,7 @@ jobs:
           ENDBODY
           gh issue create --repo "$REPO" --title "[FEAT] Block PRs if they don't link an issue" --label "VETERAN,ELUSOC,enhancement,github-actions" --body-file /tmp/body.md
 
-      - name: "Issue 6 - Stale Issues"
+      - name: 'Issue 6 - Stale Issues'
         continue-on-error: true
         run: |
           cat > /tmp/body.md << 'ENDBODY'

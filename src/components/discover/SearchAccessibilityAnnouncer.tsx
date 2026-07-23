@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 interface SearchAccessibilityAnnouncerProps {
   resultsCount: number;
@@ -10,8 +10,8 @@ export function SearchAccessibilityAnnouncer({
   isLoading,
 }: SearchAccessibilityAnnouncerProps) {
   const announcement = isLoading
-    ? "Searching profiles, please wait..."
-    : `Search completed. Found ${resultsCount} matching profile${resultsCount === 1 ? "" : "s"}.`;
+    ? 'Searching profiles, please wait...'
+    : `Search completed. Found ${resultsCount} matching profile${resultsCount === 1 ? '' : 's'}.`;
 
   return (
     <output className="sr-only" aria-live="polite" aria-atomic="true">

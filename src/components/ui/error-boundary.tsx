@@ -1,7 +1,7 @@
-"use client";
+'use client';
 
-import { Component, createElement } from "react";
-import Link from "next/link";
+import { Component, createElement } from 'react';
+import Link from 'next/link';
 
 interface ErrorBoundaryProps {
   children: React.ReactNode;
@@ -28,7 +28,7 @@ export class ErrorBoundary extends Component<
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    console.error("[ErrorBoundary]", error.message, errorInfo.componentStack);
+    console.error('[ErrorBoundary]', error.message, errorInfo.componentStack);
     this.props.onError?.(error, errorInfo);
   }
 
@@ -38,12 +38,12 @@ export class ErrorBoundary extends Component<
       return (
         <div
           style={{
-            padding: "40px 24px",
-            textAlign: "center",
-            border: "1px solid var(--color-hairline)",
-            borderRadius: "12px",
-            backgroundColor: "var(--color-canvas-soft)",
-            margin: "24px 0",
+            padding: '40px 24px',
+            textAlign: 'center',
+            border: '1px solid var(--color-hairline)',
+            borderRadius: '12px',
+            backgroundColor: 'var(--color-canvas-soft)',
+            margin: '24px 0',
           }}
         >
           <svg
@@ -53,7 +53,7 @@ export class ErrorBoundary extends Component<
             fill="none"
             stroke="var(--color-ink-mute-2)"
             strokeWidth="2"
-            style={{ margin: "0 auto 12px", display: "block" }}
+            style={{ margin: '0 auto 12px', display: 'block' }}
           >
             <circle cx="12" cy="12" r="10" />
             <line x1="12" y1="8" x2="12" y2="12" />
@@ -61,36 +61,36 @@ export class ErrorBoundary extends Component<
           </svg>
           <p
             style={{
-              fontSize: "15px",
+              fontSize: '15px',
               fontWeight: 600,
-              color: "var(--color-ink)",
-              margin: "0 0 4px",
+              color: 'var(--color-ink)',
+              margin: '0 0 4px',
             }}
           >
             Something went wrong
           </p>
           <p
             style={{
-              fontSize: "13px",
-              color: "var(--color-ink-mute)",
-              margin: "0 0 16px",
+              fontSize: '13px',
+              color: 'var(--color-ink-mute)',
+              margin: '0 0 16px',
             }}
           >
             {this.state.error?.message ||
-              "An unexpected error occurred in this section."}
+              'An unexpected error occurred in this section.'}
           </p>
           <button
             onClick={() => this.setState({ hasError: false, error: null })}
             style={{
-              fontSize: "13px",
+              fontSize: '13px',
               fontWeight: 500,
-              color: "#ffffff",
-              backgroundColor: "#3ecf8e",
-              border: "none",
-              borderRadius: "6px",
-              padding: "8px 16px",
-              cursor: "pointer",
-              marginRight: "8px",
+              color: '#ffffff',
+              backgroundColor: '#3ecf8e',
+              border: 'none',
+              borderRadius: '6px',
+              padding: '8px 16px',
+              cursor: 'pointer',
+              marginRight: '8px',
             }}
           >
             Try again
@@ -98,14 +98,14 @@ export class ErrorBoundary extends Component<
           <Link
             href="/"
             style={{
-              fontSize: "13px",
+              fontSize: '13px',
               fontWeight: 500,
-              color: "var(--color-ink)",
-              border: "1px solid var(--color-hairline-strong)",
-              borderRadius: "6px",
-              padding: "8px 16px",
-              textDecoration: "none",
-              display: "inline-block",
+              color: 'var(--color-ink)',
+              border: '1px solid var(--color-hairline-strong)',
+              borderRadius: '6px',
+              padding: '8px 16px',
+              textDecoration: 'none',
+              display: 'inline-block',
             }}
           >
             Back to home

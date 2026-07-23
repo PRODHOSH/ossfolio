@@ -1,9 +1,9 @@
 ---
 name: Feature Request
 about: Suggest a new feature or improvement for OSSfolio
-title: "[FEAT] "
+title: '[FEAT] '
 labels: enhancement
-assignees: ""
+assignees: ''
 ---
 
 ## Problem Statement

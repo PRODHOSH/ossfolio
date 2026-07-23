@@ -1,4 +1,4 @@
-import type { ContributorStats } from "@/types";
+import type { ContributorStats } from '@/types';
 
 /**
  * Achievements — automatically earned milestones, derived from a profile's GitHub stats.
@@ -66,23 +66,23 @@ interface AchievementDefinition {
  */
 const DEFINITIONS: readonly AchievementDefinition[] = [
   {
-    id: "century",
-    name: "Century",
-    tagline: "100 merged pull requests",
+    id: 'century',
+    name: 'Century',
+    tagline: '100 merged pull requests',
     target: 100,
     measure: ({ stats }) => stats.totalPRs,
   },
   {
-    id: "marathon",
-    name: "Marathon",
-    tagline: "A 30-day contribution streak",
+    id: 'marathon',
+    name: 'Marathon',
+    tagline: 'A 30-day contribution streak',
     target: 30,
     measure: ({ longestStreak }) => longestStreak,
   },
   {
-    id: "reviewer",
-    name: "Reviewer",
-    tagline: "50 code reviews for other people",
+    id: 'reviewer',
+    name: 'Reviewer',
+    tagline: '50 code reviews for other people',
     target: 50,
     measure: ({ stats }) => stats.totalReviews,
   },

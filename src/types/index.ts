@@ -69,6 +69,6 @@ export interface MergedPR {
   url: string;
   repoName: string;
   mergedAt: string;
-  state?: "open" | "closed" | "merged";
+  state?: 'open' | 'closed' | 'merged';
   createdAt?: string;
 }

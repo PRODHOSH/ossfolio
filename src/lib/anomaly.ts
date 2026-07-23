@@ -1,5 +1,5 @@
-import type { ContributorStats, Repo } from "@/types";
-import { calculateScore } from "@/lib/score";
+import type { ContributorStats, Repo } from '@/types';
+import { calculateScore } from '@/lib/score';
 
 /**
  * Heuristic anti-gaming check for the contributor score.
@@ -69,8 +69,8 @@ export function detectAnomaly(
   return {
     flagged: true,
     reason:
-      `Unusual commit ratio: ${stats.totalCommits.toLocaleString("en-US")} commits ` +
-      `vs ${collaborative.toLocaleString("en-US")} PRs/issues/reviews ` +
+      `Unusual commit ratio: ${stats.totalCommits.toLocaleString('en-US')} commits ` +
+      `vs ${collaborative.toLocaleString('en-US')} PRs/issues/reviews ` +
       `(${Math.round(commitRatio)}:1) with ${totalStars} stars`,
     commitRatio,
   };
