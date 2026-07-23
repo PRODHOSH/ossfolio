@@ -247,7 +247,21 @@
       "name": "Shikha Shukla",
       "avatar_url": "https://avatars.githubusercontent.com/u/154722305?v=4",
       "profile": "https://github.com/Shikha18Shukla",
-      "contributions": ["code", "design"]
+      "contributions": [
+        "code",
+        "design"
+      ]
+    },
+    {
+      "login": "rohitkumarnaidu",
+      "name": "Bappadala Rohith Kumar Naidu",
+      "avatar_url": "https://avatars.githubusercontent.com/u/198095685?v=4",
+      "profile": "https://github.com/rohitkumarnaidu",
+      "contributions": [
+        "code",
+        "doc",
+        "infra"
+      ]
     }
   ],
   "contributionTypes": [

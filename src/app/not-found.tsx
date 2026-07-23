@@ -19,8 +19,8 @@ const primaryButton: CSSProperties = {
   minWidth: "130px",
   padding: "10px 28px",
   borderRadius: "8px",
-  backgroundColor: "#3ecf8e",
-  color: "#171717",
+  backgroundColor: "var(--color-primary)",
+  color: "var(--color-on-primary)",
   fontSize: "16px",
   fontWeight: 600,
   textDecoration: "none",
@@ -30,7 +30,7 @@ export default function NotFound() {
   return (
     <main
       style={{
-        backgroundColor: "#ffffff",
+        backgroundColor: "var(--color-canvas)",
         minHeight: "100vh",
         display: "flex",
         alignItems: "center",
@@ -159,7 +159,7 @@ export default function NotFound() {
             fontSize: "72px",
             fontWeight: 700,
             lineHeight: 1,
-            color: "#3ecf8e",
+            color: "var(--color-primary)",
           }}
         >
           404
@@ -169,12 +169,12 @@ export default function NotFound() {
             marginTop: "16px",
             fontSize: "24px",
             fontWeight: 600,
-            color: "#171717",
+            color: "var(--color-ink)",
           }}
         >
           Page not found
         </h1>
-        <p style={{ marginTop: "12px", fontSize: "16px", color: "#707070" }}>
+        <p style={{ marginTop: "12px", fontSize: "16px",color: "var(--color-ink-mute)" }}>
           The page you are looking for does not exist or may have moved.
         </p>
         <div
