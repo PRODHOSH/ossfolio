@@ -31,7 +31,7 @@
     "framer-motion": "^12.11.4",
     "html-to-image": "^1.11.13",
     "lucide-react": "^0.511.0",
-    "next": "^16.2.9",
+    "next": "^9.3.3",
     "next-intl": "^4.13.1",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
