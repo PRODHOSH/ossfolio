@@ -136,6 +136,10 @@ dialog::backdrop {
   outline-offset: 2px;
   border-radius: 4px;
 }
+.profile-card:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--color-primary);
+}
 
 @media (prefers-reduced-motion: reduce) {
   *,
