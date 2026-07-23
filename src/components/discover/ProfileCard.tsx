@@ -52,15 +52,7 @@ function ProfileCardInner({
         borderRadius: "12px",
         textDecoration: "none",
         backgroundColor: "var(--color-canvas)",
-        transition:"border-color 0.15s, background-color 0.2s, box-shadow 0.2s ease",
-      }}
-      onMouseEnter={(e) => {
-        e.currentTarget.style.borderColor = "var(--color-primary)";
-        e.currentTarget.style.boxShadow = "0 4px 12px rgba(0, 0, 0, 0.05)";
-      }}
-      onMouseLeave={(e) => {
-        e.currentTarget.style.borderColor = "var(--color-hairline)";
-        e.currentTarget.style.boxShadow = "none";
+        transition: "border-color 0.15s, background-color 0.2s, box-shadow 0.2s ease",
       }}
     >
       <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "12px" }}>
