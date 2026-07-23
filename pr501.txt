@@ -1,0 +1,43 @@
+## Summary
+
+Sets up Vitest and React Testing Library for unit testing to improve code reliability. Added an initial test for utility functions.
+
+## Related Issue
+
+Closes #501
+
+## Type of Change
+
+- [ ] Bug fix
+- [x] New feature
+- [ ] Documentation update
+- [ ] Refactor
+- [ ] Chore / dependency update
+
+## Changes Made
+
+- Installed `vitest`, `@testing-library/react`, and related dependencies
+- Added `vitest.config.ts` and `vitest.setup.ts` configurations
+- Added a simple test suite for `src/lib/utils.ts`
+- Added `test` script in `package.json`
+
+## AI Usage
+
+- [ ] I did not use AI for any part of the code in this PR
+- [x] I used AI for coding (specify which tool below) and I fully understand every change I made, including which functions I changed, why I changed them, and what side effects they could create
+
+Used Gemini.
+
+## Screenshots (if UI change)
+
+## Checklist
+
+- [x] I was assigned to the issue before opening this PR
+- [x] My branch is up to date with `main`
+- [x] Code works locally and I have tested it
+- [x] No `console.log` left in `src/`
+- [x] If schema changed â€” both `schema.sql` and a new migration file are included
+- [x] If this is a UI change â€” I read `DESIGN.md` and followed the design system (colors, spacing, typography, components)
+- [x] Docs updated if needed
+- [x] PR title follows Conventional Commits format (`feat:`, `fix:`, `docs:`, etc.)
+- [x] This PR description is written in my own words
