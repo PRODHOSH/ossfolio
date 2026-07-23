@@ -43,6 +43,7 @@ function ProfileCardInner({
     <Link
       href={`/${encodeURIComponent(username)}`}
       aria-label={`View ${displayName}'s profile, score is ${score}`}
+      className="profile-card"
       style={{
         display: "flex",
         flexDirection: "column",
@@ -53,14 +54,6 @@ function ProfileCardInner({
         backgroundColor: "var(--color-canvas)",
         transition:
           "border-color 0.15s, background-color 0.2s, box-shadow 0.2s ease",
-      }}
-      onMouseEnter={(e) => {
-        e.currentTarget.style.borderColor = "var(--color-primary)";
-        e.currentTarget.style.boxShadow = "0 4px 12px rgba(0, 0, 0, 0.05)";
-      }}
-      onMouseLeave={(e) => {
-        e.currentTarget.style.borderColor = "var(--color-hairline)";
-        e.currentTarget.style.boxShadow = "none";
       }}
     >
       <div
