@@ -17,7 +17,8 @@ Closes #<!-- issue number -->
 ## Changes Made
 
 <!-- Bullet points of what changed and why you made each change -->
-- 
+
+-
 
 ## AI Usage
 

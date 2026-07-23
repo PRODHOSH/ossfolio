@@ -16,7 +16,11 @@ export function useKeyboardShortcuts(handlers: KeyboardShortcutMap) {
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
       const target = e.target as HTMLElement;
-      const isInput = target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.tagName === "SELECT" || target.isContentEditable;
+      const isInput =
+        target.tagName === "INPUT" ||
+        target.tagName === "TEXTAREA" ||
+        target.tagName === "SELECT" ||
+        target.isContentEditable;
 
       if (e.key === "/" && !isInput) {
         e.preventDefault();
@@ -32,12 +36,20 @@ export function useKeyboardShortcuts(handlers: KeyboardShortcutMap) {
         handlers.onQuestionMark?.();
       }
 
-      if ((e.key === "d" || e.key === "D") && !isInput && (e.metaKey || e.ctrlKey)) {
+      if (
+        (e.key === "d" || e.key === "D") &&
+        !isInput &&
+        (e.metaKey || e.ctrlKey)
+      ) {
         e.preventDefault();
         handlers.onKeyD?.();
       }
 
-      if ((e.key === "r" || e.key === "R") && !isInput && (e.metaKey || e.ctrlKey)) {
+      if (
+        (e.key === "r" || e.key === "R") &&
+        !isInput &&
+        (e.metaKey || e.ctrlKey)
+      ) {
         e.preventDefault();
         handlers.onKeyR?.();
       }

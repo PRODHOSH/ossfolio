@@ -29,7 +29,9 @@ export function SearchFilters() {
   const searchParams = useSearchParams();
 
   const [query, setQuery] = useState(searchParams.get("q") || "");
-  const [minScoreInput, setMinScoreInput] = useState(searchParams.get("min_score") || "");
+  const [minScoreInput, setMinScoreInput] = useState(
+    searchParams.get("min_score") || "",
+  );
   const debouncedQuery = useDebounce(query, 300);
   const debouncedMinScore = useDebounce(minScoreInput, 500);
   const initialRender = useRef(true);
@@ -41,13 +43,19 @@ export function SearchFilters() {
   const pushParams = useCallback(
     (overrides: Record<string, string>) => {
       const params = new URLSearchParams();
-      const merged = { q: debouncedQuery, lang, sort, min_score: debouncedMinScore, ...overrides };
+      const merged = {
+        q: debouncedQuery,
+        lang,
+        sort,
+        min_score: debouncedMinScore,
+        ...overrides,
+      };
       Object.entries(merged).forEach(([key, val]) => {
         if (val) params.set(key, val);
       });
       router.replace(`/discover?${params.toString()}`);
     },
-    [debouncedQuery, lang, sort, debouncedMinScore, router]
+    [debouncedQuery, lang, sort, debouncedMinScore, router],
   );
 
   useEffect(() => {
@@ -88,7 +96,12 @@ export function SearchFilters() {
     <form
       role="search"
       onSubmit={(e) => e.preventDefault()}
-      style={{ display: "flex", flexDirection: "column", gap: "16px", marginBottom: "24px" }}
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        gap: "16px",
+        marginBottom: "24px",
+      }}
     >
       <input
         type="text"
@@ -99,7 +112,14 @@ export function SearchFilters() {
         aria-label="Search profiles"
       />
 
-      <div style={{ display: "flex", flexWrap: "wrap", gap: "12px", alignItems: "center" }}>
+      <div
+        style={{
+          display: "flex",
+          flexWrap: "wrap",
+          gap: "12px",
+          alignItems: "center",
+        }}
+      >
         <select
           value={lang}
           onChange={(e) => {

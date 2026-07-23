@@ -40,11 +40,11 @@ const stepVariants: Variants = {
 
 export function HowItWorks() {
   return (
-    <section 
-      id="how-it-works" 
-      style={{ 
-        backgroundColor: "var(--color-canvas)", 
-        transition: "background-color 0.2s ease" 
+    <section
+      id="how-it-works"
+      style={{
+        backgroundColor: "var(--color-canvas)",
+        transition: "background-color 0.2s ease",
       }}
     >
       <div
@@ -62,9 +62,7 @@ export function HowItWorks() {
           viewport={{ once: true }}
           style={{ textAlign: "center", marginBottom: "48px" }}
         >
-          <p style={sectionEyebrowStyle}>
-            Simple by design
-          </p>
+          <p style={sectionEyebrowStyle}>Simple by design</p>
           <h2
             style={{
               fontSize: "clamp(28px, 3.5vw, 36px)",
@@ -110,16 +108,17 @@ export function HowItWorks() {
                   fontSize: "13px",
                   fontWeight: 600,
                   color: "var(--color-primary)",
-                  transition: "background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease",
+                  transition:
+                    "background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease",
                 }}
               >
                 {number}
               </div>
               <div>
-                <h3 
-                  style={{ 
-                    fontSize: "16px", 
-                    fontWeight: 600, 
+                <h3
+                  style={{
+                    fontSize: "16px",
+                    fontWeight: 600,
                     color: "var(--color-ink)",
                     transition: "color 0.2s ease",
                   }}

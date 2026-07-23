@@ -3,31 +3,28 @@ const STATIC_CACHE = `ossfolio-static-${CACHE_VERSION}`;
 const API_CACHE = `ossfolio-api-${CACHE_VERSION}`;
 const OFFLINE_QUEUE_KEY = "ossfolio-offline-queue";
 
-const STATIC_ASSETS = [
-  "/",
-  "/offline",
-  "/logo.png",
-  "/manifest.json",
-];
+const STATIC_ASSETS = ["/", "/offline", "/logo.png", "/manifest.json"];
 
 const API_PATTERNS = [/\/api\//];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
-    caches.open(STATIC_CACHE).then((cache) => cache.addAll(STATIC_ASSETS))
+    caches.open(STATIC_CACHE).then((cache) => cache.addAll(STATIC_ASSETS)),
   );
   self.skipWaiting();
 });
 
 self.addEventListener("activate", (event) => {
   event.waitUntil(
-    caches.keys().then((keys) =>
-      Promise.all(
-        keys
-          .filter((key) => key !== STATIC_CACHE && key !== API_CACHE)
-          .map((key) => caches.delete(key))
-      )
-    )
+    caches
+      .keys()
+      .then((keys) =>
+        Promise.all(
+          keys
+            .filter((key) => key !== STATIC_CACHE && key !== API_CACHE)
+            .map((key) => caches.delete(key)),
+        ),
+      ),
   );
   self.clients.claim();
 });
@@ -72,7 +69,7 @@ async function networkFirstWithQueue(request) {
     await addToQueue(request);
     return new Response(
       JSON.stringify({ error: "You are offline. Request will be retried." }),
-      { status: 503, headers: { "Content-Type": "application/json" } }
+      { status: 503, headers: { "Content-Type": "application/json" } },
     );
   }
 }

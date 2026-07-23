@@ -153,7 +153,9 @@ const server = createServer((req, res) => {
   res.setHeader("Access-Control-Allow-Origin", "*");
 
   // supabase-js asks for a single object (rather than an array) via this header.
-  const wantsSingle = (req.headers["accept"] ?? "").includes("vnd.pgrst.object");
+  const wantsSingle = (req.headers["accept"] ?? "").includes(
+    "vnd.pgrst.object",
+  );
 
   const respond = (rows) => {
     if (wantsSingle) {

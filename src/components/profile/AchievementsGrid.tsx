@@ -14,7 +14,13 @@ import type { Achievement } from "@/lib/achievements";
 
 function CheckIcon() {
   return (
-    <svg width="12" height="12" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+    <svg
+      width="12"
+      height="12"
+      viewBox="0 0 16 16"
+      fill="none"
+      aria-hidden="true"
+    >
       <path
         d="M3.5 8.5L6.5 11.5L12.5 5"
         stroke="var(--color-on-primary)"
@@ -37,11 +43,20 @@ function AchievementCard({ achievement }: { achievement: Achievement }) {
         padding: "16px",
         borderRadius: "var(--radius-sm)",
         border: `1px solid ${unlocked ? "var(--color-primary)" : "var(--color-hairline)"}`,
-        backgroundColor: unlocked ? "var(--color-canvas-soft)" : "var(--color-canvas)",
+        backgroundColor: unlocked
+          ? "var(--color-canvas-soft)"
+          : "var(--color-canvas)",
         transition: "background-color 0.2s ease, border-color 0.2s ease",
       }}
     >
-      <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "6px" }}>
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: "8px",
+          marginBottom: "6px",
+        }}
+      >
         <span
           aria-hidden="true"
           style={{
@@ -53,7 +68,9 @@ function AchievementCard({ achievement }: { achievement: Achievement }) {
             flexShrink: 0,
             borderRadius: "var(--radius-full)",
             backgroundColor: unlocked ? "var(--color-primary)" : "transparent",
-            border: unlocked ? "none" : "1px dashed var(--color-hairline-strong)",
+            border: unlocked
+              ? "none"
+              : "1px dashed var(--color-hairline-strong)",
           }}
         >
           {unlocked && <CheckIcon />}
@@ -100,7 +117,9 @@ function AchievementCard({ achievement }: { achievement: Achievement }) {
             height: "100%",
             width: `${pct}%`,
             borderRadius: "var(--radius-full)",
-            backgroundColor: unlocked ? "var(--color-primary)" : "var(--color-ink-mute-2)",
+            backgroundColor: unlocked
+              ? "var(--color-primary)"
+              : "var(--color-ink-mute-2)",
             transition: "width 0.3s ease",
           }}
         />
@@ -111,7 +130,9 @@ function AchievementCard({ achievement }: { achievement: Achievement }) {
           marginTop: "8px",
           fontSize: "12px",
           fontWeight: 500,
-          color: unlocked ? "var(--color-primary-deep)" : "var(--color-ink-mute)",
+          color: unlocked
+            ? "var(--color-primary-deep)"
+            : "var(--color-ink-mute)",
         }}
       >
         <span aria-hidden="true">

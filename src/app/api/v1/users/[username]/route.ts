@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getPublicProfileByUsername } from "@/lib/db";
-import { sanitizeUsername, createApiResponse, createErrorResponse } from "@/lib/validators/api";
+import {
+  sanitizeUsername,
+  createApiResponse,
+  createErrorResponse,
+} from "@/lib/validators/api";
 
 export const runtime = "edge";
 
@@ -14,7 +18,8 @@ export const runtime = "edge";
 const CORS_HEADERS: Record<string, string> = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "GET, OPTIONS",
-  "Access-Control-Allow-Headers": "Content-Type, Authorization, If-None-Match, Cache-Control",
+  "Access-Control-Allow-Headers":
+    "Content-Type, Authorization, If-None-Match, Cache-Control",
   "Access-Control-Max-Age": "86400",
 };
 
@@ -87,7 +92,10 @@ function checkRateLimit(ip: string): { limited: boolean; retryAfter: number } {
     }
     // Still at capacity after pruning: stop tracking new keys rather than grow.
     if (hits.size > RATE_LIMIT_MAX_KEYS && !hits.has(ip)) {
-      return { limited: true, retryAfter: Math.ceil(RATE_LIMIT_WINDOW_MS / 1000) };
+      return {
+        limited: true,
+        retryAfter: Math.ceil(RATE_LIMIT_WINDOW_MS / 1000),
+      };
     }
   }
 
@@ -99,7 +107,10 @@ function checkRateLimit(ip: string): { limited: boolean; retryAfter: number } {
 
   entry.count += 1;
   if (entry.count > RATE_LIMIT_MAX) {
-    return { limited: true, retryAfter: Math.ceil((entry.resetAt - now) / 1000) };
+    return {
+      limited: true,
+      retryAfter: Math.ceil((entry.resetAt - now) / 1000),
+    };
   }
   return { limited: false, retryAfter: 0 };
 }
@@ -117,14 +128,14 @@ export async function OPTIONS() {
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ username: string }> }
+  { params }: { params: Promise<{ username: string }> },
 ) {
   const { limited, retryAfter } = checkRateLimit(getClientIp(request));
   if (limited) {
     const res = withCors(
       createErrorResponse("Rate limit exceeded. Please slow down.", 429, {
         retryAfterSeconds: retryAfter,
-      })
+      }),
     );
     res.headers.set("Retry-After", String(retryAfter));
     return res;
@@ -137,7 +148,10 @@ export async function GET(
     return withCors(createErrorResponse("Invalid username format", 400));
   }
 
-  const { data, error } = await getPublicProfileByUsername(username, PUBLIC_COLUMNS);
+  const { data, error } = await getPublicProfileByUsername(
+    username,
+    PUBLIC_COLUMNS,
+  );
 
   if (error) {
     return withCors(createErrorResponse("Failed to fetch profile", 502));
@@ -191,6 +205,6 @@ export async function GET(
   return withCors(
     createApiResponse(body, 200, {
       "Cache-Control": "public, s-maxage=300, stale-while-revalidate=600",
-    })
+    }),
   );
 }

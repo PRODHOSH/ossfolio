@@ -17,7 +17,7 @@ export function ScoreCalculator() {
       totalIssues: issues,
       totalReviews: reviews,
     },
-    stars
+    stars,
   );
 
   const rowStyle = {
@@ -59,7 +59,14 @@ export function ScoreCalculator() {
         backgroundColor: "var(--color-canvas-soft)",
       }}
     >
-      <h3 style={{ fontSize: "16px", fontWeight: 600, color: "var(--color-ink)", marginBottom: "16px" }}>
+      <h3
+        style={{
+          fontSize: "16px",
+          fontWeight: 600,
+          color: "var(--color-ink)",
+          marginBottom: "16px",
+        }}
+      >
         Interactive Score Calculator
       </h3>
 
@@ -116,7 +123,9 @@ export function ScoreCalculator() {
       </div>
 
       <div style={rowStyle}>
-        <span style={labelStyle}>Stars ({SCORE_WEIGHTS.STAR}x, cap {STAR_CAP})</span>
+        <span style={labelStyle}>
+          Stars ({SCORE_WEIGHTS.STAR}x, cap {STAR_CAP})
+        </span>
         <input
           type="range"
           min="0"
@@ -138,7 +147,13 @@ export function ScoreCalculator() {
           justifyContent: "space-between",
         }}
       >
-        <span style={{ fontSize: "15px", fontWeight: 600, color: "var(--color-ink)" }}>
+        <span
+          style={{
+            fontSize: "15px",
+            fontWeight: 600,
+            color: "var(--color-ink)",
+          }}
+        >
           Simulated Score
         </span>
         <span style={{ fontSize: "28px", fontWeight: 700, color: "#3ecf8e" }}>

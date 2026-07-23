@@ -6,11 +6,7 @@ import { Footer } from "@/components/layout/Footer";
 import { TemporaryUnavailableFallback } from "@/components/layout/TemporaryUnavailableFallback";
 
 import { ProfileView } from "@/components/profile/ProfileView";
-import {
-  deriveTechStack,
-  mapRepos,
-  type GitHubUser,
-} from "@/lib/profile-data";
+import { deriveTechStack, mapRepos, type GitHubUser } from "@/lib/profile-data";
 import {
   getProfileSnapshot,
   isSnapshotStale,
@@ -19,19 +15,22 @@ import {
 import { ProfileSyncing } from "@/components/profile/ProfileSyncing";
 import { after } from "next/server";
 import { generateMockHeatmap, computeStreaks } from "@/lib/mock";
-import { fetchContributionCalendar, fetchContributorProfile } from "@/lib/github";
+import {
+  fetchContributionCalendar,
+  fetchContributorProfile,
+} from "@/lib/github";
 import { calculateScore } from "@/lib/score";
 import { getProfileByUsername } from "@/lib/db";
 
-
 export const runtime = "edge";
-
 
 interface ProfilePageProps {
   params: Promise<{ username: string }>;
 }
 
-export async function generateMetadata({ params }: ProfilePageProps): Promise<Metadata> {
+export async function generateMetadata({
+  params,
+}: ProfilePageProps): Promise<Metadata> {
   const { username } = await params;
   // Read the same snapshot the page body renders from, rather than calling GitHub
   // again here. `generateMetadata` blocks the response head, so a live fetch here
@@ -142,8 +141,9 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
         heading="Temporarily Unavailable"
         message={
           <>
-            GitHub API rate limit reached. Profile data for <strong>@{username}</strong> cannot be
-            loaded right now. Please try again in a few minutes.
+            GitHub API rate limit reached. Profile data for{" "}
+            <strong>@{username}</strong> cannot be loaded right now. Please try
+            again in a few minutes.
           </>
         }
       />
@@ -151,7 +151,7 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
   }
 
   const profileUser = user!;
-  
+
   // Keep original full repos for accurate tech stack and score calculations
   const mappedRepos = mapRepos(repos);
   const techStack = deriveTechStack(repos);
@@ -161,7 +161,8 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
     : generateMockHeatmap(username);
 
   // Streaks computation
-  const { current: currentStreak, longest: longestStreak } = computeStreaks(heatmap);
+  const { current: currentStreak, longest: longestStreak } =
+    computeStreaks(heatmap);
 
   const stats = { ...liveStats, totalContributions };
   const liveScore = calculateScore(stats, mappedRepos);
@@ -169,7 +170,8 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
   // --- NEW: Fetch GraphQL profile specifically for Pinned Repos ---
   let pinnedReposRaw: any[] = [];
   try {
-    const token = process.env.GITHUB_TOKEN || process.env.GITHUB_API_TOKEN || "";
+    const token =
+      process.env.GITHUB_TOKEN || process.env.GITHUB_API_TOKEN || "";
     if (token) {
       const gqlProfile = await fetchContributorProfile(username, token);
       if (gqlProfile?.pinnedItems?.nodes?.length > 0) {
@@ -191,7 +193,8 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
 
   // Fallback Logic
   const displayRepos = pinnedReposRaw.length > 0 ? pinnedReposRaw : repos;
-  const repoSectionTitle = pinnedReposRaw.length > 0 ? "Pinned repositories" : "Popular repositories";
+  const repoSectionTitle =
+    pinnedReposRaw.length > 0 ? "Pinned repositories" : "Popular repositories";
   // ----------------------------------------------------------------
 
   let score = liveScore;
@@ -203,9 +206,9 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
   let visibilityUnknown = false;
   try {
     const { data, error } = await getProfileByUsername(
-        username,
-        "id, score, updated_at, badges, headline, pinned_repos, custom_links, visibility",
-      );
+      username,
+      "id, score, updated_at, badges, headline, pinned_repos, custom_links, visibility",
+    );
     customizationFetchSettled = true;
 
     // The Supabase client resolves with `{ data: null, error }` rather than throwing, so reading
@@ -234,7 +237,7 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
               b &&
               typeof b.program === "string" &&
               b.program.trim() !== "" &&
-              Array.isArray(b.years)
+              Array.isArray(b.years),
           )
           .map((b: any) => ({
             program: b.program,
@@ -275,12 +278,19 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
     return notFound();
   }
 
-  const customization = profileRow ? {
-    headline: typeof profileRow.headline === "string" ? profileRow.headline : null,
-    pinnedRepos: Array.isArray(profileRow.pinned_repos) ? profileRow.pinned_repos as string[] : [],
-    customLinks: Array.isArray(profileRow.custom_links) ? profileRow.custom_links as Array<{ label: string; url: string }> : [],
-    visibility: profileRow.visibility as string,
-  } : null;
+  const customization = profileRow
+    ? {
+        headline:
+          typeof profileRow.headline === "string" ? profileRow.headline : null,
+        pinnedRepos: Array.isArray(profileRow.pinned_repos)
+          ? (profileRow.pinned_repos as string[])
+          : [],
+        customLinks: Array.isArray(profileRow.custom_links)
+          ? (profileRow.custom_links as Array<{ label: string; url: string }>)
+          : [],
+        visibility: profileRow.visibility as string,
+      }
+    : null;
 
   if (customization?.headline && user) {
     user.bio = customization.headline;
@@ -289,14 +299,14 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
   return (
     <>
       <Navbar />
-        {/* 💡 Fixed: Linked layout to design tokens and added transition curves */}
-        {/* ProfileActions component within ProfileView handles GitHub profile sync/refresh state */}
-      <main 
-        style={{ 
-          backgroundColor: "var(--color-canvas)", 
+      {/* 💡 Fixed: Linked layout to design tokens and added transition curves */}
+      {/* ProfileActions component within ProfileView handles GitHub profile sync/refresh state */}
+      <main
+        style={{
+          backgroundColor: "var(--color-canvas)",
           color: "var(--color-ink)",
           minHeight: "100vh",
-          transition: "background-color 0.2s ease, color 0.2s ease"
+          transition: "background-color 0.2s ease, color 0.2s ease",
         }}
       >
         <ProfileView

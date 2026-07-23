@@ -27,6 +27,7 @@ OSSfolio is a free, open-source platform where every contributor gets a public p
 No manual input. Just sign in with GitHub and your profile is ready.
 
 ## Documentation
+
 - See [API Reference Architecture](docs/api-reference-architecture.md) for endpoint specs.
 - See [System Flow Diagrams](docs/system-diagrams.md) for database and network flows.
 
@@ -75,10 +76,10 @@ The score combines different types of contributions across GitHub and assigns a 
 
 The score is designed to capture a mix of:
 
-* Code contributions through commits
-* Collaboration through pull requests and reviews
-* Community participation through issues
-* Project impact through repository stars
+- Code contributions through commits
+- Collaboration through pull requests and reviews
+- Community participation through issues
+- Project impact through repository stars
 
 ### What the Score Does Not Measure
 
@@ -96,21 +97,21 @@ src/lib/score.ts
 
 ---
 
-
 ## Tech Stack
 
-| Layer | Tech |
-|---|---|
+| Layer    | Tech                                                            |
+| -------- | --------------------------------------------------------------- |
 | Frontend | Next.js · TypeScript · Tailwind CSS · shadcn/ui · Framer Motion |
-| Backend | Supabase · PostgreSQL |
-| Data | GitHub GraphQL API |
-| Hosting | Cloudflare Pages |
+| Backend  | Supabase · PostgreSQL                                           |
+| Data     | GitHub GraphQL API                                              |
+| Hosting  | Cloudflare Pages                                                |
 
 ---
 
 ## Running it locally
 
 **What you need before starting:**
+
 - Node.js 20+
 - A free [Supabase](https://supabase.com) account
 - Git
@@ -132,12 +133,14 @@ cp .env.example .env.local
 **Setting up the database (pick one):**
 
 > **Option A — Supabase Dashboard** (recommended for most contributors, no extra tools needed)
+>
 > 1. Create a free project at [supabase.com](https://supabase.com)
 > 2. Go to your project → **SQL Editor → New query**
 > 3. Copy the contents of [`supabase/schema.sql`](supabase/schema.sql) → paste → click **Run**
 > 4. All tables and permissions are created instantly
 
 > **Option B — Supabase CLI** (if you prefer local development with Docker)
+>
 > ```bash
 > npm install -g supabase
 > supabase start       # starts a local Supabase instance
@@ -279,6 +282,7 @@ Everyone who has helped build OSSfolio — code, design, docs, ideas, all of it.
 </a>
 
 ---
+
 ### My ELUSOC 2026 Admin Badges!
 
 <a href="https://edulinkup.dev/elusoc/profile/PRODHOSH">
@@ -290,4 +294,3 @@ Everyone who has helped build OSSfolio — code, design, docs, ideas, all of it.
 ## License
 
 [MIT](LICENSE) — free to use, fork, and build on.
-

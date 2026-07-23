@@ -177,6 +177,7 @@ function HeatmapWithYearNavInner({
       if (savedYearStr) {
         const savedYear = parseInt(savedYearStr, 10);
         if (years.includes(savedYear) && savedYear !== currentYear) {
+          // eslint-disable-next-line react-hooks/set-state-in-effect
           fetchYear(savedYear);
         }
       }

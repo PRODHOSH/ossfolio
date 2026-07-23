@@ -68,4 +68,3 @@
 - name: "stale"
   color: "6e7681"
   description: "Extra attention needed — stale and inactive"
-

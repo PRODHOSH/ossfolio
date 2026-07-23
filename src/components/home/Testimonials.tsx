@@ -86,7 +86,8 @@ function TestimonialCard({ quote, name, username, role }: Testimonial) {
         flexDirection: "column",
         gap: "24px",
         whiteSpace: "normal",
-        transition: "transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease",
+        transition:
+          "transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease",
       }}
     >
       <p
@@ -119,31 +120,31 @@ function TestimonialCard({ quote, name, username, role }: Testimonial) {
         />
         <div style={{ display: "flex", flexDirection: "column" }}>
           <span
-            style={{ 
-              fontSize: "14px", 
-              fontWeight: 600, 
+            style={{
+              fontSize: "14px",
+              fontWeight: 600,
               color: "var(--color-ink)",
-              transition: "color 0.2s ease" 
+              transition: "color 0.2s ease",
             }}
           >
             {name}
           </span>
-          <span 
-            style={{ 
-              fontSize: "12px", 
+          <span
+            style={{
+              fontSize: "12px",
               color: "var(--color-ink-mute-2)",
-              transition: "color 0.2s ease" 
+              transition: "color 0.2s ease",
             }}
           >
             @{username}
-            </span>
-            <span
+          </span>
+          <span
             style={{
               fontSize: "12px",
               color: "var(--color-ink-mute)",
               transition: "color 0.2s ease",
             }}
-            >
+          >
             {role}
           </span>
         </div>

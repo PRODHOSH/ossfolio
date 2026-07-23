@@ -1,7 +1,10 @@
 import { after } from "next/server";
 import { getProfileByUsername } from "@/lib/db";
 import { sanitizeUsername } from "@/lib/validators/api";
-import { getProfileSnapshot, syncProfileSnapshot } from "@/lib/profile-snapshot";
+import {
+  getProfileSnapshot,
+  syncProfileSnapshot,
+} from "@/lib/profile-snapshot";
 import type { MergedPR } from "@/types";
 
 export const runtime = "edge";
@@ -54,7 +57,7 @@ function toRfc822(iso: string | null | undefined): string | null {
 
 function buildItem(pr: MergedPR): string {
   const title = escapeXml(
-    pr.repoName ? `${pr.repoName}: ${pr.title}` : pr.title
+    pr.repoName ? `${pr.repoName}: ${pr.title}` : pr.title,
   );
   const link = escapeXml(pr.url);
   const pubDate = toRfc822(pr.mergedAt);
@@ -69,7 +72,7 @@ function buildItem(pr: MergedPR): string {
     `      <guid isPermaLink="true">${link}</guid>`,
     pubDate ? `      <pubDate>${escapeXml(pubDate)}</pubDate>` : null,
     `      <description>${escapeXml(
-      `Merged pull request in ${pr.repoName || "a repository"}: ${pr.title}`
+      `Merged pull request in ${pr.repoName || "a repository"}: ${pr.title}`,
     )}</description>`,
     "    </item>",
   ]
@@ -79,7 +82,7 @@ function buildItem(pr: MergedPR): string {
 
 export async function GET(
   _request: Request,
-  { params }: { params: Promise<{ username: string }> }
+  { params }: { params: Promise<{ username: string }> },
 ) {
   const { username: rawUsername } = await params;
   const username = sanitizeUsername(rawUsername);
@@ -94,10 +97,8 @@ export async function GET(
   // `unlisted` is deliberately still served. It means "don't list me", not "don't exist": the
   // profile page itself still renders for anyone holding the link, and the feed follows the page
   // rather than inventing a stricter rule of its own.
-  const { data: profileRow, error: visibilityError } = await getProfileByUsername(
-        username,
-        "visibility",
-      );
+  const { data: profileRow, error: visibilityError } =
+    await getProfileByUsername(username, "visibility");
 
   // Fail closed. The Supabase client resolves with `{ data: null, error }` rather than throwing, so
   // discarding the error would leave `profileRow` null on any database failure — the private check
@@ -157,7 +158,13 @@ export async function GET(
   }
 
   const mergedPRs: MergedPR[] = (snapshot.mergedPRs ?? [])
-    .filter((pr) => pr && typeof pr.url === "string" && typeof pr.title === "string" && (!pr.state || pr.state === "merged"))
+    .filter(
+      (pr) =>
+        pr &&
+        typeof pr.url === "string" &&
+        typeof pr.title === "string" &&
+        (!pr.state || pr.state === "merged"),
+    )
     .slice(0, MAX_ITEMS);
 
   const displayName = user.name || username;
@@ -167,7 +174,9 @@ export async function GET(
   // The newest item's merge time, falling back to the snapshot's sync time. Readers use this to
   // decide whether to bother re-parsing, so a value that never changes is worse than none.
   const lastBuildDate =
-    toRfc822(mergedPRs[0]?.mergedAt) ?? toRfc822(stored?.syncedAt) ?? new Date().toUTCString();
+    toRfc822(mergedPRs[0]?.mergedAt) ??
+    toRfc822(stored?.syncedAt) ??
+    new Date().toUTCString();
 
   const xml = [
     '<?xml version="1.0" encoding="UTF-8"?>',
@@ -179,10 +188,10 @@ export async function GET(
     // own canonical location. Omitting it is the single most common way a feed "validates fine in a
     // browser" and then misbehaves in an actual reader.
     `    <atom:link href="${escapeXml(
-      feedUrl
+      feedUrl,
     )}" rel="self" type="application/rss+xml" />`,
     `    <description>${escapeXml(
-      `Recent open-source pull requests merged by ${displayName}, via OSSfolio.`
+      `Recent open-source pull requests merged by ${displayName}, via OSSfolio.`,
     )}</description>`,
     "    <language>en</language>",
     `    <lastBuildDate>${escapeXml(lastBuildDate)}</lastBuildDate>`,
@@ -201,7 +210,8 @@ export async function GET(
       // The underlying snapshot has a one-hour TTL (SNAPSHOT_TTL_MS), so there is nothing to gain
       // from letting readers poll harder than that. `stale-while-revalidate` keeps the feed served
       // from cache while a fresher copy is fetched, rather than making a reader wait.
-      "Cache-Control": "public, max-age=1800, s-maxage=3600, stale-while-revalidate=86400",
+      "Cache-Control":
+        "public, max-age=1800, s-maxage=3600, stale-while-revalidate=86400",
     },
   });
 }

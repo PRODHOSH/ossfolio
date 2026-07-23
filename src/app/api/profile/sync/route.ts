@@ -1,6 +1,9 @@
 import { NextRequest } from "next/server";
 import { createClient } from "@supabase/supabase-js";
-import { fetchContributorProfile, contributorToScoreInputs } from "@/lib/github";
+import {
+  fetchContributorProfile,
+  contributorToScoreInputs,
+} from "@/lib/github";
 import { mapRepos, fetchLiveStats } from "@/lib/profile-data";
 import { scoreWithAnomalyCheck } from "@/lib/anomaly";
 import { createApiResponse, createErrorResponse } from "@/lib/validators/api";
@@ -43,15 +46,18 @@ function extractToken(request: NextRequest): string | null {
 
 /** REST fallback for when no GitHub OAuth token is available (GraphQL needs one). */
 async function statsFromRest(
-  username: string
+  username: string,
 ): Promise<{ stats: ContributorStats; repos: Repo[] }> {
   // Bounded: this runs inside an edge invocation. The client stops waiting after
   // SYNC_TIMEOUT_MS and redirects, but the invocation itself would otherwise keep running
   // until GitHub answers, so the request is aborted rather than merely abandoned.
   const reposRes = await fetchWithTimeout(
     `https://api.github.com/users/${encodeURIComponent(username)}/repos?sort=stars&per_page=12&type=owner`,
-    { headers: { Accept: "application/vnd.github.v3+json" }, cache: "no-store" },
-    GITHUB_TIMEOUT_MS
+    {
+      headers: { Accept: "application/vnd.github.v3+json" },
+      cache: "no-store",
+    },
+    GITHUB_TIMEOUT_MS,
   );
   const rawRepos = reposRes.ok ? await reposRes.json() : [];
   const filtered = Array.isArray(rawRepos)
@@ -78,7 +84,8 @@ export async function POST(request: NextRequest) {
   // caller writing to someone else's profile, or scoring a different account as their own.
   const userId = user.id;
   const username = user.user_metadata?.user_name as string | undefined;
-  if (!username) return createErrorResponse("No GitHub username on this account", 400);
+  if (!username)
+    return createErrorResponse("No GitHub username on this account", 400);
 
   // The GitHub OAuth token is only available to the client (Supabase does not persist
   // provider tokens server-side), so it is passed in. It only ever widens the rate limit for
@@ -87,7 +94,8 @@ export async function POST(request: NextRequest) {
   let providerToken: string | undefined;
   try {
     const body = await request.json();
-    if (typeof body?.providerToken === "string") providerToken = body.providerToken;
+    if (typeof body?.providerToken === "string")
+      providerToken = body.providerToken;
   } catch {
     // No body is fine — we fall back to the unauthenticated REST path.
   }
@@ -97,7 +105,10 @@ export async function POST(request: NextRequest) {
   try {
     if (providerToken) {
       try {
-        const contributor = await fetchContributorProfile(username, providerToken);
+        const contributor = await fetchContributorProfile(
+          username,
+          providerToken,
+        );
         ({ stats, repos } = contributorToScoreInputs(contributor));
       } catch {
         ({ stats, repos } = await statsFromRest(username));
@@ -136,7 +147,7 @@ export async function POST(request: NextRequest) {
       flagged_at: anomaly.flagged ? now : null,
       updated_at: now,
     },
-    { onConflict: "id" }
+    { onConflict: "id" },
   );
 
   if (error) {
@@ -144,5 +155,10 @@ export async function POST(request: NextRequest) {
     return createErrorResponse("Could not save the profile", 500);
   }
 
-  return createApiResponse({ success: true, username, score, flagged: anomaly.flagged });
+  return createApiResponse({
+    success: true,
+    username,
+    score,
+    flagged: anomaly.flagged,
+  });
 }

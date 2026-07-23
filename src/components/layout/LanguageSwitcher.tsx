@@ -76,8 +76,12 @@ export function LanguageSwitcher() {
               borderRadius: "9999px",
               border: "none",
               cursor: isActive ? "default" : "pointer",
-              backgroundColor: isActive ? "var(--color-primary)" : "transparent",
-              color: isActive ? "var(--color-on-primary)" : "var(--color-ink-mute)",
+              backgroundColor: isActive
+                ? "var(--color-primary)"
+                : "transparent",
+              color: isActive
+                ? "var(--color-on-primary)"
+                : "var(--color-ink-mute)",
               transition: "background-color 0.15s ease, color 0.15s ease",
             }}
           >

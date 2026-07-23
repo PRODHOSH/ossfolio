@@ -1,7 +1,11 @@
 import { NextRequest } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { sanitizeString } from "@/lib/sanitizer";
-import { sanitizeUrl, createApiResponse, createErrorResponse } from "@/lib/validators/api";
+import {
+  sanitizeUrl,
+  createApiResponse,
+  createErrorResponse,
+} from "@/lib/validators/api";
 
 export const runtime = "edge";
 
@@ -27,7 +31,9 @@ export async function GET(request: NextRequest) {
   }
 
   const supabase = createAuthClient(token);
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
   if (!user) {
     return createErrorResponse("Unauthorized", 401);
   }
@@ -52,7 +58,9 @@ export async function PUT(request: NextRequest) {
   }
 
   const supabase = createAuthClient(token);
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
   if (!user) {
     return createErrorResponse("Unauthorized", 401);
   }
@@ -106,7 +114,12 @@ export async function PUT(request: NextRequest) {
         return {
           program: sanitizeString(badge.program, 50),
           years: Array.isArray(badge.years)
-            ? badge.years.filter((y: unknown) => typeof y === "number" && y >= 2000 && y <= 2100).slice(0, 5)
+            ? badge.years
+                .filter(
+                  (y: unknown) =>
+                    typeof y === "number" && y >= 2000 && y <= 2100,
+                )
+                .slice(0, 5)
             : [],
         };
       })

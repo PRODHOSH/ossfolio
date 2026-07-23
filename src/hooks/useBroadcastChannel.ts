@@ -13,7 +13,7 @@ type MessageHandler<T> = (data: T) => void;
  */
 export function useBroadcastChannel<T = unknown>(
   channelName: string,
-  onMessage: MessageHandler<T>
+  onMessage: MessageHandler<T>,
 ) {
   const handlerRef = useRef<MessageHandler<T>>(onMessage);
   useEffect(() => {
@@ -44,7 +44,7 @@ export function useBroadcastChannel<T = unknown>(
         // BroadcastChannel can throw in some restricted contexts.
       }
     },
-    [channelName]
+    [channelName],
   );
 
   return { postMessage };

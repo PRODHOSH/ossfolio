@@ -1,11 +1,15 @@
 import { NextRequest } from "next/server";
-import { sanitizeUsername, createApiResponse, createErrorResponse } from "@/lib/validators/api";
+import {
+  sanitizeUsername,
+  createApiResponse,
+  createErrorResponse,
+} from "@/lib/validators/api";
 import { refreshProfile } from "@/lib/refresh-profile";
 import { checkRefreshRateLimit } from "@/lib/rate-limit";
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: Promise<{ username: string }> }
+  { params }: { params: Promise<{ username: string }> },
 ) {
   // Limit the caller before doing anything else — before the username is even looked at.
   //
@@ -23,7 +27,7 @@ export async function POST(
       "Too many refresh requests. Please try again shortly.",
       429,
       { retryAfterSeconds: rateLimit.retryAfterSeconds },
-      { "Retry-After": String(rateLimit.retryAfterSeconds) }
+      { "Retry-After": String(rateLimit.retryAfterSeconds) },
     );
   }
 

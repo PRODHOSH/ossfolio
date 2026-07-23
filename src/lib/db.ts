@@ -123,7 +123,8 @@ export async function searchProfiles(
 }
 
 /** Sort keys accepted by the Explore profile listing. */
-export type ExploreProfileSort = "score" | "prs" | "commits" | "issues" | "improvement";
+export type ExploreProfileSort =
+  "score" | "prs" | "commits" | "issues" | "improvement";
 
 /**
  * Fetch a page of public profiles for the Explore listing.

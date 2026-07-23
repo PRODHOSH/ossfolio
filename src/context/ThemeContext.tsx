@@ -19,7 +19,9 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     setTimeout(() => {
       setMounted(true);
       const savedTheme = localStorage.getItem("theme") as Theme | null;
-      const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+      const prefersDark = window.matchMedia(
+        "(prefers-color-scheme: dark)",
+      ).matches;
       const initialTheme = savedTheme || (prefersDark ? "dark" : "light");
       setTheme(initialTheme);
     }, 0);

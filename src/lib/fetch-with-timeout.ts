@@ -18,7 +18,7 @@ function isAbortLikeError(err: unknown): boolean {
 export async function fetchWithTimeout(
   input: RequestInfo | URL,
   init: RequestInit = {},
-  timeoutMs: number = 10_000
+  timeoutMs: number = 10_000,
 ): Promise<Response> {
   const controller = new AbortController();
   const timeoutId = setTimeout(() => {
@@ -35,7 +35,7 @@ export async function fetchWithTimeout(
     if (isAbortLikeError(err)) {
       throw new FetchTimeoutError(
         `Request timed out after ${timeoutMs}ms`,
-        timeoutMs
+        timeoutMs,
       );
     }
     throw err;
@@ -43,4 +43,3 @@ export async function fetchWithTimeout(
     clearTimeout(timeoutId);
   }
 }
-

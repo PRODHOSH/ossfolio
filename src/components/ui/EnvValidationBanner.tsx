@@ -31,13 +31,19 @@ export function EnvValidationBanner() {
     >
       <span>⚠️</span>
       <span>
-        <strong>Supabase Credentials Missing:</strong> Copy <code>.env.example</code> to <code>.env.local</code> and fill in your Supabase variables.
+        <strong>Supabase Credentials Missing:</strong> Copy{" "}
+        <code>.env.example</code> to <code>.env.local</code> and fill in your
+        Supabase variables.
       </span>
       <a
         href="https://github.com/PRODHOSH/ossfolio/blob/main/CONTRIBUTING.md#local-setup"
         target="_blank"
         rel="noopener noreferrer"
-        style={{ color: "#3ecf8e", fontWeight: 600, textDecoration: "underline" }}
+        style={{
+          color: "#3ecf8e",
+          fontWeight: 600,
+          textDecoration: "underline",
+        }}
       >
         Read setup guide
       </a>
