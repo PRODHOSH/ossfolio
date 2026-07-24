@@ -1,4 +1,4 @@
-@import "tailwindcss";
+@import 'tailwindcss';
 
 /* ─────────────────────────────────────────────────────────────────────────────
    Design tokens — Tailwind v4 CSS-first configuration.
@@ -56,9 +56,9 @@
   --radius-full: 9999px;
 
   /* Structural Typography Font Configurations */
-  --font-sans: "Inter", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --font-sans: 'Inter', 'Helvetica Neue', Helvetica, Arial, sans-serif;
   --font-mono:
-    ui-monospace, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+    ui-monospace, Menlo, Monaco, Consolas, 'Liberation Mono', monospace;
 
   /* Nav/segmented-control muted text (e.g. Heatmap year buttons) */
   --color-nav-mute: var(--color-ink-mute);
