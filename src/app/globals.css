@@ -144,6 +144,25 @@ dialog::backdrop {
   outline-offset: 2px;
   box-shadow: 0 0 0 3px var(--color-primary);
 }
+.footer-social-link {
+  transition: color 0.2s ease;
+}
+
+.footer-social-link:hover {
+  color: var(--color-primary);
+}
+
+.footer-author-link {
+  transition: color 0.2s ease;
+}
+
+.footer-author-name {
+  transition: color 0.2s ease;
+}
+
+.footer-author-link:hover .footer-author-name {
+  color: var(--color-primary);
+}
 
 @media (prefers-reduced-motion: reduce) {
   *,

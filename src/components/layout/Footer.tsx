@@ -136,6 +136,7 @@ export function Footer() {
               href="https://github.com/PRODHOSH/ossfolio"
               target="_blank"
               rel="noopener noreferrer"
+              className="footer-social-link"
               style={{
                 display: "inline-flex",
                 alignItems: "center",
@@ -145,12 +146,6 @@ export function Footer() {
                 textDecoration: "none",
                 transition: "color 0.2s ease",
               }}
-              onMouseEnter={(e) =>
-                (e.currentTarget.style.color = "var(--color-ink)")
-              }
-              onMouseLeave={(e) =>
-                (e.currentTarget.style.color = "var(--color-ink-mute-2)")
-              }
             >
               <svg
                 width="13"
@@ -312,23 +307,12 @@ export function Footer() {
             href="https://github.com/PRODHOSH"
             target="_blank"
             rel="noopener noreferrer"
+            className="footer-author-link"
             style={{
               display: "flex",
               alignItems: "center",
               gap: "8px",
               textDecoration: "none",
-            }}
-            onMouseEnter={(e) => {
-              const textSpan = e.currentTarget.querySelector(
-                ".author-name",
-              ) as HTMLElement;
-              if (textSpan) textSpan.style.color = "var(--color-primary)";
-            }}
-            onMouseLeave={(e) => {
-              const textSpan = e.currentTarget.querySelector(
-                ".author-name",
-              ) as HTMLElement;
-              if (textSpan) textSpan.style.color = "var(--color-ink)";
             }}
           >
             <span
@@ -353,7 +337,7 @@ export function Footer() {
               }}
             />
             <span
-              className="author-name"
+              className="footer-author-name"
               style={{
                 fontSize: "12px",
                 fontWeight: 500,
