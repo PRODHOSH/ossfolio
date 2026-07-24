@@ -1,7 +1,7 @@
 ---
 version: alpha
-name: ossfolio-design-system
-description: OSSfolio design system built on a clean white-and-near-black palette with a single signature emerald-green CTA, a humanist sans display tier, and a minimal chrome approach. The brand reads as quietly technical: near-monochrome palette with the green primary as the only chromatic event on the page.
+name: "ossfolio-design-system
+description: OSSfolio design system built on a clean white-and-near-black palette with a single signature emerald-green CTA, a humanist sans display tier, and a minimal chrome approach. The brand reads as quietly technical: near-monochrome palette with the green primary as the only chromatic event on the page."
 
 colors:
   primary: "#3ecf8e"
