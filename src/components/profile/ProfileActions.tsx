@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import type { ContributorStats } from "@/types";
+import { ExportMenu } from "@/components/profile/ExportMenu";
 
 interface ProfileActionsProps {
   username: string;
@@ -246,6 +247,8 @@ export function ProfileActions({
           </>
         )}
       </button>
+
+      <ExportMenu username={username} />
     </div>
   );
 }
