@@ -1,37 +1,66 @@
 import { supabase } from "@/lib/supabase";
 
+function isDomain(hostname: string, targetDomain: string): boolean {
+  return hostname === targetDomain || hostname.endsWith("." + targetDomain);
+}
+
+function isGoogleDomain(hostname: string): boolean {
+  return (
+    isDomain(hostname, "google.com") ||
+    /^([a-z0-9-]+\.)*google\.[a-z]{2,}(\.[a-z]{2})?$/.test(hostname)
+  );
+}
+
 export function parseReferrer(referrerHeader?: string | null): string {
   if (!referrerHeader || referrerHeader.trim() === "") {
     return "Direct";
   }
 
-  const lower = referrerHeader.toLowerCase();
+  let hostname = "";
+  try {
+    const url = new URL(referrerHeader);
+    hostname = url.hostname.toLowerCase();
+  } catch {
+    try {
+      const url = new URL(`https://${referrerHeader.trim()}`);
+      hostname = url.hostname.toLowerCase();
+    } catch {
+      return "Other";
+    }
+  }
 
-  if (lower.includes("github.com")) return "GitHub";
-  if (lower.includes("t.co") || lower.includes("twitter.com") || lower.includes("x.com")) {
+  if (!hostname) return "Other";
+
+  if (isDomain(hostname, "github.com")) return "GitHub";
+  if (
+    isDomain(hostname, "t.co") ||
+    isDomain(hostname, "twitter.com") ||
+    isDomain(hostname, "x.com")
+  ) {
     return "Twitter / X";
   }
-  if (lower.includes("linkedin.com") || lower.includes("lnkd.in")) return "LinkedIn";
+  if (isDomain(hostname, "linkedin.com") || isDomain(hostname, "lnkd.in")) {
+    return "LinkedIn";
+  }
   if (
-    lower.includes("google.") ||
-    lower.includes("bing.com") ||
-    lower.includes("duckduckgo.com") ||
-    lower.includes("yahoo.com")
+    isGoogleDomain(hostname) ||
+    isDomain(hostname, "bing.com") ||
+    isDomain(hostname, "duckduckgo.com") ||
+    isDomain(hostname, "yahoo.com")
   ) {
     return "Search Engine";
   }
-  if (lower.includes("reddit.com")) return "Reddit";
-  if (lower.includes("ycombinator.com")) return "Hacker News";
-  if (lower.includes("dev.to") || lower.includes("hashnode.com") || lower.includes("medium.com")) {
+  if (isDomain(hostname, "reddit.com")) return "Reddit";
+  if (isDomain(hostname, "ycombinator.com")) return "Hacker News";
+  if (
+    isDomain(hostname, "dev.to") ||
+    isDomain(hostname, "hashnode.com") ||
+    isDomain(hostname, "medium.com")
+  ) {
     return "Tech Blogs";
   }
 
-  try {
-    const url = new URL(referrerHeader);
-    return url.hostname.replace(/^www\./, "");
-  } catch {
-    return "Other";
-  }
+  return hostname.replace(/^www\./, "");
 }
 
 export function parseDeviceType(userAgent?: string | null): "desktop" | "mobile" | "tablet" {

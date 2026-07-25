@@ -22,6 +22,21 @@ describe("analytics-tracker helpers", () => {
     it("should extract domain name for unmapped web sites", () => {
       expect(parseReferrer("https://blog.mywebsite.com/posts/1")).toBe("blog.mywebsite.com");
     });
+
+    it("should prevent incomplete URL substring spoofing", () => {
+      expect(parseReferrer("https://evil-github.com")).toBe("evil-github.com");
+      expect(parseReferrer("https://github.com.attacker.com")).toBe("github.com.attacker.com");
+      expect(parseReferrer("https://attacker.com?ref=github.com")).toBe("attacker.com");
+      expect(parseReferrer("https://evil-twitter.com")).toBe("evil-twitter.com");
+      expect(parseReferrer("https://attacker.com/linkedin.com")).toBe("attacker.com");
+      expect(parseReferrer("https://fakebing.com")).toBe("fakebing.com");
+      expect(parseReferrer("https://fakeduckduckgo.com")).toBe("fakeduckduckgo.com");
+      expect(parseReferrer("https://fakeyahoo.com")).toBe("fakeyahoo.com");
+      expect(parseReferrer("https://fakereddit.com")).toBe("fakereddit.com");
+      expect(parseReferrer("https://fakeycombinator.com")).toBe("fakeycombinator.com");
+      expect(parseReferrer("https://fakehashnode.com")).toBe("fakehashnode.com");
+      expect(parseReferrer("https://fakemedium.com")).toBe("fakemedium.com");
+    });
   });
 
   describe("parseDeviceType", () => {
