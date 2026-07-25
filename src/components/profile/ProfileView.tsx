@@ -1296,6 +1296,7 @@ export function ProfileView({
               stats={stats}
               isRefreshing={isRefreshing}
               onRefresh={handleRefresh}
+              isOwner={isOwner}
             />
           </div>
 
