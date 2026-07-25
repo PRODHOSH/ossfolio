@@ -1,5 +1,6 @@
 {
   "Nav": {
+    "skipToMainContent": "Skip to main content",
     "features": "Features",
     "howItWorks": "How it works",
     "leaderboard": "Leaderboard",
@@ -18,6 +19,9 @@
     "switchToDark": "Switch to dark mode",
     "settings": "Settings",
     "compare": "Compare Profiles",
+    "skipToMainContent": "Skip to main content"
+  },
+  "Navigation": {
     "skipToMainContent": "Skip to main content"
   },
   "Footer": {

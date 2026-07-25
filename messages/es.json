@@ -1,5 +1,6 @@
 {
   "Nav": {
+    "skipToMainContent": "Saltar al contenido principal",
     "features": "Funciones",
     "howItWorks": "Cómo funciona",
     "leaderboard": "Clasificación",
@@ -18,6 +19,9 @@
     "switchToDark": "Cambiar a modo oscuro",
     "settings": "Configuración",
     "compare": "Comparar perfiles",
+    "skipToMainContent": "Saltar al contenido principal"
+  },
+  "Navigation": {
     "skipToMainContent": "Saltar al contenido principal"
   },
   "Footer": {
