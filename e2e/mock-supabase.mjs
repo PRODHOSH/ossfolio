@@ -162,7 +162,7 @@ const server = createServer((req, res) => {
       // `.maybeSingle()` expects one object, or 406 when there's nothing.
       if (rows.length === 0) {
         res.statusCode = 406;
-        res.end(JSON.stringify({ message: 'no rows' }));
+        res.end(JSON.stringify({ code: 'PGRST116', message: 'no rows' }));
         return;
       }
       res.statusCode = 200;

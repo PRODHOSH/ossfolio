@@ -118,6 +118,7 @@ export const CONTRIBUTOR_QUERY = `
       pinnedItems(first: 6, types: REPOSITORY) {
         nodes {
           ... on Repository {
+            databaseId
             name
             description
             stargazerCount
@@ -179,6 +180,7 @@ export interface GitHubContributor {
   following: { totalCount: number };
   pinnedItems: {
     nodes: {
+      databaseId: number;
       name: string;
       description: string | null;
       stargazerCount: number;

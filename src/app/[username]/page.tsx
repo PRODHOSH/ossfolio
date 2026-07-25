@@ -186,6 +186,7 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
         // Map GraphQL shape to match REST API shape expected by ProfileView
         pinnedReposRaw = gqlProfile.pinnedItems.nodes.map(
           (n: {
+            databaseId: number;
             name: string;
             description: string | null;
             stargazerCount: number;
@@ -193,7 +194,7 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
             primaryLanguage?: { name: string } | null;
             url: string;
           }) => ({
-            id: Math.floor(Math.random() * 1000000),
+            id: n.databaseId,
             name: n.name,
             description: n.description,
             stargazers_count: n.stargazerCount,
