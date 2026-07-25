@@ -16,17 +16,23 @@ function warningMissingEnv() {
   }
 }
 
-let client: SupabaseClient | null = null;
+let _client: SupabaseClient | null = null;
 
 export function getSupabase(): SupabaseClient {
-  if (!client) {
+  if (!_client) {
     warningMissingEnv();
-    client = createClient(supabaseUrl, supabaseAnonKey);
+    _client = createClient(supabaseUrl, supabaseAnonKey);
   }
-  return client;
+  return _client;
 }
 
-export const supabase = getSupabase();
+// Lazy proxy — avoids running createClient() at module-load time (which crashes
+// Cloudflare's workerd on boot). The client is created on first property access.
+export const supabase = new Proxy({} as SupabaseClient, {
+  get(_target, prop) {
+    return (getSupabase() as any)[prop];
+  },
+});
 
 export function supabaseAdmin(): SupabaseClient {
   warningMissingEnv();
