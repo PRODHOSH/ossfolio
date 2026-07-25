@@ -17,7 +17,7 @@ import type { ContributorStats, Repo } from "@/types";
 import { CompareForm } from "@/components/profile/CompareForm";
 import { CompareCharts } from "@/components/profile/CompareCharts";
 
-export const runtime = "edge";
+// Runtime managed by @opennextjs/cloudflare
 
 export const metadata: Metadata = {
   title: "Compare Contributors",

@@ -10,7 +10,7 @@ import { createApiResponse, createErrorResponse } from "@/lib/validators/api";
 import { fetchWithTimeout } from "@/lib/fetch-with-timeout";
 import type { ContributorStats, Repo } from "@/types";
 
-export const runtime = "edge";
+// Runtime managed by @opennextjs/cloudflare
 
 /** Bound every outbound GitHub call so a slow upstream cannot pin an edge invocation open. */
 const GITHUB_TIMEOUT_MS = 8000;

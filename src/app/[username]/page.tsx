@@ -22,7 +22,7 @@ import {
 import { calculateScore } from "@/lib/score";
 import { getProfileByUsername } from "@/lib/db";
 
-export const runtime = "edge";
+// Runtime managed by @opennextjs/cloudflare
 
 interface ProfilePageProps {
   params: Promise<{ username: string }>;
