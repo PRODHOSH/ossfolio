@@ -22,7 +22,10 @@ const inputStyle: React.CSSProperties = {
   transition: "border-color 0.2s ease",
 };
 
-export function CompareForm({ defaultA = "", defaultB = "" }: CompareFormProps) {
+export function CompareForm({
+  defaultA = "",
+  defaultB = "",
+}: CompareFormProps) {
   const router = useRouter();
   const [a, setA] = useState(defaultA);
   const [b, setB] = useState(defaultB);
@@ -31,7 +34,9 @@ export function CompareForm({ defaultA = "", defaultB = "" }: CompareFormProps) 
     const trimA = a.trim();
     const trimB = b.trim();
     if (!trimA || !trimB) return;
-    router.push(`/compare?a=${encodeURIComponent(trimA)}&b=${encodeURIComponent(trimB)}`);
+    router.push(
+      `/compare?a=${encodeURIComponent(trimA)}&b=${encodeURIComponent(trimB)}`,
+    );
   }
 
   return (
@@ -55,8 +60,12 @@ export function CompareForm({ defaultA = "", defaultB = "" }: CompareFormProps) 
         aria-label="First GitHub username"
         autoComplete="off"
         style={inputStyle}
-        onFocus={(e) => (e.currentTarget.style.borderColor = "var(--color-primary)")}
-        onBlur={(e) => (e.currentTarget.style.borderColor = "var(--color-hairline)")}
+        onFocus={(e) =>
+          (e.currentTarget.style.borderColor = "var(--color-primary)")
+        }
+        onBlur={(e) =>
+          (e.currentTarget.style.borderColor = "var(--color-hairline)")
+        }
       />
       <span
         style={{
@@ -75,8 +84,12 @@ export function CompareForm({ defaultA = "", defaultB = "" }: CompareFormProps) 
         aria-label="Second GitHub username"
         autoComplete="off"
         style={inputStyle}
-        onFocus={(e) => (e.currentTarget.style.borderColor = "var(--color-primary)")}
-        onBlur={(e) => (e.currentTarget.style.borderColor = "var(--color-hairline)")}
+        onFocus={(e) =>
+          (e.currentTarget.style.borderColor = "var(--color-primary)")
+        }
+        onBlur={(e) =>
+          (e.currentTarget.style.borderColor = "var(--color-hairline)")
+        }
       />
       <button
         type="submit"
@@ -94,9 +107,15 @@ export function CompareForm({ defaultA = "", defaultB = "" }: CompareFormProps) 
           outline: "2px solid transparent",
           outlineOffset: "2px",
         }}
-        onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "var(--color-primary-deep)")}
-        onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "var(--color-primary)")}
-        onFocus={(e) => (e.currentTarget.style.outlineColor = "var(--color-primary)")}
+        onMouseEnter={(e) =>
+          (e.currentTarget.style.backgroundColor = "var(--color-primary-deep)")
+        }
+        onMouseLeave={(e) =>
+          (e.currentTarget.style.backgroundColor = "var(--color-primary)")
+        }
+        onFocus={(e) =>
+          (e.currentTarget.style.outlineColor = "var(--color-primary)")
+        }
         onBlur={(e) => (e.currentTarget.style.outlineColor = "transparent")}
       >
         Compare

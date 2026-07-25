@@ -71,14 +71,19 @@ export function DiscoverContent() {
     }
 
     fetchProfiles();
-    return () => { controller.abort(); };
+    return () => {
+      controller.abort();
+    };
   }, [searchParams]);
 
   const currentPage = data?.page || 1;
 
   return (
     <>
-      <SearchAccessibilityAnnouncer resultsCount={data?.profiles.length || 0} isLoading={loading} />
+      <SearchAccessibilityAnnouncer
+        resultsCount={data?.profiles.length || 0}
+        isLoading={loading}
+      />
       <SearchFilters />
 
       {loading && (
@@ -114,7 +119,9 @@ export function DiscoverContent() {
             backgroundColor: "rgba(252, 165, 165, 0.1)",
           }}
         >
-          <p style={{ fontSize: "14px", color: "var(--color-ink)", margin: 0 }}>{error}</p>
+          <p style={{ fontSize: "14px", color: "var(--color-ink)", margin: 0 }}>
+            {error}
+          </p>
         </div>
       )}
 
@@ -127,10 +134,23 @@ export function DiscoverContent() {
             textAlign: "center",
           }}
         >
-          <p style={{ fontSize: "15px", fontWeight: 500, color: "var(--color-ink)", margin: 0 }}>
+          <p
+            style={{
+              fontSize: "15px",
+              fontWeight: 500,
+              color: "var(--color-ink)",
+              margin: 0,
+            }}
+          >
             No contributors found
           </p>
-          <p style={{ fontSize: "14px", color: "var(--color-ink-mute)", margin: "6px 0 0 0" }}>
+          <p
+            style={{
+              fontSize: "14px",
+              color: "var(--color-ink-mute)",
+              margin: "6px 0 0 0",
+            }}
+          >
             Try adjusting your search or filters.
           </p>
         </div>

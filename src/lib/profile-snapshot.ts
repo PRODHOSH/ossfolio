@@ -10,8 +10,12 @@ import {
   type GitHubUser,
   type GitHubRepoPayload,
 } from "@/lib/profile-data";
-import { fetchContributionCalendar, type ContributionCalendar } from "@/lib/github";
+import {
+  fetchContributionCalendar,
+  type ContributionCalendar,
+} from "@/lib/github";
 import type { ContributorStats, Org, MergedPR } from "@/types";
+import { GitHubRateLimitError } from "@/lib/errors";
 
 /**
  * DB-first profile data.
@@ -70,7 +74,7 @@ export function isSnapshotStale(syncedAt: string | null): boolean {
  * need it and both run for the same request — share a single database round-trip.
  */
 export const getProfileSnapshot = cache(async function getProfileSnapshot(
-  username: string
+  username: string,
 ): Promise<SnapshotRow | null> {
   const { data, error } = await supabase
     .from("profile_snapshots")
@@ -105,7 +109,10 @@ function adminClient(): SupabaseClient | null {
  *
  * Returns false when another sync currently holds the claim.
  */
-async function claimSync(admin: SupabaseClient, username: string): Promise<boolean> {
+async function claimSync(
+  admin: SupabaseClient,
+  username: string,
+): Promise<boolean> {
   const now = new Date();
   const lockCutoff = new Date(now.getTime() - SYNC_LOCK_MS).toISOString();
 
@@ -173,13 +180,16 @@ export async function syncProfileSnapshot(rawUsername: string): Promise<void> {
     ]);
 
   const wasRateLimited = (r: PromiseSettledResult<unknown>) =>
-    r.status === "rejected" &&
-    r.reason instanceof Error &&
-    r.reason.message === "RateLimit";
+    r.status === "rejected" && r.reason instanceof GitHubRateLimitError;
 
-  const rateLimited = [user, repos, liveStats, mergedPRs, orgs, contributionCalendar].some(
-    wasRateLimited
-  );
+  const rateLimited = [
+    user,
+    repos,
+    liveStats,
+    mergedPRs,
+    orgs,
+    contributionCalendar,
+  ].some(wasRateLimited);
 
   // ANY failed user fetch — rate limit, 10s timeout, DNS failure, connection reset —
   // tells us nothing about whether the account exists. `fetchWithTimeout` throws
@@ -206,20 +216,20 @@ export async function syncProfileSnapshot(rawUsername: string): Promise<void> {
     mergedPRs: mergedPRs.status === "fulfilled" ? mergedPRs.value : [],
     orgs: orgs.status === "fulfilled" ? orgs.value : [],
     contributionCalendar:
-      contributionCalendar.status === "fulfilled" ? contributionCalendar.value : null,
+      contributionCalendar.status === "fulfilled"
+        ? contributionCalendar.value
+        : null,
     rateLimited,
   };
 
-  const { error } = await admin
-    .from("profile_snapshots")
-    .upsert(
-      {
-        username,
-        snapshot,
-        synced_at: new Date().toISOString(),
-      },
-      { onConflict: "username" }
-    );
+  const { error } = await admin.from("profile_snapshots").upsert(
+    {
+      username,
+      snapshot,
+      synced_at: new Date().toISOString(),
+    },
+    { onConflict: "username" },
+  );
 
   if (error) {
     console.error("[snapshot] failed to store snapshot:", error.message);

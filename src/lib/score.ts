@@ -31,7 +31,7 @@ export function getScoreBreakdown(
     totalIssues: number;
     totalReviews: number;
   },
-  totalStars: number
+  totalStars: number,
 ): ScoreBreakdown {
   const commitsContribution = stats.totalCommits * SCORE_WEIGHTS.COMMIT;
   const prsContribution = stats.totalPRs * SCORE_WEIGHTS.PR;
@@ -41,10 +41,10 @@ export function getScoreBreakdown(
 
   const total = Math.round(
     commitsContribution +
-    prsContribution +
-    issuesContribution +
-    reviewsContribution +
-    starsContribution
+      prsContribution +
+      issuesContribution +
+      reviewsContribution +
+      starsContribution,
   );
 
   return {
@@ -67,14 +67,4 @@ export function calculateScore(stats: ContributorStats, repos: Repo[]): number {
   const totalStars = repos.reduce((sum, r) => sum + r.stars, 0);
   const breakdown = getScoreBreakdown(stats, totalStars);
   return breakdown.total;
-}
-
-/** Calculates the percentage difference relative to a baseline score. */
-export function getScoreDeltaPercentage(scoreA: number, scoreB: number): string {
-  if (scoreA === scoreB) return "0%";
-  const max = Math.max(scoreA, scoreB);
-  const min = Math.min(scoreA, scoreB);
-  const diff = max - min;
-  const percentage = (diff / (min || 1)) * 100;
-  return `+${percentage.toFixed(0)}%`;
 }

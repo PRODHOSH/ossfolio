@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, memo, useMemo } from "react";
+import { useState, useCallback, memo, useMemo, useEffect, useRef } from "react";
 import type { HeatmapWeek } from "@/types";
 import { computeStreaks } from "@/lib/mock";
 
@@ -34,12 +34,16 @@ const YearButton = memo(function YearButton({
         padding: "4px 10px",
         fontSize: "12px",
         fontWeight: selectedYear === year ? 600 : 400,
-        color: selectedYear === year ? "#171717" : "var(--color-ink-mute)",
-        backgroundColor: selectedYear === year ? "#3ecf8e" : "var(--color-canvas-soft)",
-        border: selectedYear === year ? "none" : "1px solid var(--color-hairline)",
+        color: selectedYear === year ? "#171717" : "var(--color-nav-mute)",
+        backgroundColor:
+          selectedYear === year ? "#3ecf8e" : "var(--color-canvas-soft)",
+        border:
+          selectedYear === year ? "none" : "1px solid var(--color-hairline)",
         borderRadius: "9999px",
         cursor: loading ? "wait" : "pointer",
         transition: "background-color 0.15s, color 0.15s",
+        // Hold the pill's natural width so the strip scrolls instead of squashing.
+        flexShrink: 0,
       }}
     >
       {year}
@@ -90,7 +94,7 @@ interface DisplayedWeek {
 function getFilteredWeeks(
   weeks: HeatmapWeek[],
   selectedYear: number,
-  viewMode: "365" | "calendar"
+  viewMode: "365" | "calendar",
 ): DisplayedWeek[] {
   if (viewMode === "365" && selectedYear === currentYear) {
     return weeks as DisplayedWeek[];
@@ -130,6 +134,13 @@ function HeatmapWithYearNavInner({
 
   const fetchYear = useCallback(
     async (year: number) => {
+      try {
+        if (typeof window !== "undefined") {
+          localStorage.setItem("heatmap_selected_year", String(year));
+        }
+      } catch {
+        // Ignore storage errors to ensure the fetch still proceeds
+      }
       if (year === selectedYear && weeks.length > 0) return;
       if (year === currentYear && initialWeeks.length > 0) {
         setWeeks(initialWeeks);
@@ -140,7 +151,9 @@ function HeatmapWithYearNavInner({
       setLoading(true);
       setSelectedYear(year);
       try {
-        const res = await fetch(`/api/${encodeURIComponent(username)}/contributions?year=${year}`);
+        const res = await fetch(
+          `/api/${encodeURIComponent(username)}/contributions?year=${year}`,
+        );
         if (!res.ok) throw new Error("fetch failed");
         const data = await res.json();
         setWeeks(data.weeks);
@@ -150,11 +163,34 @@ function HeatmapWithYearNavInner({
         setLoading(false);
       }
     },
-    [username, selectedYear, weeks.length, initialWeeks]
+    [username, selectedYear, weeks.length, initialWeeks],
   );
 
+  const hasInitialized = useRef(false);
+
+  useEffect(() => {
+    if (hasInitialized.current) return;
+    hasInitialized.current = true;
+
+    try {
+      const savedYearStr = localStorage.getItem("heatmap_selected_year");
+      if (savedYearStr) {
+        const savedYear = parseInt(savedYearStr, 10);
+        if (years.includes(savedYear) && savedYear !== currentYear) {
+          // eslint-disable-next-line react-hooks/set-state-in-effect
+          fetchYear(savedYear);
+        }
+      }
+    } catch {
+      // Ignore errors from blocked storage access
+    }
+  }, [fetchYear]);
   const displayedWeeks = useMemo(() => {
-    return getFilteredWeeks(weeks, selectedYear, selectedYear === currentYear ? viewMode : "calendar");
+    return getFilteredWeeks(
+      weeks,
+      selectedYear,
+      selectedYear === currentYear ? viewMode : "calendar",
+    );
   }, [weeks, selectedYear, viewMode]);
 
   const { currentStreak, longestStreak } = useMemo(() => {
@@ -169,11 +205,41 @@ function HeatmapWithYearNavInner({
 
   return (
     <div style={{ marginTop: "44px" }}>
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", margin: "0 0 16px 0" }}>
-        <h2 style={{ fontSize: "16px", fontWeight: 600, color: "var(--color-ink)", margin: 0, letterSpacing: "-0.2px" }}>
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          margin: "0 0 16px 0",
+        }}
+      >
+        <h2
+          style={{
+            fontSize: "16px",
+            fontWeight: 600,
+            color: "var(--color-ink)",
+            margin: 0,
+            letterSpacing: "-0.2px",
+          }}
+        >
           Contribution activity
         </h2>
-        <div style={{ display: "flex", gap: "6px" }}>
+        <div
+          style={{
+            display: "flex",
+            gap: "6px",
+            // Keep the years on one row and let the strip scroll horizontally on
+            // narrow screens rather than squashing the buttons. `minWidth: 0` is
+            // required because this div is itself a flex item — without it the
+            // default `min-width: auto` prevents it from shrinking below its
+            // content, so `overflowX` would never engage.
+            flexWrap: "nowrap",
+            overflowX: "auto",
+            minWidth: 0,
+            WebkitOverflowScrolling: "touch",
+            scrollbarWidth: "none",
+          }}
+        >
           {years.map((year) => (
             <YearButton
               key={year}
@@ -237,8 +303,10 @@ function HeatmapWithYearNavInner({
                 padding: "4px 12px",
                 fontSize: "12px",
                 fontWeight: viewMode === "calendar" ? 600 : 400,
-                color: viewMode === "calendar" ? "#171717" : "var(--color-ink-mute)",
-                backgroundColor: viewMode === "calendar" ? "#3ecf8e" : "transparent",
+                color:
+                  viewMode === "calendar" ? "#171717" : "var(--color-ink-mute)",
+                backgroundColor:
+                  viewMode === "calendar" ? "#3ecf8e" : "transparent",
                 border: "none",
                 borderRadius: "9999px",
                 cursor: "pointer",
@@ -265,16 +333,25 @@ function HeatmapWithYearNavInner({
         }}
       >
         {displayedWeeks.map((week, wi) => (
-          <div key={wi} style={{ display: "flex", flexDirection: "column", gap: "3px" }}>
+          <div
+            key={wi}
+            style={{ display: "flex", flexDirection: "column", gap: "3px" }}
+          >
             {week.days.map((day, di) => (
               <div
                 key={di}
-                title={day.isPlaceholder ? undefined : `${day.count} contributions on ${day.date}`}
+                title={
+                  day.isPlaceholder
+                    ? undefined
+                    : `${day.count} contributions on ${day.date}`
+                }
                 style={{
                   width: "11px",
                   height: "11px",
                   borderRadius: "2px",
-                  backgroundColor: day.isPlaceholder ? "transparent" : day.color,
+                  backgroundColor: day.isPlaceholder
+                    ? "transparent"
+                    : day.color,
                   flexShrink: 0,
                   pointerEvents: day.isPlaceholder ? "none" : "auto",
                 }}
@@ -283,25 +360,76 @@ function HeatmapWithYearNavInner({
           </div>
         ))}
         {displayedWeeks.length === 0 && !loading && (
-          <p style={{ fontSize: "13px", color: "var(--color-ink-mute)", margin: "12px auto" }}>
+          <p
+            style={{
+              fontSize: "13px",
+              color: "var(--color-ink-mute)",
+              margin: "12px auto",
+            }}
+          >
             No contribution data available for {selectedYear}.
           </p>
         )}
       </div>
 
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: "4px", margin: "10px 0 0 0" }}>
-        <span style={{ fontSize: "12px", color: "var(--color-ink-mute)", marginRight: "2px" }}>Less</span>
-        {["var(--color-hairline)", "#9be9a8", "#40c463", "#30a14e", "#216e39"].map((shade) => (
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "flex-end",
+          gap: "4px",
+          margin: "10px 0 0 0",
+        }}
+      >
+        <span
+          style={{
+            fontSize: "12px",
+            color: "var(--color-ink-mute)",
+            marginRight: "2px",
+          }}
+        >
+          Less
+        </span>
+        {[
+          "var(--color-hairline)",
+          "#9be9a8",
+          "#40c463",
+          "#30a14e",
+          "#216e39",
+        ].map((shade) => (
           <span
             key={shade}
             aria-hidden="true"
-            style={{ width: "11px", height: "11px", borderRadius: "2px", backgroundColor: shade.startsWith("var") ? "rgba(128, 128, 128, 0.1)" : shade, flexShrink: 0 }}
+            style={{
+              width: "11px",
+              height: "11px",
+              borderRadius: "2px",
+              backgroundColor: shade.startsWith("var")
+                ? "rgba(128, 128, 128, 0.1)"
+                : shade,
+              flexShrink: 0,
+            }}
           />
         ))}
-        <span style={{ fontSize: "12px", color: "var(--color-ink-mute)", marginLeft: "2px" }}>More</span>
+        <span
+          style={{
+            fontSize: "12px",
+            color: "var(--color-ink-mute)",
+            marginLeft: "2px",
+          }}
+        >
+          More
+        </span>
       </div>
-      <p style={{ fontSize: "12px", color: "var(--color-ink-mute)", margin: "10px 0 0 0" }}>
-        This chart shows an estimate of contribution activity. Exact daily counts are not available for public profiles.
+      <p
+        style={{
+          fontSize: "12px",
+          color: "var(--color-ink-mute)",
+          margin: "10px 0 0 0",
+        }}
+      >
+        This chart shows an estimate of contribution activity. Exact daily
+        counts are not available for public profiles.
       </p>
     </div>
   );

@@ -3,11 +3,7 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
-import { fetchContributorProfile, contributorToScoreInputs } from "@/lib/github";
-import { mapRepos, fetchLiveStats } from "@/lib/profile-data";
-import { scoreWithAnomalyCheck } from "@/lib/anomaly";
 import type { Session } from "@supabase/supabase-js";
-import type { ContributorStats, Repo } from "@/types";
 
 // Cap how long the post-login score sync may delay the redirect. The sync is
 // best-effort (the profile page recomputes the score live as a fallback), so a
@@ -18,63 +14,36 @@ const SYNC_TIMEOUT_MS = 4000;
 // redirecting home. Prevents infinite "Signing you in…" spinner.
 const AUTH_WAIT_TIMEOUT_MS = 10000;
 
-async function statsFromRest(
-  username: string
-): Promise<{ stats: ContributorStats; repos: Repo[] }> {
-  const reposRes = await fetch(
-    `https://api.github.com/users/${username}/repos?sort=stars&per_page=12&type=owner`,
-    { headers: { Accept: "application/vnd.github.v3+json" } }
-  );
-  const rawRepos = reposRes.ok ? await reposRes.json() : [];
-  const filtered = Array.isArray(rawRepos)
-    ? rawRepos.filter((r: { fork: boolean }) => !r.fork).slice(0, 6)
-    : [];
-  return { repos: mapRepos(filtered), stats: await fetchLiveStats(username) };
-}
-
-async function syncScore(
-  userId: string,
-  username: string,
-  providerToken: string | undefined
+/**
+ * Ask the server to recompute and store this account's score.
+ *
+ * This used to happen right here in the browser: it fetched from GitHub, scored the
+ * account, and upserted `profiles` with the anon key. That is what made `score`,
+ * `total_*` and the anti-gaming `flagged` column client-writable (see #409) — the anon
+ * key ships in the browser bundle, so any signed-in user could simply PATCH their own
+ * score and clear their own flag.
+ *
+ * The scoring now happens on the server, keyed to the *verified* access token, and is
+ * written with the service-role key. The browser no longer computes, sends, or is
+ * permitted to write any of those columns.
+ */
+async function requestScoreSync(
+  accessToken: string,
+  providerToken?: string,
 ): Promise<void> {
-  let stats: ContributorStats;
-  let repos: Repo[];
-
-  if (providerToken) {
-    try {
-      const contributor = await fetchContributorProfile(username, providerToken);
-      ({ stats, repos } = contributorToScoreInputs(contributor));
-    } catch {
-      ({ stats, repos } = await statsFromRest(username));
-    }
-  } else {
-    ({ stats, repos } = await statsFromRest(username));
-  }
-
-  // Score the account and run the anti-gaming heuristic. A flagged account is
-  // persisted with its reason (auditable, reversible) and stores the discounted
-  // score, so every surface that reads `profiles.score` reflects the discount.
-  const { score, anomaly } = scoreWithAnomalyCheck(stats, repos);
-  const now = new Date().toISOString();
-
-  const { error } = await supabase.from("profiles").upsert(
-    {
-      id: userId,
-      username,
-      score,
-      total_commits: stats.totalCommits,
-      total_prs: stats.totalPRs,
-      total_issues: stats.totalIssues,
-      total_reviews: stats.totalReviews,
-      flagged: anomaly.flagged,
-      flag_reason: anomaly.reason,
-      flagged_at: anomaly.flagged ? now : null,
-      updated_at: now,
+  const res = await fetch("/api/profile/sync", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${accessToken}`,
     },
-    { onConflict: "id" }
-  );
-  if (error) {
-    console.error("Score sync upsert failed:", error.message);
+    // The GitHub OAuth token only widens the rate limit for this user's own lookup; the
+    // server takes the identity being scored from the session, not from this body.
+    body: JSON.stringify({ providerToken }),
+  });
+
+  if (!res.ok) {
+    console.error("Score sync failed:", res.status);
   }
 }
 
@@ -85,14 +54,14 @@ export default function AuthCallbackPage() {
     let cancelled = false;
 
     async function handleSession(session: Session) {
-      const username = session.user.user_metadata?.user_name as string | undefined;
-      const userId = session.user.id;
+      const username = session.user.user_metadata?.user_name as
+        string | undefined;
       // provider_token is only present immediately after the OAuth redirect.
       const providerToken = session.provider_token ?? undefined;
 
-      if (username && userId) {
+      if (username && session.access_token) {
         await Promise.race([
-          syncScore(userId, username, providerToken).catch(() => {}),
+          requestScoreSync(session.access_token, providerToken).catch(() => {}),
           new Promise<void>((resolve) => setTimeout(resolve, SYNC_TIMEOUT_MS)),
         ]);
       }
@@ -108,14 +77,14 @@ export default function AuthCallbackPage() {
     // instead, which fires only after the exchange succeeds and the session is
     // stored. We also fall back to INITIAL_SESSION in case the session was
     // already established before the listener attached (e.g., rapid re-mount).
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        if (cancelled || !session) return;
-        if (event === "SIGNED_IN" || event === "INITIAL_SESSION") {
-          await handleSession(session);
-        }
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (cancelled || !session) return;
+      if (event === "SIGNED_IN" || event === "INITIAL_SESSION") {
+        await handleSession(session);
       }
-    );
+    });
 
     // Safety net: if no auth event arrives within AUTH_WAIT_TIMEOUT_MS, redirect
     // home so the user isn't stuck on the spinner indefinitely.

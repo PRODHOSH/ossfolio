@@ -1,6 +1,20 @@
 @import "tailwindcss";
 
-:root {
+/* ─────────────────────────────────────────────────────────────────────────────
+   Design tokens — Tailwind v4 CSS-first configuration.
+
+   These moved from `:root` into `@theme`. The values are byte-for-byte unchanged;
+   what changes is that Tailwind can finally see them. Sitting in `:root` they were
+   invisible to it, so no utilities were generated from them at all — which is why
+   the codebase reaches for inline `style={{ }}` and hardcoded hexes like
+   `bg-[#3ecf8e]`: there was simply no `bg-primary` to use.
+
+   From `@theme`, Tailwind generates the full utility set from these same tokens —
+   `bg-canvas`, `text-ink`, `border-hairline`, `text-primary`, `rounded-sm`,
+   `font-sans`, and so on — and still emits every token as a CSS variable on
+   `:root`, so all existing `var(--color-…)` usages keep working untouched.
+   ───────────────────────────────────────────────────────────────────────────── */
+@theme {
   /* Brand Constants */
   --color-primary: #3ecf8e;
   --color-primary-deep: #24b47e;
@@ -43,15 +57,22 @@
 
   /* Structural Typography Font Configurations */
   --font-sans: "Inter", "Helvetica Neue", Helvetica, Arial, sans-serif;
-  --font-mono: ui-monospace, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+  --font-mono:
+    ui-monospace, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+
+  /* Nav/segmented-control muted text (e.g. Heatmap year buttons) */
+  --color-nav-mute: var(--color-ink-mute);
 }
 
 /* Dynamic Theme Variable Swapping Block */
 :root.dark {
+  /* lighter override for dark mode */
+  --color-nav-mute: #c2c2c2;
+
   /* Swap surface roles to keep the system semantic context intact */
-  --color-canvas: var(--color-canvas-night);          
-  --color-canvas-soft: var(--color-canvas-night-soft);     
-  
+  --color-canvas: var(--color-canvas-night);
+  --color-canvas-soft: var(--color-canvas-night-soft);
+
   /* Invert Typography text visibility scales */
   --color-ink: #ffffff;
   --color-ink-subtle: #f5f5f5; /* 💡 Synchronized variable name from secondary to subtle */
@@ -78,7 +99,9 @@ html {
   /* Sync system scroll element surfaces transitions smoothly */
   background-color: var(--color-canvas);
   color: var(--color-ink);
-  transition: background-color 0.2s ease, color 0.2s ease;
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease;
 }
 
 body {
@@ -87,7 +110,9 @@ body {
   font-family: var(--font-sans);
   font-size: 16px;
   line-height: 1.5;
-  transition: background-color 0.2s ease, color 0.2s ease;
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease;
 }
 
 dialog::backdrop {
@@ -96,8 +121,13 @@ dialog::backdrop {
 }
 
 @keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.5; }
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
 }
 
 *:focus-visible {
@@ -105,9 +135,20 @@ dialog::backdrop {
   outline-offset: 2px;
   border-radius: 4px;
 }
+.profile-card:hover {
+  border-color: var(--color-primary);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+.profile-card:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 3px var(--color-primary);
+}
 
 @media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after {
+  *,
+  *::before,
+  *::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
@@ -115,19 +156,43 @@ dialog::backdrop {
   }
 }
 
-.sr-only {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
-  border-width: 0;
+/* `.sr-only` was hand-rolled here, byte-identical to the one Tailwind already ships.
+   Removed — Tailwind generates it, and an unlayered copy only shadowed it. */
+
+/* Smooth global transitions for theme color variables.
+   Declared with `@utility` — Tailwind v4's way of registering a custom utility, so it
+   lands in the utilities layer and composes with variants (`hover:`, `dark:`, ...)
+   instead of being an unlayered class that outranks everything. */
+@utility theme-transition {
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease,
+    color 0.2s ease,
+    fill 0.2s ease,
+    stroke 0.2s ease;
 }
 
-/* Smooth global transitions for theme color variables */
-.theme-transition {
-  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease, fill 0.2s ease, stroke 0.2s ease;
+/* Global scrollbar styling */
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-primary) var(--color-canvas-soft);
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-canvas-soft);
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: var(--color-primary);
+  border-radius: var(--radius-full);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: var(--color-primary-deep);
 }

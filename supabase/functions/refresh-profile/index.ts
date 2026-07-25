@@ -8,11 +8,18 @@ const RATE_LIMIT_MS = 10 * 60 * 1000;
 serve(async (req) => {
   try {
     const { username } = await req.json();
-    if (!username || !GITHUB_USERNAME_REGEX.test(username) || username.length > 39) {
-      return new Response(JSON.stringify({ error: "Invalid username format" }), {
-        status: 400,
-        headers: { "Content-Type": "application/json" },
-      });
+    if (
+      !username ||
+      !GITHUB_USERNAME_REGEX.test(username) ||
+      username.length > 39
+    ) {
+      return new Response(
+        JSON.stringify({ error: "Invalid username format" }),
+        {
+          status: 400,
+          headers: { "Content-Type": "application/json" },
+        },
+      );
     }
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
@@ -49,20 +56,26 @@ serve(async (req) => {
       .single();
 
     if (claimError || !claimed) {
-      return new Response(JSON.stringify({ error: "Rate limited", retryAfterSeconds: 600 }), {
-        status: 429,
-        headers: { "Content-Type": "application/json" },
-      });
+      return new Response(
+        JSON.stringify({ error: "Rate limited", retryAfterSeconds: 600 }),
+        {
+          status: 429,
+          headers: { "Content-Type": "application/json" },
+        },
+      );
     }
 
-    const ghRes = await fetch(`${GITHUB_API}/users/${encodeURIComponent(username)}`, {
-      headers: { Accept: "application/vnd.github.v3+json" },
-    });
+    const ghRes = await fetch(
+      `${GITHUB_API}/users/${encodeURIComponent(username)}`,
+      {
+        headers: { Accept: "application/vnd.github.v3+json" },
+      },
+    );
 
     if (!ghRes.ok) {
       return new Response(
         JSON.stringify({ error: `GitHub API returned ${ghRes.status}` }),
-        { status: 502, headers: { "Content-Type": "application/json" } }
+        { status: 502, headers: { "Content-Type": "application/json" } },
       );
     }
 
@@ -87,13 +100,17 @@ serve(async (req) => {
     }
 
     return new Response(
-      JSON.stringify({ success: true, username, refreshedAt: new Date().toISOString() }),
-      { status: 200, headers: { "Content-Type": "application/json" } }
+      JSON.stringify({
+        success: true,
+        username,
+        refreshedAt: new Date().toISOString(),
+      }),
+      { status: 200, headers: { "Content-Type": "application/json" } },
     );
   } catch (err) {
     return new Response(
       JSON.stringify({ error: err.message || "Internal error" }),
-      { status: 500, headers: { "Content-Type": "application/json" } }
+      { status: 500, headers: { "Content-Type": "application/json" } },
     );
   }
 });

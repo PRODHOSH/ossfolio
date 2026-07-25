@@ -1,12 +1,17 @@
 import { NextRequest } from "next/server";
 import { fetchContributionCalendar } from "@/lib/github";
-import { sanitizeUsername, validateYear, createApiResponse, createErrorResponse } from "@/lib/validators/api";
+import {
+  sanitizeUsername,
+  validateYear,
+  createApiResponse,
+  createErrorResponse,
+} from "@/lib/validators/api";
 
 export const runtime = "edge";
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ username: string }> }
+  { params }: { params: Promise<{ username: string }> },
 ) {
   const { username: rawUsername } = await params;
   const username = sanitizeUsername(rawUsername);
@@ -21,7 +26,10 @@ export async function GET(
   if (yearParam !== null) {
     const year = validateYear(yearParam);
     if (year === null) {
-      return createErrorResponse("Invalid year parameter. Must be a valid year within the last 10 years.", 400);
+      return createErrorResponse(
+        "Invalid year parameter. Must be a valid year within the last 10 years.",
+        400,
+      );
     }
     from = `${year}-01-01`;
   }

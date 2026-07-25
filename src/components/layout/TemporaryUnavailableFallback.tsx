@@ -29,14 +29,23 @@ export function TemporaryUnavailableFallback({
             textAlign: "center",
           }}
         >
-          <h1 style={{ fontSize: "22px", fontWeight: 500, margin: "0 0 12px 0" }}>
+          <h1
+            style={{ fontSize: "22px", fontWeight: 500, margin: "0 0 12px 0" }}
+          >
             {heading}
           </h1>
-          <p style={{ fontSize: "15px", color: "var(--color-ink-mute)", margin: 0 }}>{message}</p>
+          <p
+            style={{
+              fontSize: "15px",
+              color: "var(--color-ink-mute)",
+              margin: 0,
+            }}
+          >
+            {message}
+          </p>
         </div>
       </main>
       <Footer />
     </>
   );
 }
-

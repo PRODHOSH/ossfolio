@@ -1,0 +1,6 @@
+.next/
+node_modules/
+public/
+.next/
+*.js.map
+*.d.ts

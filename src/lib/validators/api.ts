@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { sanitizeString } from "../sanitizer";
+import { AppError, toApiErrorBody } from "@/lib/errors";
 
 export function sanitizeUsername(value: unknown): string | null {
   if (typeof value !== "string") return null;
@@ -16,7 +16,8 @@ export function sanitizeUrl(value: unknown): string | null {
   try {
     const url = new URL(trimmed);
     if (!["http:", "https:"].includes(url.protocol)) return null;
-    if (url.hostname === "localhost" || url.hostname === "127.0.0.1") return null;
+    if (url.hostname === "localhost" || url.hostname === "127.0.0.1")
+      return null;
     return url.toString();
   } catch {
     return null;
@@ -32,22 +33,24 @@ export function validateYear(value: unknown): number | null {
   return parsed;
 }
 
-export function validateEmail(value: unknown): string | null {
-  if (typeof value !== "string") return null;
-  const trimmed = value.trim().toLowerCase();
-  if (trimmed.length > 254) return null;
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed)) return null;
-  return trimmed;
-}
-
 export function validatePagination(
   page: unknown,
   pageSize: unknown,
   maxPage = 100,
-  maxSize = 100
+  maxSize = 100,
 ): { page: number; pageSize: number } {
-  const p = typeof page === "string" ? parseInt(page, 10) : typeof page === "number" ? page : 1;
-  const s = typeof pageSize === "string" ? parseInt(pageSize, 10) : typeof pageSize === "number" ? pageSize : 20;
+  const p =
+    typeof page === "string"
+      ? parseInt(page, 10)
+      : typeof page === "number"
+        ? page
+        : 1;
+  const s =
+    typeof pageSize === "string"
+      ? parseInt(pageSize, 10)
+      : typeof pageSize === "number"
+        ? pageSize
+        : 20;
   return {
     page: Math.max(1, Math.min(maxPage, isNaN(p) ? 1 : p)),
     pageSize: Math.max(1, Math.min(maxSize, isNaN(s) ? 20 : s)),
@@ -57,44 +60,19 @@ export function validatePagination(
 export function validateSortBy<T extends string>(
   value: unknown,
   allowed: readonly T[],
-  fallback: T
+  fallback: T,
 ): T {
   if (typeof value !== "string") return fallback;
-  return (allowed as readonly string[]).includes(value) ? (value as T) : fallback;
+  return (allowed as readonly string[]).includes(value)
+    ? (value as T)
+    : fallback;
 }
 
-export function sanitizeObject<T extends Record<string, unknown>>(
-  obj: T,
-  schema: Record<string, { type: "string" | "number" | "boolean" | "array" | "object"; maxLength?: number; required?: boolean }>
-): { data: Partial<T>; errors: string[] } {
-  const data: Partial<T> = {};
-  const errors: string[] = [];
-
-  for (const [key, rule] of Object.entries(schema)) {
-    const value = obj[key as keyof T];
-    if (value === undefined || value === null) {
-      if (rule.required) errors.push(`${key} is required`);
-      continue;
-    }
-    if (rule.type === "string" && typeof value === "string") {
-      data[key as keyof T] = sanitizeString(value, rule.maxLength ?? 500) as T[keyof T];
-    } else if (rule.type === "number" && typeof value === "number") {
-      data[key as keyof T] = value;
-    } else if (rule.type === "boolean" && typeof value === "boolean") {
-      data[key as keyof T] = value;
-    } else if (rule.type === "array" && Array.isArray(value)) {
-      data[key as keyof T] = value.slice(0, rule.maxLength ?? 50) as T[keyof T];
-    } else if (rule.type === "object" && typeof value === "object" && !Array.isArray(value)) {
-      data[key as keyof T] = value;
-    } else {
-      errors.push(`${key} has invalid type`);
-    }
-  }
-
-  return { data, errors };
-}
-
-export function createApiResponse<T>(data: T, status = 200, extraHeaders?: Record<string, string>): NextResponse {
+export function createApiResponse<T>(
+  data: T,
+  status = 200,
+  extraHeaders?: Record<string, string>,
+): NextResponse {
   return NextResponse.json(data, {
     status,
     headers: {
@@ -106,27 +84,63 @@ export function createApiResponse<T>(data: T, status = 200, extraHeaders?: Recor
   });
 }
 
-export function createErrorResponse(error: string, status = 400, extra?: Record<string, unknown>): NextResponse {
-  return NextResponse.json(
-    { error, ...extra },
-    {
-      status,
-      headers: {
-        "X-Content-Type-Options": "nosniff",
-        "X-Frame-Options": "DENY",
-      },
-    }
-  );
+export function createErrorResponse(
+  error: string,
+  status = 400,
+  extra?: Record<string, unknown>,
+  headers?: Record<string, string>,
+): NextResponse {
+  const body: Record<string, unknown> = {
+    error,
+    code: errorCodeForStatus(status),
+    status,
+    timestamp: new Date().toISOString(),
+    ...extra,
+  };
+  return NextResponse.json(body, {
+    status,
+    headers: {
+      "X-Content-Type-Options": "nosniff",
+      "X-Frame-Options": "DENY",
+      ...headers,
+    },
+  });
 }
 
-export const COMMON_SCHEMAS = {
-  pagination: {
-    page: { type: "number" as const },
-    pageSize: { type: "number" as const },
-  },
-  profile: {
-    headline: { type: "string" as const, maxLength: 160 },
-    bio: { type: "string" as const, maxLength: 500 },
-    location: { type: "string" as const, maxLength: 100 },
-  },
-};
+function errorCodeForStatus(status: number): string {
+  switch (status) {
+    case 400:
+      return "VALIDATION_ERROR";
+    case 401:
+      return "AUTH_ERROR";
+    case 404:
+      return "NOT_FOUND";
+    case 429:
+      return "RATE_LIMITED";
+    case 502:
+      return "UPSTREAM_ERROR";
+    case 503:
+      return "SERVICE_UNAVAILABLE";
+    default:
+      return "INTERNAL_ERROR";
+  }
+}
+
+export function apiErrorResponse(
+  error: AppError,
+  extraHeaders?: Record<string, string>,
+): NextResponse {
+  const body = toApiErrorBody(error);
+  const headers: Record<string, string> = {
+    "X-Content-Type-Options": "nosniff",
+    "X-Frame-Options": "DENY",
+    ...extraHeaders,
+  };
+  if (error.retryAfterSeconds !== undefined) {
+    headers["Retry-After"] = String(error.retryAfterSeconds);
+  }
+  return NextResponse.json(body, {
+    status: error.status,
+    headers,
+  });
+}

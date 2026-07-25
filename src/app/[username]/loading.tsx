@@ -40,7 +40,8 @@ function Block({
         width,
         height,
         flexShrink: 0,
-        ...style}}
+        ...style,
+      }}
     />
   );
 }
@@ -57,7 +58,9 @@ export default function ProfileLoading() {
         }
       `}</style>
 
-      <main style={{ backgroundColor: "var(--color-canvas)", minHeight: "100vh" }}>
+      <main
+        style={{ backgroundColor: "var(--color-canvas)", minHeight: "100vh" }}
+      >
         {/* Outer container mirrors ProfileView's maxWidth + padding exactly */}
         <div
           style={{
@@ -66,7 +69,6 @@ export default function ProfileLoading() {
             padding: "48px 20px 80px",
           }}
         >
-
           {/* ── Profile header ──────────────────────────────────────── */}
           {/* Mirrors: flex row (avatar + info column), borderBottom */}
           <div
@@ -80,11 +82,7 @@ export default function ProfileLoading() {
             }}
           >
             {/* Avatar — 88×88 circle matching Image dimensions in ProfileView */}
-            <Block
-              width={88}
-              height={88}
-              style={{ borderRadius: "9999px" }}
-            />
+            <Block width={88} height={88} style={{ borderRadius: "9999px" }} />
 
             {/* Name / username / bio / links / follower counts */}
             <div
@@ -136,11 +134,7 @@ export default function ProfileLoading() {
           {/* ── Popular repositories ────────────────────────────────── */}
           {/* Mirrors: heading + repeat(auto-fill, minmax(280px, 1fr)) grid */}
           <div style={{ marginTop: "40px" }}>
-            <Block
-              width={158}
-              height={16}
-              style={{ marginBottom: "20px" }}
-            />
+            <Block width={158} height={16} style={{ marginBottom: "20px" }} />
             <div
               style={{
                 display: "grid",
@@ -186,11 +180,7 @@ export default function ProfileLoading() {
           {/* ── Contribution stats ──────────────────────────────────── */}
           {/* Mirrors: heading + repeat(auto-fit, minmax(140px, 1fr)) grid */}
           <div style={{ marginTop: "44px" }}>
-            <Block
-              width={148}
-              height={16}
-              style={{ marginBottom: "20px" }}
-            />
+            <Block width={148} height={16} style={{ marginBottom: "20px" }} />
             <div
               style={{
                 display: "grid",
@@ -223,11 +213,7 @@ export default function ProfileLoading() {
           {/* ── Tech stack ──────────────────────────────────────────── */}
           {/* Mirrors: heading + flex-wrap pill row */}
           <div style={{ marginTop: "44px" }}>
-            <Block
-              width={96}
-              height={16}
-              style={{ marginBottom: "16px" }}
-            />
+            <Block width={96} height={16} style={{ marginBottom: "16px" }} />
             <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
               {([72, 90, 68, 80, 64, 88, 74, 66] as number[]).map((w, i) => (
                 <Block
@@ -243,11 +229,7 @@ export default function ProfileLoading() {
           {/* ── Organizations ───────────────────────────────────────── */}
           {/* Mirrors: heading + flex-wrap row of avatar + name chips */}
           <div style={{ marginTop: "44px" }}>
-            <Block
-              width={118}
-              height={16}
-              style={{ marginBottom: "16px" }}
-            />
+            <Block width={118} height={16} style={{ marginBottom: "16px" }} />
             <div style={{ display: "flex", flexWrap: "wrap", gap: "12px" }}>
               {([80, 96, 72, 88, 76] as number[]).map((w, i) => (
                 <div
@@ -278,19 +260,10 @@ export default function ProfileLoading() {
           {/* ── Contribution activity (heatmap) ─────────────────────── */}
           {/* Mirrors the heatmap section heading + the grid of week columns */}
           <div style={{ marginTop: "44px" }}>
-            <Block
-              width={178}
-              height={16}
-              style={{ marginBottom: "16px" }}
-            />
+            <Block width={178} height={16} style={{ marginBottom: "16px" }} />
             {/* Single shimmer rectangle represents the 52-week heatmap */}
-            <Block
-              width="100%"
-              height={88}
-              style={{ borderRadius: "8px" }}
-            />
+            <Block width="100%" height={88} style={{ borderRadius: "8px" }} />
           </div>
-
         </div>
       </main>
     </>

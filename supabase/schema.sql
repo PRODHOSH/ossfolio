@@ -27,7 +27,7 @@ create table public.profiles (
   headline       text,
   pinned_repos   text[] not null default '{}',
   custom_links   jsonb not null default '[]'::jsonb,
-  visibility     text not null default 'public' check (visibility in ('public', 'unlisted')),
+  visibility     text not null default 'public' check (visibility in ('public', 'unlisted', 'private')),
   search_text    tsvector generated always as (
     to_tsvector('english',
       coalesce(username, '') || ' ' ||
@@ -80,6 +80,39 @@ create trigger on_auth_user_created
   for each row execute procedure public.handle_new_user();
 
 -- ============================================================
+-- ORGANIZATIONS
+-- Teams/orgs and their membership. Referenced by the organizations
+-- index below, so it must exist before that index is created.
+-- ============================================================
+
+create table if not exists public.organizations (
+  id         uuid primary key default gen_random_uuid(),
+  name       text not null,
+  slug       text unique not null,
+  avatar_url text,
+  score      integer not null default 0,
+  created_at timestamptz not null default timezone('utc'::text, now())
+);
+
+create table if not exists public.organization_members (
+  id              uuid primary key default gen_random_uuid(),
+  organization_id uuid not null references public.organizations(id) on delete cascade,
+  user_id         uuid not null references public.profiles(id) on delete cascade,
+  role            text default 'member' check (role in ('owner', 'admin', 'member')),
+  joined_at       timestamptz not null default timezone('utc'::text, now()),
+  unique (organization_id, user_id)
+);
+
+alter table public.organizations enable row level security;
+alter table public.organization_members enable row level security;
+
+create policy "Allow public read access to organizations"
+  on public.organizations for select using (true);
+
+create policy "Allow public read access to organization members"
+  on public.organization_members for select using (true);
+
+-- ============================================================
 -- SEARCH INDEXES
 -- ============================================================
 
@@ -95,8 +128,12 @@ create index if not exists idx_profiles_score_desc
 create index if not exists idx_profiles_score_username
   on public.profiles(score desc, username asc);
 
-create index if not exists idx_organizations_login
-  on public.organizations(login);
+-- Speed up the Explore org listing, which orders by score desc then slug asc.
+-- (The original index referenced organizations(login), but there is no `login`
+-- column -- that is a GitHub API field, not a DB column -- so it failed on a fresh
+-- database. The real columns are id, name, slug, avatar_url, score, created_at.)
+create index if not exists idx_organizations_score_slug
+  on public.organizations(score desc, slug asc);
 
 create index if not exists idx_profiles_updated_at
   on public.profiles(updated_at desc);
@@ -148,6 +185,10 @@ begin
       (query = '' or p.search_text @@ plainto_tsquery('english', query))
       and (lang = '' or p.top_languages @> array[lang])
       and p.score >= min_score
+      -- Discover is a listing: 'unlisted' opted out of being found, 'private' opted out entirely.
+      -- This filter lives inside the function on purpose — search_profiles is `security definer`,
+      -- so RLS does not apply to the rows it reads and a policy on `profiles` would be bypassed.
+      and p.visibility = 'public'
     order by
       case when sort_by = 'score' then p.score else 0 end desc,
       case when sort_by = 'contributions' then (p.total_prs + p.total_commits + p.total_issues) else 0 end desc,
@@ -239,3 +280,64 @@ select cron.schedule(
 
 -- Run once to initialize
 select public.take_score_snapshots();
+
+-- ============================================================
+-- PROFILE SNAPSHOTS
+-- Cached GitHub payload per username, so profile pages render from the DB.
+-- Not tied to auth.users, so it works for users who have never signed in.
+-- ============================================================
+
+create table if not exists public.profile_snapshots (
+  username         text primary key,
+  snapshot         jsonb,
+  synced_at        timestamptz,
+  sync_started_at  timestamptz not null default now(),
+  -- Every reader and writer normalizes with `.toLowerCase()`, but `text` collates
+  -- case-sensitively, so nothing stops a future caller inserting "Octocat" alongside
+  -- "octocat" — two rows for one account, with split caches that never converge.
+  -- Enforce the invariant here rather than trusting every call site to remember it.
+  constraint profile_snapshots_username_lowercase check (username = lower(username))
+);
+
+comment on table public.profile_snapshots is
+  'Cached GitHub payload per username, so profile pages render from the DB. Not tied to auth.users, so it works for users who have never signed in.';
+comment on column public.profile_snapshots.snapshot is
+  'The GitHub payload the profile page renders from. NULL while the very first sync is still in flight.';
+comment on column public.profile_snapshots.synced_at is
+  'When the snapshot last landed. NULL until the first successful sync.';
+comment on column public.profile_snapshots.sync_started_at is
+  'Claim marker. A background sync only proceeds if this is older than the lock window, so repeated loads of a cold profile cannot stampede the GitHub API.';
+
+create index if not exists idx_profile_snapshots_synced_at
+  on public.profile_snapshots (synced_at);
+
+alter table public.profile_snapshots enable row level security;
+
+-- Snapshots are what the public profile page renders from, so they are publicly
+-- selectable — matching the `organizations` policy (`for select using (true)`).
+create policy "profile_snapshots_select" on public.profile_snapshots
+  for select using (true);
+-- No insert/update/delete policies are granted, deliberately. The only writer is
+-- the background sync, which runs server-side with the service-role key and so
+-- bypasses RLS entirely.
+
+-- ============================================================
+-- SCHEDULER LOCKS
+-- Exclusive locks for edge-function cron jobs. Each row guards one schedule.
+-- ============================================================
+
+create table if not exists public.scheduler_locks (
+  key        text primary key,
+  locked_at  timestamptz not null default now(),
+  expires_at timestamptz not null default now() + interval '10 minutes'
+);
+
+comment on table public.scheduler_locks is
+  'Exclusive locks for edge-function cron jobs. Each row guards one schedule.';
+
+-- The only writer is the scheduled-refresh edge function, which connects with the
+-- service-role key and so bypasses RLS entirely. No policy is needed — and adding a
+-- permissive one (using/with check true, no TO clause) would default to PUBLIC and
+-- expose the locks to every client role, including anon. RLS on with zero policies
+-- denies all client roles by default, which is exactly what we want here.
+alter table public.scheduler_locks enable row level security;

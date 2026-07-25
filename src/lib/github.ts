@@ -1,34 +1,104 @@
 import type { ContributorStats, Repo } from "@/types";
 import { redis } from "./redis";
-import { fetchWithTimeout } from "@/lib/fetch-with-timeout";
-
+import { fetchWithTimeout, FetchTimeoutError } from "@/lib/fetch-with-timeout";
+import { GitHubRateLimitError } from "@/lib/errors";
 
 const GITHUB_GRAPHQL_URL = "https://api.github.com/graphql";
+
+const RETRY_CONFIG = {
+  maxRetries: 3,
+  baseDelayMs: 1_000,
+  maxDelayMs: 10_000,
+};
+
+async function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
 
 async function githubGraphQL<T>(
   query: string,
   variables: Record<string, unknown>,
-  token: string
+  token: string,
 ): Promise<T> {
-  const res = await fetchWithTimeout(
-    GITHUB_GRAPHQL_URL,
-    {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ query, variables }),
-      next: { revalidate: 3600 }, // fallback memory cache for 1 hour
-    },
-    10_000
-  );
+  let lastError: Error | null = null;
 
+  for (let attempt = 0; attempt <= RETRY_CONFIG.maxRetries; attempt++) {
+    try {
+      const res = await fetchWithTimeout(
+        GITHUB_GRAPHQL_URL,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ query, variables }),
+          next: { revalidate: 3600 },
+        },
+        10_000,
+      );
 
-  if (!res.ok) throw new Error(`GitHub API error: ${res.status}`);
-  const json = await res.json();
-  if (json.errors) throw new Error(json.errors[0].message);
-  return json.data as T;
+      if (!res.ok) {
+        if (res.status === 403) {
+          const isRateLimit =
+            res.headers.get("x-ratelimit-remaining") === "0" ||
+            res.headers.has("retry-after");
+          if (isRateLimit) {
+            throw new GitHubRateLimitError();
+          }
+        }
+        // 429 or 5xx — retryable
+        if (res.status === 429 || res.status >= 500) {
+          lastError = new Error(`GitHub API error: ${res.status}`);
+          if (attempt < RETRY_CONFIG.maxRetries) {
+            const delay = Math.min(
+              RETRY_CONFIG.baseDelayMs * 2 ** attempt,
+              RETRY_CONFIG.maxDelayMs,
+            );
+            await sleep(delay);
+            continue;
+          }
+        }
+        throw new Error(`GitHub API error: ${res.status}`);
+      }
+
+      const json = await res.json();
+      if (json.errors?.length) {
+        const firstErr = json.errors[0];
+        // GitHub GraphQL signals quota exhaustion with a structured type field.
+        if (firstErr.type === "RATE_LIMITED") {
+          throw new GitHubRateLimitError(firstErr.message);
+        }
+        lastError = new Error(firstErr.message);
+        // Some GitHub errors are retryable (e.g. secondary rate limit)
+        if (attempt < RETRY_CONFIG.maxRetries) {
+          const delay = Math.min(
+            RETRY_CONFIG.baseDelayMs * 2 ** attempt,
+            RETRY_CONFIG.maxDelayMs,
+          );
+          await sleep(delay);
+          continue;
+        }
+        throw lastError;
+      }
+      return json.data as T;
+    } catch (err) {
+      if (err instanceof FetchTimeoutError) {
+        lastError = err;
+        if (attempt < RETRY_CONFIG.maxRetries) {
+          const delay = Math.min(
+            RETRY_CONFIG.baseDelayMs * 2 ** attempt,
+            RETRY_CONFIG.maxDelayMs,
+          );
+          await sleep(delay);
+          continue;
+        }
+      }
+      throw err;
+    }
+  }
+
+  throw lastError ?? new Error("GitHub API request failed after retries");
 }
 
 export const CONTRIBUTOR_QUERY = `
@@ -44,6 +114,18 @@ export const CONTRIBUTOR_QUERY = `
       location
       followers { totalCount }
       following { totalCount }
+      pinnedItems(first: 6, types: REPOSITORY) {
+        nodes {
+          ... on Repository {
+            name
+            description
+            stargazerCount
+            forkCount
+            primaryLanguage { name color }
+            url
+          }
+        }
+      }
       repositories(first: 100, ownerAffiliations: OWNER, isFork: false, orderBy: { field: STARGAZERS, direction: DESC }) {
         totalCount
         nodes {
@@ -94,6 +176,16 @@ export interface GitHubContributor {
   location: string | null;
   followers: { totalCount: number };
   following: { totalCount: number };
+  pinnedItems: {
+    nodes: {
+      name: string;
+      description: string | null;
+      stargazerCount: number;
+      forkCount: number;
+      primaryLanguage: { name: string; color: string } | null;
+      url: string;
+    }[];
+  };
   repositories: {
     totalCount: number;
     nodes: {
@@ -134,7 +226,7 @@ export interface GitHubContributor {
 /** Fetch a contributor's full GitHub profile and contributions via the GraphQL API, caching results in Redis for 2 hours. */
 export async function fetchContributorProfile(
   login: string,
-  token: string
+  token: string,
 ): Promise<GitHubContributor> {
   const cacheKey = `github:profile:${login.toLowerCase()}`;
 
@@ -152,7 +244,7 @@ export async function fetchContributorProfile(
   const data = await githubGraphQL<{ user: GitHubContributor }>(
     CONTRIBUTOR_QUERY,
     { login },
-    token
+    token,
   );
 
   if (data?.user) {
@@ -167,9 +259,10 @@ export async function fetchContributorProfile(
   return data.user;
 }
 
-export function contributorToScoreInputs(
-  c: GitHubContributor
-): { stats: ContributorStats; repos: Repo[] } {
+export function contributorToScoreInputs(c: GitHubContributor): {
+  stats: ContributorStats;
+  repos: Repo[];
+} {
   const cc = c.contributionsCollection;
   const stats: ContributorStats = {
     totalCommits: cc.totalCommitContributions,
@@ -222,7 +315,7 @@ export interface ContributionCalendar {
 
 export async function fetchContributionCalendar(
   username: string,
-  from?: string
+  from?: string,
 ): Promise<ContributionCalendar | null> {
   const cacheKey = `github:calendar:${username.toLowerCase()}${from ? `:${from}` : ""}`;
 
@@ -248,14 +341,15 @@ export async function fetchContributionCalendar(
         },
         next: { revalidate: 3600 },
       },
-      10_000
+      10_000,
     );
 
     if (!res.ok) return null;
 
     const html = await res.text();
     const countById = new Map<string, number>();
-    const tipRe = /<tool-tip[^>]*\bfor="(contribution-day-component-\d+-\d+)"[^>]*>([^<]*)<\/tool-tip>/g;
+    const tipRe =
+      /<tool-tip[^>]*\bfor="(contribution-day-component-\d+-\d+)"[^>]*>([^<]*)<\/tool-tip>/g;
     let tip: RegExpExecArray | null;
     while ((tip = tipRe.exec(html)) !== null) {
       const id = tip[1];
@@ -281,9 +375,9 @@ export async function fetchContributionCalendar(
 
       if (!weekMap.has(col)) weekMap.set(col, []);
       weekMap.get(col)!.push({
-  row,
-  day: { date: dateMatch[1], count, color: colorForCount(count) },
-});
+        row,
+        day: { date: dateMatch[1], count, color: colorForCount(count) },
+      });
     }
 
     if (weekMap.size === 0) return null;
@@ -299,7 +393,7 @@ export async function fetchContributionCalendar(
 
     const totalContributions = weeks.reduce(
       (sum, week) => sum + week.days.reduce((s, d) => s + d.count, 0),
-      0
+      0,
     );
 
     const result: ContributionCalendar = { weeks, totalContributions };

@@ -1,7 +1,11 @@
 import { NextRequest } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { sanitizeString } from "@/lib/sanitizer";
-import { sanitizeUrl, createApiResponse, createErrorResponse } from "@/lib/validators/api";
+import {
+  sanitizeUrl,
+  createApiResponse,
+  createErrorResponse,
+} from "@/lib/validators/api";
 
 export const runtime = "edge";
 
@@ -27,7 +31,9 @@ export async function GET(request: NextRequest) {
   }
 
   const supabase = createAuthClient(token);
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
   if (!user) {
     return createErrorResponse("Unauthorized", 401);
   }
@@ -52,7 +58,9 @@ export async function PUT(request: NextRequest) {
   }
 
   const supabase = createAuthClient(token);
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
   if (!user) {
     return createErrorResponse("Unauthorized", 401);
   }
@@ -106,14 +114,27 @@ export async function PUT(request: NextRequest) {
         return {
           program: sanitizeString(badge.program, 50),
           years: Array.isArray(badge.years)
-            ? badge.years.filter((y: unknown) => typeof y === "number" && y >= 2000 && y <= 2100).slice(0, 5)
+            ? badge.years
+                .filter(
+                  (y: unknown) =>
+                    typeof y === "number" && y >= 2000 && y <= 2100,
+                )
+                .slice(0, 5)
             : [],
         };
       })
       .filter(Boolean);
   }
 
-  if (body.visibility === "public" || body.visibility === "unlisted") {
+  // 'private' is new: the column's CHECK previously rejected it, so the third state the UI is meant
+  // to offer could never be stored. Still an explicit allow-list rather than a passthrough — the
+  // value lands in a CHECK-constrained column, and a 400 from us beats a constraint violation from
+  // Postgres.
+  if (
+    body.visibility === "public" ||
+    body.visibility === "unlisted" ||
+    body.visibility === "private"
+  ) {
     updates.visibility = body.visibility;
   }
 
@@ -121,7 +142,9 @@ export async function PUT(request: NextRequest) {
     return createErrorResponse("No valid fields to update", 400);
   }
 
-  updates.updated_at = new Date().toISOString();
+  // `updated_at` is maintained by the `profiles_set_updated_at` trigger. The client is not
+  // granted the column (Explore orders by it, so a writable timestamp is forgeable), and
+  // writing it here would now fail with `permission denied`.
 
   const { error } = await supabase
     .from("profiles")
@@ -133,4 +156,61 @@ export async function PUT(request: NextRequest) {
   }
 
   return createApiResponse({ success: true });
+}
+
+/**
+ * Delete the signed-in user's account.
+ *
+ * The identity comes from `auth.getUser()` on a client scoped to the caller's bearer token, never
+ * from a user id in the request body — otherwise anyone holding any valid token could delete anyone
+ * else's account by naming them.
+ *
+ * This deletes the *auth user*, not the profile row, and that is deliberate rather than an
+ * oversight:
+ *
+ *   1. `profiles.id` is `references auth.users(id) on delete cascade`, so removing the auth user
+ *      removes the profile with it. Deleting the row separately would be redundant and would open a
+ *      window where the profile is gone but the account still exists.
+ *
+ *   2. Migration 20260713000000 revokes DELETE on `public.profiles` from `authenticated` outright,
+ *      on the grounds that nothing in the app deletes a profile from the client. That is still the
+ *      right call — re-granting DELETE just to support this endpoint would widen the client's write
+ *      surface permanently to serve one server-side operation. Deleting through the auth admin API
+ *      leaves that hardening intact.
+ *
+ *   3. `auth.admin.deleteUser` requires the service-role key by design. The anon key cannot call it,
+ *      which is precisely why account deletion belongs on the server rather than in the browser.
+ */
+export async function DELETE(request: NextRequest) {
+  const token = extractToken(request);
+  if (!token) {
+    return createErrorResponse("Unauthorized", 401);
+  }
+
+  const authed = createAuthClient(token);
+  const {
+    data: { user },
+    error: authError,
+  } = await authed.auth.getUser();
+
+  if (authError || !user) {
+    return createErrorResponse("Unauthorized", 401);
+  }
+
+  // Checked rather than assumed: without the service key the admin call below fails in a way that
+  // looks like a server bug, and the user would be told their deletion failed with no idea why. A
+  // 503 says "this deployment can't do that", which is the truth.
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!serviceKey) {
+    return createErrorResponse("Account deletion is not configured", 503);
+  }
+
+  const admin = createClient(supabaseUrl, serviceKey);
+  const { error } = await admin.auth.admin.deleteUser(user.id);
+
+  if (error) {
+    return createErrorResponse("Failed to delete account", 500);
+  }
+
+  return createApiResponse({ deleted: true });
 }

@@ -93,7 +93,6 @@ export function generateMockHeatmap(username: string): MockHeatmap {
   return { weeks, totalContributions };
 }
 
-
 /**
  * Contribution streaks derived from the heatmap calendar.
  * - current: consecutive days with >=1 contribution ending at the most recent
@@ -110,7 +109,7 @@ export function generateMockHeatmap(username: string): MockHeatmap {
  */
 export function computeStreaks(
   weeks: HeatmapWeek[],
-  todayKey: string = new Date().toISOString().slice(0, 10)
+  todayKey: string = new Date().toISOString().slice(0, 10),
 ): { current: number; longest: number } {
   const days = weeks.flatMap((w) => w.days).filter((d) => d.date <= todayKey);
 

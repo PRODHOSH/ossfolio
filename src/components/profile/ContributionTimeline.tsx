@@ -19,17 +19,24 @@ interface ContributionTimelineProps {
   badges?: BadgeItem[];
 }
 
-export function ContributionTimeline({ mergedPRs, badges = [] }: ContributionTimelineProps) {
+export function ContributionTimeline({
+  mergedPRs,
+  badges = [],
+}: ContributionTimelineProps) {
   const PAGE_SIZE = 10;
+
+  const mergedOnlyPRs = useMemo(() => {
+    return (mergedPRs || []).filter((pr) => !pr.state || pr.state === "merged");
+  }, [mergedPRs]);
 
   // 1. Gather and construct timeline events
   const events: TimelineEvent[] = [];
 
   // Parse PR events
-  if (mergedPRs && mergedPRs.length > 0) {
+  if (mergedOnlyPRs && mergedOnlyPRs.length > 0) {
     // Sort PRs chronologically ascending (oldest first) to find the absolute oldest retrieved PR
-    const sortedAscPRs = [...mergedPRs].sort(
-      (a, b) => new Date(a.mergedAt).getTime() - new Date(b.mergedAt).getTime()
+    const sortedAscPRs = [...mergedOnlyPRs].sort(
+      (a, b) => new Date(a.mergedAt).getTime() - new Date(b.mergedAt).getTime(),
     );
 
     sortedAscPRs.forEach((pr, index) => {
@@ -44,7 +51,9 @@ export function ContributionTimeline({ mergedPRs, badges = [] }: ContributionTim
       events.push({
         id: `pr-${pr.url}`,
         type: isOldest ? "first_pr" : "pr",
-        title: isOldest ? "🚀 Earliest Merged Pull Request (recent)" : "Merged Pull Request",
+        title: isOldest
+          ? "🚀 Earliest Merged Pull Request (recent)"
+          : "Merged Pull Request",
         description: pr.title,
         date: pr.mergedAt,
         displayDate: formattedDate,
@@ -74,15 +83,19 @@ export function ContributionTimeline({ mergedPRs, badges = [] }: ContributionTim
   // Sort events chronologically descending (newest first)
   const sortedEvents = useMemo(() => {
     // Mutate-free sort to avoid surprising updates across renders
-    return [...events].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    return [...events].sort(
+      (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
+    );
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mergedPRs, badges]);
 
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
 
-  const visibleEvents = useMemo(() => sortedEvents.slice(0, visibleCount), [sortedEvents, visibleCount]);
+  const visibleEvents = useMemo(
+    () => sortedEvents.slice(0, visibleCount),
+    [sortedEvents, visibleCount],
+  );
   const hasMore = visibleCount < sortedEvents.length;
-
 
   return (
     <section style={{ marginTop: "44px" }}>
@@ -122,7 +135,8 @@ export function ContributionTimeline({ mergedPRs, badges = [] }: ContributionTim
         />
 
         {visibleEvents.map((event) => {
-          const isHighlight = event.type === "first_pr" || event.type === "badge";
+          const isHighlight =
+            event.type === "first_pr" || event.type === "badge";
           return (
             <div
               key={event.id}
@@ -143,8 +157,12 @@ export function ContributionTimeline({ mergedPRs, badges = [] }: ContributionTim
                   height: "12px",
                   borderRadius: "50%",
                   border: `2px solid ${isHighlight ? "var(--color-primary)" : "var(--color-hairline-strong)"}`,
-                  backgroundColor: isHighlight ? "var(--color-primary)" : "var(--color-canvas)",
-                  boxShadow: isHighlight ? "0 0 8px var(--color-primary)" : "none",
+                  backgroundColor: isHighlight
+                    ? "var(--color-primary)"
+                    : "var(--color-canvas)",
+                  boxShadow: isHighlight
+                    ? "0 0 8px var(--color-primary)"
+                    : "none",
                   zIndex: 2,
                   transition: "all 0.2s ease",
                 }}
@@ -162,8 +180,10 @@ export function ContributionTimeline({ mergedPRs, badges = [] }: ContributionTim
                   transition: "border-color 0.2s ease, box-shadow 0.2s ease",
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.borderColor = "var(--color-hairline-strong)";
-                  e.currentTarget.style.boxShadow = "0 2px 6px rgba(0, 0, 0, 0.05)";
+                  e.currentTarget.style.borderColor =
+                    "var(--color-hairline-strong)";
+                  e.currentTarget.style.boxShadow =
+                    "0 2px 6px rgba(0, 0, 0, 0.05)";
                 }}
                 onMouseLeave={(e) => {
                   e.currentTarget.style.borderColor = isHighlight
@@ -186,7 +206,9 @@ export function ContributionTimeline({ mergedPRs, badges = [] }: ContributionTim
                     style={{
                       fontSize: "14px",
                       fontWeight: 600,
-                      color: isHighlight ? "var(--color-primary)" : "var(--color-ink)",
+                      color: isHighlight
+                        ? "var(--color-primary)"
+                        : "var(--color-ink)",
                     }}
                   >
                     {event.title}
@@ -282,7 +304,6 @@ export function ContributionTimeline({ mergedPRs, badges = [] }: ContributionTim
 
       {hasMore && (
         <div style={{ marginTop: "20px", paddingLeft: "8px" }}>
-
           <button
             type="button"
             onClick={() => setVisibleCount((c) => c + PAGE_SIZE)}
@@ -299,7 +320,8 @@ export function ContributionTimeline({ mergedPRs, badges = [] }: ContributionTim
               boxShadow: "none",
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.boxShadow = "0 2px 10px rgba(0, 0, 0, 0.05)";
+              e.currentTarget.style.boxShadow =
+                "0 2px 10px rgba(0, 0, 0, 0.05)";
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.boxShadow = "none";
@@ -309,9 +331,41 @@ export function ContributionTimeline({ mergedPRs, badges = [] }: ContributionTim
           </button>
         </div>
       )}
-      {sortedEvents.length === 0 ? null : null}
+      {sortedEvents.length === 0 ? (
+        <div
+          style={{
+            marginTop: "16px",
+            padding: "32px",
+            border: "1px solid var(--color-hairline)",
+            borderRadius: "12px",
+            backgroundColor: "var(--color-canvas)",
+            textAlign: "center",
+            color: "var(--color-ink-mute)",
+            boxShadow: "0 1px 3px rgba(0,0,0,0.06)",
+          }}
+        >
+          <p
+            style={{
+              margin: 0,
+              fontSize: "16px",
+              fontWeight: 500,
+              color: "var(--color-ink)",
+            }}
+          >
+            No contribution activity yet
+          </p>
+          <p
+            style={{
+              marginTop: "8px",
+              fontSize: "13px",
+              lineHeight: 1.45,
+              color: "var(--color-ink-mute)",
+            }}
+          >
+            Your merged pull requests will appear here as you contribute.
+          </p>
+        </div>
+      ) : null}
     </section>
   );
 }
-
-

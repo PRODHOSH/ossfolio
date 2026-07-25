@@ -45,14 +45,17 @@ export interface AnomalyResult {
  */
 export function detectAnomaly(
   stats: ContributorStats,
-  totalStars: number
+  totalStars: number,
 ): AnomalyResult {
-  const collaborative =
-    stats.totalPRs + stats.totalIssues + stats.totalReviews;
+  const collaborative = stats.totalPRs + stats.totalIssues + stats.totalReviews;
   const commitRatio =
     collaborative > 0 ? stats.totalCommits / collaborative : stats.totalCommits;
 
-  const notFlagged: AnomalyResult = { flagged: false, reason: null, commitRatio };
+  const notFlagged: AnomalyResult = {
+    flagged: false,
+    reason: null,
+    commitRatio,
+  };
 
   // Guard 1 — too little volume to be worth flagging.
   if (stats.totalCommits < ANOMALY_THRESHOLDS.MIN_COMMITS) return notFlagged;
@@ -76,7 +79,7 @@ export function detectAnomaly(
 /** Returns the score after applying the flagged-account discount. */
 export function applyAnomalyDiscount(
   score: number,
-  anomaly: AnomalyResult
+  anomaly: AnomalyResult,
 ): number {
   if (!anomaly.flagged) return score;
   return Math.round(score * ANOMALY_SCORE_MULTIPLIER);
@@ -89,7 +92,7 @@ export function applyAnomalyDiscount(
  */
 export function scoreWithAnomalyCheck(
   stats: ContributorStats,
-  repos: Repo[]
+  repos: Repo[],
 ): { score: number; rawScore: number; anomaly: AnomalyResult } {
   const totalStars = repos.reduce((sum, r) => sum + r.stars, 0);
   const rawScore = calculateScore(stats, repos);

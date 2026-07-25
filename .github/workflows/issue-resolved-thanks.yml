@@ -1,0 +1,30 @@
+name: Issue Resolved Thanks
+
+on:
+  issues:
+    types: [closed]
+
+jobs:
+  thanks:
+    name: Thank reporter
+    runs-on: ubuntu-latest
+    if: github.event.issue.state_reason == 'completed' && github.event.issue.user.type != 'Bot'
+    permissions:
+      issues: write
+
+    steps:
+      - name: Post thank you comment
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { owner, repo } = context.repo;
+            const issue = context.payload.issue;
+
+            const body = "This issue has been successfully resolved! Thank you for your contribution to OSSfolio 🚀.";
+
+            await github.rest.issues.createComment({
+              owner,
+              repo,
+              issue_number: issue.number,
+              body,
+            });

@@ -1,5 +1,9 @@
 import { NextRequest, after } from "next/server";
-import { sanitizeUsername, createApiResponse, createErrorResponse } from "@/lib/validators/api";
+import {
+  sanitizeUsername,
+  createApiResponse,
+  createErrorResponse,
+} from "@/lib/validators/api";
 import { refreshProfile } from "@/lib/refresh-profile";
 
 // Receives GitHub `push` webhooks and triggers a (rate-limited) refresh of the
@@ -20,7 +24,7 @@ function timingSafeEqual(a: string, b: string): boolean {
 async function verifySignature(
   secret: string,
   body: string,
-  header: string | null
+  header: string | null,
 ): Promise<boolean> {
   if (!header || !header.startsWith("sha256=")) return false;
 
@@ -29,9 +33,13 @@ async function verifySignature(
     new TextEncoder().encode(secret),
     { name: "HMAC", hash: "SHA-256" },
     false,
-    ["sign"]
+    ["sign"],
   );
-  const signed = await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(body));
+  const signed = await crypto.subtle.sign(
+    "HMAC",
+    key,
+    new TextEncoder().encode(body),
+  );
   const digest = Array.from(new Uint8Array(signed))
     .map((b) => b.toString(16).padStart(2, "0"))
     .join("");
@@ -87,7 +95,10 @@ export async function POST(request: NextRequest) {
     } catch (err) {
       // Best-effort: GitHub already received its 2xx. Log so failed
       // webhook-triggered refreshes are visible in production.
-      console.error("GitHub webhook: background refresh failed", { username, err });
+      console.error("GitHub webhook: background refresh failed", {
+        username,
+        err,
+      });
     }
   });
 

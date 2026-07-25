@@ -12,7 +12,7 @@ import {
 import { fetchContributionCalendar } from "@/lib/github";
 import { generateMockHeatmap } from "@/lib/mock";
 import { calculateScore } from "@/lib/score";
-import { supabase } from "@/lib/supabase";
+import { getProfileByUsername } from "@/lib/db";
 import type { ContributorStats, Repo } from "@/types";
 import { CompareForm } from "@/components/profile/CompareForm";
 import { CompareCharts } from "@/components/profile/CompareCharts";
@@ -62,7 +62,7 @@ async function fetchGitHubRepos(username: string) {
     {
       headers: { Accept: "application/vnd.github.v3+json" },
       next: { revalidate: 3600 },
-    }
+    },
   );
   if (!res.ok) {
     throw new Error(`GitHub repositories lookup failed (${res.status})`);
@@ -72,7 +72,7 @@ async function fetchGitHubRepos(username: string) {
     .filter((r: { fork: boolean }) => !r.fork)
     .sort(
       (a: { stargazers_count: number }, b: { stargazers_count: number }) =>
-        (b.stargazers_count ?? 0) - (a.stargazers_count ?? 0)
+        (b.stargazers_count ?? 0) - (a.stargazers_count ?? 0),
     )
     .slice(0, 6);
 }
@@ -97,17 +97,55 @@ async function fetchProfile(username: string): Promise<ProfileData> {
   const liveScore = calculateScore(stats, mappedRepos);
 
   let score = liveScore;
+  let visibility: string | null = null;
+  let visibilityUnknown = false;
   try {
-    const { data: profileRow } = await supabase
-      .from("profiles")
-      .select("score")
-      .eq("username", username)
-      .maybeSingle();
-    if (profileRow && typeof profileRow.score === "number") {
-      score = profileRow.score;
+    const { data: profileRow, error } = await getProfileByUsername(
+      username,
+      "score, visibility",
+    );
+
+    // The Supabase client resolves with `{ data: null, error }` rather than throwing, so the catch
+    // below never sees a query failure — reading only `data` would leave `visibility` null on a
+    // database error and the private check would quietly pass. A privacy gate has to fail closed.
+    if (error) {
+      visibilityUnknown = true;
+    } else if (profileRow) {
+      visibility =
+        typeof profileRow.visibility === "string"
+          ? profileRow.visibility
+          : null;
+      if (typeof profileRow.score === "number") {
+        score = profileRow.score;
+      }
     }
   } catch {
+    visibilityUnknown = true;
     // Soft fallback to live score
+  }
+
+  // Deliberately outside the try above. That catch exists to fall back to the live score when
+  // Supabase is unreachable, and it would happily swallow this throw and compare the profile anyway.
+  //
+  // It also has to throw rather than filter the row. Everything returned below — the user, their
+  // stats, their repos — is rebuilt from the GitHub API, so excluding the profiles row alone would
+  // not have hidden anything: it would simply have compared them using the live score instead of the
+  // stored one. A private profile has no page, and it should not be reachable through /compare
+  // either.
+  //
+  // Same message as the not-found case on purpose, so /compare cannot be used to discover that a
+  // private profile exists — which is the same reasoning api/v1 already applies to unlisted ones.
+  if (visibilityUnknown) {
+    // Distinct message from the not-found case below, because this genuinely is different: the
+    // profile may be perfectly fine and the database simply unreachable. Telling the user to retry
+    // is honest; claiming the account doesn't exist would not be.
+    throw new Error(
+      `Could not verify profile visibility for "${username}". Please try again.`,
+    );
+  }
+
+  if (visibility === "private") {
+    throw new Error(`GitHub user "${username}" not found`);
   }
 
   return { user, stats, repos: mappedRepos, score };
@@ -142,7 +180,13 @@ export default async function ComparePage({ searchParams }: ComparePageProps) {
             transition: "background-color 0.2s ease, color 0.2s ease",
           }}
         >
-          <div style={{ maxWidth: "72rem", margin: "0 auto", padding: "56px 20px" }}>
+          <div
+            style={{
+              maxWidth: "72rem",
+              margin: "0 auto",
+              padding: "56px 20px",
+            }}
+          >
             <header style={{ marginBottom: "32px" }}>
               <h1
                 style={{
@@ -162,7 +206,8 @@ export default async function ComparePage({ searchParams }: ComparePageProps) {
                   margin: "8px 0 0 0",
                 }}
               >
-                Enter two GitHub usernames to compare their open-source stats side by side.
+                Enter two GitHub usernames to compare their open-source stats
+                side by side.
               </p>
             </header>
 
@@ -176,9 +221,9 @@ export default async function ComparePage({ searchParams }: ComparePageProps) {
 
   // ── Fetch both profiles in parallel; each wrapped in its own try/catch ───
   const normalizeError = (err: unknown) =>
-      err instanceof Error ? err : new Error("Failed to load profile");
+    err instanceof Error ? err : new Error("Failed to load profile");
 
-    const [resultA, resultB] = await Promise.all([
+  const [resultA, resultB] = await Promise.all([
     fetchProfile(a).catch(normalizeError),
     fetchProfile(b).catch(normalizeError),
   ]);
@@ -219,7 +264,9 @@ export default async function ComparePage({ searchParams }: ComparePageProps) {
           transition: "background-color 0.2s ease, color 0.2s ease",
         }}
       >
-        <div style={{ maxWidth: "72rem", margin: "0 auto", padding: "56px 20px" }}>
+        <div
+          style={{ maxWidth: "72rem", margin: "0 auto", padding: "56px 20px" }}
+        >
           {/* Header */}
           <header style={{ marginBottom: "32px" }}>
             <h1
@@ -267,10 +314,23 @@ export default async function ComparePage({ searchParams }: ComparePageProps) {
                   textAlign: "center",
                 }}
               >
-                <p style={{ fontSize: "15px", fontWeight: 500, color: "var(--color-ink)", margin: 0 }}>
+                <p
+                  style={{
+                    fontSize: "15px",
+                    fontWeight: 500,
+                    color: "var(--color-ink)",
+                    margin: 0,
+                  }}
+                >
                   Could not load @{a}
                 </p>
-                <p style={{ fontSize: "13px", color: "var(--color-ink-mute)", margin: "6px 0 0 0" }}>
+                <p
+                  style={{
+                    fontSize: "13px",
+                    color: "var(--color-ink-mute)",
+                    margin: "6px 0 0 0",
+                  }}
+                >
                   {errorA}
                 </p>
               </div>
@@ -292,10 +352,23 @@ export default async function ComparePage({ searchParams }: ComparePageProps) {
                   textAlign: "center",
                 }}
               >
-                <p style={{ fontSize: "15px", fontWeight: 500, color: "var(--color-ink)", margin: 0 }}>
+                <p
+                  style={{
+                    fontSize: "15px",
+                    fontWeight: 500,
+                    color: "var(--color-ink)",
+                    margin: 0,
+                  }}
+                >
                   Could not load @{b}
                 </p>
-                <p style={{ fontSize: "13px", color: "var(--color-ink-mute)", margin: "6px 0 0 0" }}>
+                <p
+                  style={{
+                    fontSize: "13px",
+                    color: "var(--color-ink-mute)",
+                    margin: "6px 0 0 0",
+                  }}
+                >
                   {errorB}
                 </p>
               </div>
@@ -332,7 +405,10 @@ export default async function ComparePage({ searchParams }: ComparePageProps) {
                     padding: "14px 18px",
                     fontSize: "18px",
                     fontWeight: 600,
-                    color: winnerScore === "a" ? "var(--color-primary)" : "var(--color-ink)",
+                    color:
+                      winnerScore === "a"
+                        ? "var(--color-primary)"
+                        : "var(--color-ink)",
                     textAlign: "center",
                   }}
                 >
@@ -357,7 +433,10 @@ export default async function ComparePage({ searchParams }: ComparePageProps) {
                     padding: "14px 18px",
                     fontSize: "18px",
                     fontWeight: 600,
-                    color: winnerScore === "b" ? "var(--color-primary)" : "var(--color-ink)",
+                    color:
+                      winnerScore === "b"
+                        ? "var(--color-primary)"
+                        : "var(--color-ink)",
                     textAlign: "center",
                   }}
                 >
@@ -386,7 +465,9 @@ export default async function ComparePage({ searchParams }: ComparePageProps) {
                         padding: "12px 18px",
                         fontSize: "15px",
                         fontWeight: aWins ? 600 : 400,
-                        color: aWins ? "var(--color-primary)" : "var(--color-ink)",
+                        color: aWins
+                          ? "var(--color-primary)"
+                          : "var(--color-ink)",
                         textAlign: "center",
                       }}
                     >
@@ -411,7 +492,9 @@ export default async function ComparePage({ searchParams }: ComparePageProps) {
                         padding: "12px 18px",
                         fontSize: "15px",
                         fontWeight: bWins ? 600 : 400,
-                        color: bWins ? "var(--color-primary)" : "var(--color-ink)",
+                        color: bWins
+                          ? "var(--color-primary)"
+                          : "var(--color-ink)",
                         textAlign: "center",
                       }}
                     >
@@ -446,7 +529,6 @@ export default async function ComparePage({ searchParams }: ComparePageProps) {
         </div>
       </main>
       <Footer />
-
 
       {/* Responsive: stack columns on mobile */}
       <style>{`

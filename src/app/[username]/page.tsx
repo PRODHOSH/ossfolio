@@ -6,11 +6,7 @@ import { Footer } from "@/components/layout/Footer";
 import { TemporaryUnavailableFallback } from "@/components/layout/TemporaryUnavailableFallback";
 
 import { ProfileView } from "@/components/profile/ProfileView";
-import {
-  deriveTechStack,
-  mapRepos,
-  type GitHubUser,
-} from "@/lib/profile-data";
+import { deriveTechStack, mapRepos, type GitHubUser } from "@/lib/profile-data";
 import {
   getProfileSnapshot,
   isSnapshotStale,
@@ -19,19 +15,22 @@ import {
 import { ProfileSyncing } from "@/components/profile/ProfileSyncing";
 import { after } from "next/server";
 import { generateMockHeatmap, computeStreaks } from "@/lib/mock";
-import { fetchContributionCalendar } from "@/lib/github";
+import {
+  fetchContributionCalendar,
+  fetchContributorProfile,
+} from "@/lib/github";
 import { calculateScore } from "@/lib/score";
-import { supabase } from "@/lib/supabase";
-
+import { getProfileByUsername } from "@/lib/db";
 
 export const runtime = "edge";
-
 
 interface ProfilePageProps {
   params: Promise<{ username: string }>;
 }
 
-export async function generateMetadata({ params }: ProfilePageProps): Promise<Metadata> {
+export async function generateMetadata({
+  params,
+}: ProfilePageProps): Promise<Metadata> {
   const { username } = await params;
   // Read the same snapshot the page body renders from, rather than calling GitHub
   // again here. `generateMetadata` blocks the response head, so a live fetch here
@@ -142,8 +141,9 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
         heading="Temporarily Unavailable"
         message={
           <>
-            GitHub API rate limit reached. Profile data for <strong>@{username}</strong> cannot be
-            loaded right now. Please try again in a few minutes.
+            GitHub API rate limit reached. Profile data for{" "}
+            <strong>@{username}</strong> cannot be loaded right now. Please try
+            again in a few minutes.
           </>
         }
       />
@@ -151,21 +151,51 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
   }
 
   const profileUser = user!;
+
+  // Keep original full repos for accurate tech stack and score calculations
   const mappedRepos = mapRepos(repos);
   const techStack = deriveTechStack(repos);
 
-  // Heatmap calculation — use the user's real contribution calendar parsed from
-  // GitHub's public endpoint. If that request failed (network error, rate limit,
-  // markup change), fall back to the seeded placeholder so the page still renders.
   const { weeks: heatmap, totalContributions } = contributionCalendar
     ? contributionCalendar
     : generateMockHeatmap(username);
 
   // Streaks computation
-  const { current: currentStreak, longest: longestStreak } = computeStreaks(heatmap);
+  const { current: currentStreak, longest: longestStreak } =
+    computeStreaks(heatmap);
 
   const stats = { ...liveStats, totalContributions };
   const liveScore = calculateScore(stats, mappedRepos);
+
+  // --- NEW: Fetch GraphQL profile specifically for Pinned Repos ---
+  let pinnedReposRaw: any[] = [];
+  try {
+    const token =
+      process.env.GITHUB_TOKEN || process.env.GITHUB_API_TOKEN || "";
+    if (token) {
+      const gqlProfile = await fetchContributorProfile(username, token);
+      if (gqlProfile?.pinnedItems?.nodes?.length > 0) {
+        // Map GraphQL shape to match REST API shape expected by ProfileView
+        pinnedReposRaw = gqlProfile.pinnedItems.nodes.map((n: any) => ({
+          name: n.name,
+          description: n.description,
+          stargazers_count: n.stargazerCount,
+          forks_count: n.forkCount,
+          language: n.primaryLanguage?.name || null,
+          html_url: n.url,
+          topics: [],
+        }));
+      }
+    }
+  } catch (err) {
+    console.error(`Failed to fetch pinned repos for ${username}:`, err);
+  }
+
+  // Fallback Logic
+  const displayRepos = pinnedReposRaw.length > 0 ? pinnedReposRaw : repos;
+  const repoSectionTitle =
+    pinnedReposRaw.length > 0 ? "Pinned repositories" : "Popular repositories";
+  // ----------------------------------------------------------------
 
   let score = liveScore;
   let updatedAt: string | null = null;
@@ -173,14 +203,25 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
   let profileId: string | null = null;
   let profileRow: any = null;
   let customizationFetchSettled = false;
+  let visibilityUnknown = false;
   try {
-    const { data } = await supabase
-      .from("profiles")
-      .select("id, score, updated_at, badges, headline, pinned_repos, custom_links, visibility")
-      .eq("username", username)
-      .maybeSingle();
+    const { data, error } = await getProfileByUsername(
+      username,
+      "id, score, updated_at, badges, headline, pinned_repos, custom_links, visibility",
+    );
     customizationFetchSettled = true;
-    profileRow = data;
+
+    // The Supabase client resolves with `{ data: null, error }` rather than throwing, so reading
+    // only `data` would leave `profileRow` null on a database failure — indistinguishable, from
+    // here, from a profile that simply has no row. The private check below would then pass and the
+    // page would render. A privacy gate has to fail closed, so the error is captured and handled
+    // below rather than discarded.
+    if (error) {
+      visibilityUnknown = true;
+    } else {
+      profileRow = data;
+    }
+
     if (profileRow) {
       profileId = profileRow.id;
       if (typeof profileRow.score === "number") {
@@ -196,7 +237,7 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
               b &&
               typeof b.program === "string" &&
               b.program.trim() !== "" &&
-              Array.isArray(b.years)
+              Array.isArray(b.years),
           )
           .map((b: any) => ({
             program: b.program,
@@ -208,15 +249,48 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
     }
   } catch {
     customizationFetchSettled = true;
+    visibilityUnknown = true;
     // Soft isolation fallback
   }
 
-  const customization = profileRow ? {
-    headline: typeof profileRow.headline === "string" ? profileRow.headline : null,
-    pinnedRepos: Array.isArray(profileRow.pinned_repos) ? profileRow.pinned_repos as string[] : [],
-    customLinks: Array.isArray(profileRow.custom_links) ? profileRow.custom_links as Array<{ label: string; url: string }> : [],
-    visibility: profileRow.visibility as string,
-  } : null;
+  // Both checks below are deliberately *outside* the try above, and that placement is the whole
+  // point rather than a stylistic choice.
+  //
+  // `notFound()` works by throwing. Inside that try, the bare `catch` would swallow it — the page
+  // would carry straight on and render the very profile the setting exists to hide. This is the
+  // documented reason Next tells you to call notFound()/redirect() outside try/catch, and it is a
+  // silent failure: nothing errors, the 404 simply never happens.
+  //
+  // Failing closed on an unknown visibility matters for the same reason. Note this does *not* touch
+  // the ordinary "never signed up" path: that returns no error and no row, and such a profile cannot
+  // be private (private requires a stored row), so it still renders from GitHub data exactly as
+  // before. Only a genuine database failure trips this.
+  if (visibilityUnknown) {
+    throw new Error(`Could not verify profile visibility for "${username}"`);
+  }
+
+  // `private` means the page does not exist. This is an explicit check rather than an RLS policy:
+  // ossfolio renders /[username] for any GitHub account, signed up or not, so a null `profileRow` is
+  // the ordinary case. If RLS hid private rows, this code could not tell "private" from "never
+  // signed up" — it would fall through and render the public GitHub data instead of 404ing, and the
+  // setting would look like it worked while doing nothing.
+  if (profileRow?.visibility === "private") {
+    return notFound();
+  }
+
+  const customization = profileRow
+    ? {
+        headline:
+          typeof profileRow.headline === "string" ? profileRow.headline : null,
+        pinnedRepos: Array.isArray(profileRow.pinned_repos)
+          ? (profileRow.pinned_repos as string[])
+          : [],
+        customLinks: Array.isArray(profileRow.custom_links)
+          ? (profileRow.custom_links as Array<{ label: string; url: string }>)
+          : [],
+        visibility: profileRow.visibility as string,
+      }
+    : null;
 
   if (customization?.headline && user) {
     user.bio = customization.headline;
@@ -225,19 +299,20 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
   return (
     <>
       <Navbar />
-        {/* 💡 Fixed: Linked layout to design tokens and added transition curves */}
-        {/* ProfileActions component within ProfileView handles GitHub profile sync/refresh state */}
-      <main 
-        style={{ 
-          backgroundColor: "var(--color-canvas)", 
+      {/* 💡 Fixed: Linked layout to design tokens and added transition curves */}
+      {/* ProfileActions component within ProfileView handles GitHub profile sync/refresh state */}
+      <main
+        style={{
+          backgroundColor: "var(--color-canvas)",
           color: "var(--color-ink)",
           minHeight: "100vh",
-          transition: "background-color 0.2s ease, color 0.2s ease"
+          transition: "background-color 0.2s ease, color 0.2s ease",
         }}
       >
         <ProfileView
           user={profileUser}
-          repos={repos}
+          repos={displayRepos}
+          repoSectionTitle={repoSectionTitle}
           stats={stats}
           techStack={techStack}
           orgs={orgs}
@@ -251,6 +326,7 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
           rateLimited={rateLimited}
           mergedPRs={mergedPRs}
           customLinks={customization?.customLinks ?? []}
+          pinnedRepos={customization?.pinnedRepos ?? []}
           customizationLoaded={customizationFetchSettled}
         />
       </main>

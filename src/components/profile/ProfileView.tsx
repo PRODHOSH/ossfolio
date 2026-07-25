@@ -4,16 +4,27 @@ import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import Image from "next/image";
 import dynamic from "next/dynamic";
 import { AnimatePresence, motion } from "framer-motion";
-import type { MergedPR } from '@/types';
-import { LatestMergedPRs } from '@/components/profile/LatestMergedPRs';
-import { ContributionTimeline } from '@/components/profile/ContributionTimeline';
+import { LatestMergedPRs } from "@/components/profile/LatestMergedPRs";
+import { ContributionTimeline } from "@/components/profile/ContributionTimeline";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
+import { useBroadcastChannel } from "@/hooks/useBroadcastChannel";
+import { useVisibility } from "@/hooks/useVisibility";
 import { SkeletonCard } from "@/components/ui/skeleton-card";
-import type { ContributorStats, Org, TechEntry, HeatmapWeek, BadgeItem } from "@/types";
+import { evaluateAchievements, countUnlocked } from "@/lib/achievements";
+import { AchievementsGrid } from "@/components/profile/AchievementsGrid";
+import type {
+  ContributorStats,
+  Org,
+  TechEntry,
+  HeatmapWeek,
+  BadgeItem,
+  MergedPR,
+} from "@/types";
 import { toPng } from "html-to-image";
 import { supabase } from "@/lib/supabase";
+import { updateProfileBadges } from "@/lib/db";
 import { LANG_COLORS } from "@/lib/languages";
 import { ProfileActions } from "@/components/profile/ProfileActions";
 import { OrganizationSection } from "@/components/profile/OrganizationSection";
@@ -27,11 +38,19 @@ import * as Tooltip from "@radix-ui/react-tooltip";
 // fallback reserves the heatmap's vertical space so lazy-loading causes no
 // layout shift (CLS).
 const HeatmapWithYearNav = dynamic(
-  () => import("@/components/profile/HeatmapWithYearNav").then((mod) => mod.HeatmapWithYearNav),
+  () =>
+    import("@/components/profile/HeatmapWithYearNav").then(
+      (mod) => mod.HeatmapWithYearNav,
+    ),
   {
     ssr: false,
     loading: () => (
-      <div style={{ marginTop: "44px" }} role="status" aria-live="polite" aria-busy="true">
+      <div
+        style={{ marginTop: "44px" }}
+        role="status"
+        aria-live="polite"
+        aria-busy="true"
+      >
         <span className="sr-only">Loading contribution activity…</span>
         <SkeletonCard variant="card" lines={7} />
       </div>
@@ -65,7 +84,6 @@ interface GitHubRepo {
   pushed_at?: string;
 }
 
-
 /** Full program names, shown on hover/focus — the badge itself only has room for the short name. */
 const PROGRAM_FULL_NAMES: Record<string, string> = {
   GSoC: "Google Summer of Code",
@@ -75,7 +93,10 @@ const PROGRAM_FULL_NAMES: Record<string, string> = {
   EluSoC: "EduLinkUp Season of Code",
 };
 
-const PROGRAM_STYLING: Record<string, { gradient: string; text: string; bg: string }> = {
+const PROGRAM_STYLING: Record<
+  string,
+  { gradient: string; text: string; bg: string }
+> = {
   GSSoC: {
     gradient: "linear-gradient(135deg, #FF9900 0%, #FF5E36 100%)",
     text: "#ffffff",
@@ -143,7 +164,13 @@ function formatUpdatedAt(iso: string): string {
   return years === 1 ? "1 year ago" : `${years} years ago`;
 }
 
-function ProfileFreshness({ username, updatedAt }: { username: string; updatedAt?: string }) {
+function ProfileFreshness({
+  username,
+  updatedAt,
+}: {
+  username: string;
+  updatedAt?: string;
+}) {
   const router = useRouter();
   const [refreshing, setRefreshing] = useState(false);
   const [lastRefresh, setLastRefresh] = useState(updatedAt);
@@ -164,7 +191,10 @@ function ProfileFreshness({ username, updatedAt }: { username: string; updatedAt
     };
     const id = setTimeout(() => setRelativeTime(compute()), 0);
     const interval = setInterval(() => setRelativeTime(compute()), 60000);
-    return () => { clearTimeout(id); clearInterval(interval); };
+    return () => {
+      clearTimeout(id);
+      clearInterval(interval);
+    };
   }, [lastRefresh]);
 
   const handleRefresh = async () => {
@@ -177,9 +207,13 @@ function ProfileFreshness({ username, updatedAt }: { username: string; updatedAt
         setLastRefresh(data.refreshedAt);
         router.refresh();
       } else {
-        const payload = await res.json().catch(() => ({ error: "Refresh failed" }));
+        const payload = await res
+          .json()
+          .catch(() => ({ error: "Refresh failed" }));
         if (res.status === 429 && payload.retryAfterSeconds) {
-          setErrorMsg(`Try again in ${Math.ceil(payload.retryAfterSeconds / 60)} min`);
+          setErrorMsg(
+            `Try again in ${Math.ceil(payload.retryAfterSeconds / 60)} min`,
+          );
         } else {
           setErrorMsg(payload.error || "Refresh failed");
         }
@@ -192,7 +226,15 @@ function ProfileFreshness({ username, updatedAt }: { username: string; updatedAt
   };
 
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: "8px", marginTop: "8px", flexWrap: "wrap" }}>
+    <div
+      style={{
+        display: "flex",
+        alignItems: "center",
+        gap: "8px",
+        marginTop: "8px",
+        flexWrap: "wrap",
+      }}
+    >
       <span style={{ fontSize: "12px", color: "var(--color-ink-mute)" }}>
         Updated {relativeTime}
       </span>
@@ -214,7 +256,11 @@ function ProfileFreshness({ username, updatedAt }: { username: string; updatedAt
         {refreshing ? "Refreshing..." : "Refresh"}
       </button>
       {errorMsg && (
-        <span style={{ fontSize: "11px", color: "var(--color-error, #dc2626)" }}>{errorMsg}</span>
+        <span
+          style={{ fontSize: "11px", color: "var(--color-error, #dc2626)" }}
+        >
+          {errorMsg}
+        </span>
       )}
     </div>
   );
@@ -279,15 +325,42 @@ function ProfileDownloadCard({
       >
         {isDownloading ? (
           <>
-            <svg className="animate-spin" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-              <circle cx="12" cy="12" r="10" stroke="var(--color-hairline-strong)" strokeWidth="4" style={{ opacity: 0.25 }} />
-              <path fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+            <svg
+              className="animate-spin"
+              width="13"
+              height="13"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              aria-hidden="true"
+            >
+              <circle
+                cx="12"
+                cy="12"
+                r="10"
+                stroke="var(--color-hairline-strong)"
+                strokeWidth="4"
+                style={{ opacity: 0.25 }}
+              />
+              <path
+                fill="currentColor"
+                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+              />
             </svg>
             Generating...
           </>
         ) : (
           <>
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+            <svg
+              width="13"
+              height="13"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              aria-hidden="true"
+            >
               <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
               <polyline points="7 10 12 15 17 10" />
               <line x1="12" y1="15" x2="12" y2="3" />
@@ -297,7 +370,15 @@ function ProfileDownloadCard({
         )}
       </button>
 
-      <div style={{ position: "fixed", left: "-9999px", top: "-9999px", overflow: "hidden", pointerEvents: "none" }}>
+      <div
+        style={{
+          position: "fixed",
+          left: "-9999px",
+          top: "-9999px",
+          overflow: "hidden",
+          pointerEvents: "none",
+        }}
+      >
         <div
           ref={cardRef}
           style={{
@@ -311,52 +392,132 @@ function ProfileDownloadCard({
             flexDirection: "column",
             justifyContent: "space-between",
             boxSizing: "border-box",
-            fontFamily: "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+            fontFamily:
+              "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
           }}
         >
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "24px" }}>
-            <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
-              <div style={{ display: "flex", gap: "16px", alignItems: "center" }}>
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "flex-start",
+              gap: "24px",
+            }}
+          >
+            <div
+              style={{ display: "flex", flexDirection: "column", gap: "24px" }}
+            >
+              <div
+                style={{ display: "flex", gap: "16px", alignItems: "center" }}
+              >
                 <Image
                   src={user.avatar_url}
                   alt={displayName}
                   width={64}
                   height={64}
                   unoptimized
-                  style={{ width: "64px", height: "64px", borderRadius: "9999px", border: "1px solid rgba(255, 255, 255, 0.15)", objectFit: "cover" }}
+                  style={{
+                    width: "64px",
+                    height: "64px",
+                    borderRadius: "9999px",
+                    border: "1px solid rgba(255, 255, 255, 0.15)",
+                    objectFit: "cover",
+                  }}
                 />
 
                 <div>
-                  <div style={{ fontSize: "18px", fontWeight: 600, color: "#ffffff", letterSpacing: "-0.3px", lineHeight: 1.2 }}>
+                  <div
+                    style={{
+                      fontSize: "18px",
+                      fontWeight: 600,
+                      color: "#ffffff",
+                      letterSpacing: "-0.3px",
+                      lineHeight: 1.2,
+                    }}
+                  >
                     {displayName}
                   </div>
-                  <div style={{ fontSize: "13px", color: "#9a9a9a", marginTop: "2px" }}>
+                  <div
+                    style={{
+                      fontSize: "13px",
+                      color: "#9a9a9a",
+                      marginTop: "2px",
+                    }}
+                  >
                     @{user.login}
                   </div>
                 </div>
               </div>
               <div>
-                <div style={{ fontSize: "10px", textTransform: "uppercase", letterSpacing: "1px", color: "#9a9a9a", fontWeight: 600 }}>
+                <div
+                  style={{
+                    fontSize: "10px",
+                    textTransform: "uppercase",
+                    letterSpacing: "1px",
+                    color: "#9a9a9a",
+                    fontWeight: 600,
+                  }}
+                >
                   Contributor Score
                 </div>
-                <div style={{ fontSize: "44px", fontWeight: 700, color: "#3ecf8e", marginTop: "4px", lineHeight: 1 }}>
+                <div
+                  style={{
+                    fontSize: "44px",
+                    fontWeight: 700,
+                    color: "#3ecf8e",
+                    marginTop: "4px",
+                    lineHeight: 1,
+                  }}
+                >
                   {score.toLocaleString("en-US")}
                 </div>
               </div>
             </div>
 
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", width: "260px" }}>
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "1fr 1fr",
+                gap: "12px",
+                width: "260px",
+              }}
+            >
               {[
                 { label: "Commits", value: stats.totalCommits },
                 { label: "PRs", value: stats.totalPRs },
                 { label: "Issues", value: stats.totalIssues },
                 { label: "Reviews", value: stats.totalReviews },
               ].map((stat) => (
-                <div key={stat.label} style={{ border: "1px solid rgba(255, 255, 255, 0.08)", borderRadius: "8px", padding: "12px 14px", backgroundColor: "#202020", display: "flex", flexDirection: "column", justifyContent: "center" }}>
-                  <div style={{ fontSize: "20px", fontWeight: 600, color: "#ffffff", lineHeight: 1.1 }}>
+                <div
+                  key={stat.label}
+                  style={{
+                    border: "1px solid rgba(255, 255, 255, 0.08)",
+                    borderRadius: "8px",
+                    padding: "12px 14px",
+                    backgroundColor: "#202020",
+                    display: "flex",
+                    flexDirection: "column",
+                    justifyContent: "center",
+                  }}
+                >
+                  <div
+                    style={{
+                      fontSize: "20px",
+                      fontWeight: 600,
+                      color: "#ffffff",
+                      lineHeight: 1.1,
+                    }}
+                  >
                     {stat.value.toLocaleString("en-US")}
                   </div>
-                  <div style={{ fontSize: "11px", color: "#9a9a9a", marginTop: "4px", fontWeight: 500 }}>
+                  <div
+                    style={{
+                      fontSize: "11px",
+                      color: "#9a9a9a",
+                      marginTop: "4px",
+                      fontWeight: 500,
+                    }}
+                  >
                     {stat.label}
                   </div>
                 </div>
@@ -364,12 +525,43 @@ function ProfileDownloadCard({
             </div>
           </div>
 
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderTop: "1px solid rgba(255, 255, 255, 0.08)", paddingTop: "16px", marginTop: "16px" }}>
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              borderTop: "1px solid rgba(255, 255, 255, 0.08)",
+              paddingTop: "16px",
+              marginTop: "16px",
+            }}
+          >
             <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-              <span style={{ width: "8px", height: "8px", borderRadius: "50%", backgroundColor: "#3ecf8e" }} />
-              <span style={{ fontSize: "14px", fontWeight: 600, color: "#ffffff", letterSpacing: "-0.2px" }}>OSSfolio</span>
+              <span
+                style={{
+                  width: "8px",
+                  height: "8px",
+                  borderRadius: "50%",
+                  backgroundColor: "#3ecf8e",
+                }}
+              />
+              <span
+                style={{
+                  fontSize: "14px",
+                  fontWeight: 600,
+                  color: "#ffffff",
+                  letterSpacing: "-0.2px",
+                }}
+              >
+                OSSfolio
+              </span>
             </div>
-            <span style={{ fontSize: "11px", fontFamily: "ui-monospace, Menlo, Monaco, Consolas, monospace", color: "#707070" }}>
+            <span
+              style={{
+                fontSize: "11px",
+                fontFamily: "ui-monospace, Menlo, Monaco, Consolas, monospace",
+                color: "#707070",
+              }}
+            >
               ossfolio.qzz.io
             </span>
           </div>
@@ -388,13 +580,12 @@ interface FilterTabProps {
 
 function FilterTab({ label, isActive, onClick, dotColor }: FilterTabProps) {
   return (
-      <button
-        type="button"
-        aria-pressed="false"
-        data-aria-pressed={isActive}
+    <button
+      type="button"
+      aria-pressed="false"
+      data-aria-pressed={isActive}
 
-
-        onClick={onClick}
+      onClick={onClick}
       style={{
         display: "inline-flex",
         alignItems: "center",
@@ -438,6 +629,23 @@ function FilterTab({ label, isActive, onClick, dotColor }: FilterTabProps) {
     </button>
   );
 }
+function ContributorScoreCard({ children }: { children: React.ReactNode }) {
+  const [animate, setAnimate] = useState(true);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setAnimate(false);
+    }, 1000);
+
+    return () => clearTimeout(timer);
+  }, []);
+
+  return (
+    <div className={animate ? "animate-pulse" : ""} style={{ height: "100%" }}>
+      {children}
+    </div>
+  );
+}
 
 export function ProfileView({
   user,
@@ -455,24 +663,58 @@ export function ProfileView({
   rateLimited,
   mergedPRs,
   customLinks = [],
+  pinnedRepos = [],
   customizationLoaded = false,
+  repoSectionTitle, // <-- NEW: Added this prop
 }: {
   user: GitHubUser;
   repos: GitHubRepo[];
-} &
-  ProfileExtras &
-  {
+} & ProfileExtras & {
     rateLimited?: boolean;
     customLinks?: Array<{ label: string; url: string }>;
+    pinnedRepos?: string[];
     customizationLoaded?: boolean;
+    repoSectionTitle?: string; // <-- NEW: Added to TypeScript definitions
   }) {
+  // Derived from stats the page already fetched and passed down, so the whole feature
+  // costs no extra GitHub calls and no extra database queries. `useMemo` keeps the array
+  // referentially stable across the many re-renders this component does (tab switches,
+  // repo filtering, sorting), so the cards don't rebuild on every keystroke.
+  const achievements = useMemo(
+    () => evaluateAchievements({ stats, longestStreak }),
+    [stats, longestStreak],
+  );
+  const unlockedCount = useMemo(
+    () => countUnlocked(achievements),
+    [achievements],
+  );
+
   const [copied, setCopied] = useState(false);
-  const [repoSort, setRepoSort] = useState<"stars" | "forks" | "updated">("stars");
+  const [repoSort, setRepoSort] = useState<"stars" | "forks" | "updated">(
+    "stars",
+  );
   const [isDownloading, setIsDownloading] = useState(false);
   const searchRef = useRef<HTMLInputElement>(null);
   const [repoFilter, setRepoFilter] = useState("");
   const [activeLanguage, setActiveLanguage] = useState<string>("All");
-  const [activeTab, setActiveTab] = useState<"repos" | "stats" | "prs" | "timeline">("repos");
+  const [activeTab, setActiveTab] = useState<
+    "repos" | "stats" | "prs" | "timeline"
+  >("repos");
+
+  const [pinnedList, setPinnedList] = useState<string[]>(pinnedRepos);
+  const [pinningRepo, setPinningRepo] = useState<string | null>(null);
+
+  // Sync local pinned state when the prop changes (e.g. after a background refresh), using React's
+  // "adjust state during render" pattern rather than an effect — it avoids an extra render pass and
+  // the cascading-render the effect-based approach triggers.
+  const [prevPinnedProp, setPrevPinnedProp] = useState<string[]>(pinnedRepos);
+
+  if (prevPinnedProp !== pinnedRepos) {
+    setPrevPinnedProp(pinnedRepos);
+    setPinnedList(pinnedRepos);
+  }
+
+  const MAX_PINNED = 6;
 
   const profileTabs = [
     { key: "repos" as const, label: "Repos" },
@@ -481,10 +723,17 @@ export function ProfileView({
     { key: "timeline" as const, label: "Timeline" },
   ];
 
-  const tabTransition = { duration: 0.18, ease: [0.25, 0.1, 0.25, 1.0] as const };
+  const tabTransition = {
+    duration: 0.18,
+    ease: [0.25, 0.1, 0.25, 1.0] as const,
+  };
   const tabInitial = { opacity: 0, y: 6 };
   const tabAnimate = { opacity: 1, y: 0, transition: tabTransition };
-  const tabExit = { opacity: 0, y: -6, transition: { duration: 0.12, ease: "easeIn" as const } };
+  const tabExit = {
+    opacity: 0,
+    y: -6,
+    transition: { duration: 0.12, ease: "easeIn" as const },
+  };
 
   const handleTabKeyDown = useCallback(
     (e: React.KeyboardEvent<HTMLButtonElement>) => {
@@ -522,21 +771,35 @@ export function ProfileView({
       new Set(
         repos
           .map((r) => r.language)
-          .filter((l): l is string => typeof l === "string" && l.trim() !== "")
-      )
+          .filter((l): l is string => typeof l === "string" && l.trim() !== ""),
+      ),
     ).sort();
   }, [repos]);
 
   const filteredRepos = useMemo(() => {
+    const pinnedSet = new Set(pinnedList);
     return [...repos]
       .sort((a, b) => {
+        const aPinned = pinnedSet.has(a.name);
+        const bPinned = pinnedSet.has(b.name);
+        if (aPinned !== bPinned) return aPinned ? -1 : 1;
         if (repoSort === "forks") return b.forks_count - a.forks_count;
-        if (repoSort === "updated") return (b.pushed_at || "").localeCompare(a.pushed_at || "");
+        if (repoSort === "updated")
+          return (b.pushed_at || "").localeCompare(a.pushed_at || "");
         return b.stargazers_count - a.stargazers_count;
       })
-      .filter((repo) => !repoFilter || repo.name.toLowerCase().includes(repoFilter.toLowerCase()) || (repo.description || "").toLowerCase().includes(repoFilter.toLowerCase()))
-      .filter((repo) => activeLanguage === "All" || repo.language === activeLanguage);
-  }, [repos, repoSort, repoFilter, activeLanguage]);
+      .filter(
+        (repo) =>
+          !repoFilter ||
+          repo.name.toLowerCase().includes(repoFilter.toLowerCase()) ||
+          (repo.description || "")
+            .toLowerCase()
+            .includes(repoFilter.toLowerCase()),
+      )
+      .filter(
+        (repo) => activeLanguage === "All" || repo.language === activeLanguage,
+      );
+  }, [repos, repoSort, repoFilter, activeLanguage, pinnedList]);
 
   const focusSearch = useCallback(() => searchRef.current?.focus(), []);
   useKeyboardShortcuts({ onSlash: focusSearch });
@@ -546,6 +809,7 @@ export function ProfileView({
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [lastRefresh, setLastRefresh] = useState(updatedAt);
   const [relativeTime, setRelativeTime] = useState("...");
+  const [tabVisible, setTabVisible] = useState(true);
 
   useEffect(() => {
     const compute = () => {
@@ -560,12 +824,14 @@ export function ProfileView({
       return `${days}d ago`;
     };
     const initialUpdate = setTimeout(() => setRelativeTime(compute()), 0);
-    const interval = setInterval(() => setRelativeTime(compute()), 60000);
+    const interval = setInterval(() => {
+      if (tabVisible) setRelativeTime(compute());
+    }, 60000);
     return () => {
       clearInterval(interval);
       clearTimeout(initialUpdate);
     };
-  }, [lastRefresh]);
+  }, [lastRefresh, tabVisible]);
 
   const handleRefresh = async () => {
     setIsRefreshing(true);
@@ -574,6 +840,7 @@ export function ProfileView({
       if (res.ok) {
         const data = await res.json();
         setLastRefresh(data.refreshedAt);
+        postMessage({ type: "refreshed", username: user.login });
         router.refresh();
       } else {
         const payload = await res.json().catch(() => ({}));
@@ -592,7 +859,7 @@ export function ProfileView({
           b &&
           typeof b.program === "string" &&
           b.program.trim() !== "" &&
-          Array.isArray(b.years)
+          Array.isArray(b.years),
       )
       .map((b) => ({
         program: b.program,
@@ -602,15 +869,18 @@ export function ProfileView({
       }));
   };
 
-  const [badgesList, setBadgesList] = useState<BadgeItem[]>(() => sanitizeBadges(badges));
+  const [badgesList, setBadgesList] = useState<BadgeItem[]>(() =>
+    sanitizeBadges(badges),
+  );
   const [authUser, setAuthUser] = useState<any>(null);
   const [isBadgeModalOpen, setIsBadgeModalOpen] = useState(false);
 
   const isOwner = !!(
-    authUser && (
-      (profileId && authUser.id === profileId) ||
-      (!profileId && authUser.user_metadata?.user_name?.toLowerCase() === user.login?.toLowerCase())
-    )
+    authUser &&
+    ((profileId && authUser.id === profileId) ||
+      (!profileId &&
+        authUser.user_metadata?.user_name?.toLowerCase() ===
+          user.login?.toLowerCase()))
   );
 
   useEffect(() => {
@@ -634,9 +904,59 @@ export function ProfileView({
     };
   }, []);
 
+  // Cross-tab sync: when a refresh completes in another tab, reload data.
+  const { postMessage } = useBroadcastChannel<{
+    type: string;
+    username: string;
+  }>(
+    "ossfolio:refresh",
+    useCallback(
+      (data) => {
+        if (data.type === "refreshed" && data.username === user.login) {
+          router.refresh();
+        }
+      },
+      [user.login, router],
+    ),
+  );
+
+  // Pause relative-time updates when the tab is hidden.
+  useVisibility(
+    useCallback(() => setTabVisible(true), []),
+    useCallback(() => setTabVisible(false), []),
+  );
+
+  // Debounced tab setter to prevent rapid switching from queuing
+  // multiple AnimatePresence transitions.
+  const tabDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const setActiveTabDebounced = useCallback(
+    (key: "repos" | "stats" | "prs" | "timeline") => {
+      if (tabDebounceRef.current) clearTimeout(tabDebounceRef.current);
+      tabDebounceRef.current = setTimeout(() => {
+        setActiveTab(key);
+      }, 150);
+    },
+    [],
+  );
+
+  useEffect(() => {
+    return () => {
+      if (tabDebounceRef.current) clearTimeout(tabDebounceRef.current);
+    };
+  }, []);
+
   if (rateLimited) {
     return (
-      <div style={{ color: 'var(--color-ink-mute)', backgroundColor: 'var(--color-canvas-soft)', padding: '16px', borderRadius: '8px', textAlign: 'center', marginBottom: '24px' }}>
+      <div
+        style={{
+          color: "var(--color-ink-mute)",
+          backgroundColor: "var(--color-canvas-soft)",
+          padding: "16px",
+          borderRadius: "8px",
+          textAlign: "center",
+          marginBottom: "24px",
+        }}
+      >
         GitHub data is temporarily unavailable. Please try again later.
       </div>
     );
@@ -654,19 +974,18 @@ export function ProfileView({
       alert("Please sync your profile first before removing badges.");
       return;
     }
-    const confirmRemove = confirm(`Are you sure you want to remove the ${program} badge?`);
+    const confirmRemove = confirm(
+      `Are you sure you want to remove the ${program} badge?`,
+    );
     if (!confirmRemove) return;
 
     try {
       const updatedList = badgesList.filter((b) => b.program !== program);
-      const { error } = await supabase
-        .from("profiles")
-        .upsert({
-          id: profileId,
-          username: user.login,
-          badges: updatedList,
-          updated_at: new Date().toISOString(),
-        });
+      const { error } = await updateProfileBadges({
+        id: profileId,
+        username: user.login,
+        badges: updatedList,
+      });
 
       if (error) {
         alert(`Failed to remove badge: ${error.message}`);
@@ -678,37 +997,129 @@ export function ProfileView({
     }
   };
 
-  const scrollToTop = () =>
-    window.scrollTo({ top: 0, behavior: "smooth" });
+  const handleTogglePin = async (repoName: string) => {
+    // Single-flight: block all toggles while one PUT is in flight, so two quick clicks on different
+    // cards can't race — overlapping requests could otherwise land out of order and persist a stale list.
+    if (pinningRepo !== null) return;
+    const isPinned = pinnedList.includes(repoName);
+    if (!isPinned && pinnedList.length >= MAX_PINNED) {
+      alert(`You can pin up to ${MAX_PINNED} repositories.`);
+      return;
+    }
+    const next = isPinned
+      ? pinnedList.filter((name) => name !== repoName)
+      : [...pinnedList, repoName];
+    const previous = pinnedList;
+    setPinnedList(next);
+    setPinningRepo(repoName);
+    try {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      const token = session?.access_token;
+      if (!token) {
+        setPinnedList(previous);
+        alert("Please sign in again to update pinned repositories.");
+        return;
+      }
+      const resp = await fetch("/api/settings", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ pinned_repos: next }),
+      });
+      if (!resp.ok) {
+        setPinnedList(previous);
+        alert("Failed to update pinned repositories. Please try again.");
+      }
+    } catch (err) {
+      setPinnedList(previous);
+      console.error("Error updating pinned repositories:", err);
+      alert("Failed to update pinned repositories. Please try again.");
+    } finally {
+      setPinningRepo(null);
+    }
+  };
+  const scrollToTop = () => window.scrollTo({ top: 0, behavior: "smooth" });
 
-  const totalStars = repos.reduce((sum, r) => sum + (r.stargazers_count ?? 0), 0);
+  const totalStars = repos.reduce(
+    (sum, r) => sum + (r.stargazers_count ?? 0),
+    0,
+  );
   const totalForks = repos.reduce((sum, r) => sum + (r.forks_count ?? 0), 0);
 
   return (
-    <div style={{ maxWidth: "56rem", margin: "0 auto", padding: "48px 20px 80px" }}>
+    <div
+      style={{ maxWidth: "56rem", margin: "0 auto", padding: "48px 20px 80px" }}
+    >
       {/* Profile header */}
-      <div style={{ display: "flex", alignItems: "flex-start", gap: "24px", flexWrap: "wrap", paddingBottom: "40px", borderBottom: "1px solid var(--color-hairline)" }}>
+      <div
+        style={{
+          display: "flex",
+          alignItems: "flex-start",
+          gap: "24px",
+          flexWrap: "wrap",
+          paddingBottom: "40px",
+          borderBottom: "1px solid var(--color-hairline)",
+        }}
+      >
         <Image
           src={user.avatar_url}
           alt={displayName}
           width={88}
           height={88}
-          style={{ borderRadius: "9999px", border: "1px solid var(--color-hairline)", flexShrink: 0 }}
+          style={{
+            borderRadius: "9999px",
+            border: "1px solid var(--color-hairline)",
+            flexShrink: 0,
+          }}
         />
 
         <div style={{ flex: 1, minWidth: "200px" }}>
-          <h1 style={{ fontSize: "24px", fontWeight: 600, color: "var(--color-ink)", letterSpacing: "-0.42px", margin: 0 }}>
+          <h1
+            style={{
+              fontSize: "24px",
+              fontWeight: 600,
+              color: "var(--color-ink)",
+              letterSpacing: "-0.42px",
+              margin: 0,
+            }}
+          >
             {displayName}
           </h1>
-          <p style={{ fontSize: "14px", color: "var(--color-ink-mute)", margin: "4px 0 0 0" }}>@{user.login}</p>
+          <p
+            style={{
+              fontSize: "14px",
+              color: "var(--color-ink-mute)",
+              margin: "4px 0 0 0",
+            }}
+          >
+            @{user.login}
+          </p>
 
           {user.bio && (
-            <p style={{ fontSize: "14px", color: "var(--color-ink)", lineHeight: 1.55, margin: "12px 0 0 0", maxWidth: "480px" }}>
+            <p
+              style={{
+                fontSize: "14px",
+                color: "var(--color-ink)",
+                lineHeight: 1.55,
+                margin: "12px 0 0 0",
+                maxWidth: "480px",
+              }}
+            >
               {user.bio}
             </p>
           )}
 
-          <div style={{ fontSize: "12px", color: "var(--color-ink-mute)", marginTop: "8px" }}>
+          <div
+            style={{
+              fontSize: "12px",
+              color: "var(--color-ink-mute)",
+              marginTop: "8px",
+            }}
+          >
             Updated {relativeTime}
           </div>
 
@@ -734,20 +1145,63 @@ export function ProfileView({
               tierBg = "rgba(192, 192, 192, 0.15)";
             }
             return (
-              <div style={{ marginTop: "12px", display: "inline-flex", alignItems: "center" }}>
-                <span style={{ fontSize: "11px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", color: tierColor, backgroundColor: tierBg, border: `1px solid ${tierColor}`, padding: "3px 8px", borderRadius: "4px", boxShadow: "0 2px 8px rgba(0,0,0,0.05)" }}>
+              <div
+                style={{
+                  marginTop: "12px",
+                  display: "inline-flex",
+                  alignItems: "center",
+                }}
+              >
+                <span
+                  style={{
+                    fontSize: "11px",
+                    fontWeight: 700,
+                    textTransform: "uppercase",
+                    letterSpacing: "0.05em",
+                    color: tierColor,
+                    backgroundColor: tierBg,
+                    border: `1px solid ${tierColor}`,
+                    padding: "3px 8px",
+                    borderRadius: "4px",
+                    boxShadow: "0 2px 8px rgba(0,0,0,0.05)",
+                  }}
+                >
                   {tierName}
                 </span>
               </div>
             );
           })()}
 
-          <div style={{ display: "flex", flexWrap: "wrap", gap: "16px", marginTop: "14px", alignItems: "center" }}>
+          <div
+            style={{
+              display: "flex",
+              flexWrap: "wrap",
+              gap: "16px",
+              marginTop: "14px",
+              alignItems: "center",
+            }}
+          >
             {user.location && (
-              <span style={{ fontSize: "14px", color: "var(--color-ink-mute)", display: "flex", alignItems: "center", gap: "5px" }}>
-                <svg aria-hidden="true" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-
-                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" /><circle cx="12" cy="10" r="3" />
+              <span
+                style={{
+                  fontSize: "14px",
+                  color: "var(--color-ink-mute)",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "5px",
+                }}
+              >
+                <svg
+                  aria-hidden="true"
+                  width="13"
+                  height="13"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                >
+                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+                  <circle cx="12" cy="10" r="3" />
                 </svg>
                 {user.location}
               </span>
@@ -758,9 +1212,23 @@ export function ProfileView({
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label={`Personal website ${website.replace(/^https?:\/\//, "")} (opens in a new tab)`}
-                style={{ fontSize: "13px", color: "var(--color-ink-mute)", display: "flex", alignItems: "center", gap: "5px", textDecoration: "none" }}
+                style={{
+                  fontSize: "13px",
+                  color: "var(--color-ink-mute)",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "5px",
+                  textDecoration: "none",
+                }}
               >
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <svg
+                  width="13"
+                  height="13"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                >
                   <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
                   <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
                 </svg>
@@ -773,9 +1241,22 @@ export function ProfileView({
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label={`Twitter profile of @${user.twitter_username} (opens in a new tab)`}
-                style={{ fontSize: "13px", color: "var(--color-ink-mute)", display: "flex", alignItems: "center", gap: "5px", textDecoration: "none" }}
+                style={{
+                  fontSize: "13px",
+                  color: "var(--color-ink-mute)",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "5px",
+                  textDecoration: "none",
+                }}
               >
-                <svg aria-hidden="true" width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
+                <svg
+                  aria-hidden="true"
+                  width="13"
+                  height="13"
+                  viewBox="0 0 24 24"
+                  fill="currentColor"
+                >
                   <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
                 </svg>
                 @{user.twitter_username}
@@ -786,9 +1267,22 @@ export function ProfileView({
               target="_blank"
               rel="noopener noreferrer"
               aria-label={`GitHub profile of ${displayName} (opens in a new tab)`}
-              style={{ fontSize: "13px", color: "var(--color-ink-mute)", display: "flex", alignItems: "center", gap: "5px", textDecoration: "none" }}
+              style={{
+                fontSize: "13px",
+                color: "var(--color-ink-mute)",
+                display: "flex",
+                alignItems: "center",
+                gap: "5px",
+                textDecoration: "none",
+              }}
             >
-              <svg aria-hidden="true" width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
+              <svg
+                aria-hidden="true"
+                width="13"
+                height="13"
+                viewBox="0 0 24 24"
+                fill="currentColor"
+              >
                 <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z" />
               </svg>
               GitHub
@@ -799,13 +1293,26 @@ export function ProfileView({
             <ProfileActions
               username={user.login}
               score={score}
+              stats={stats}
               isRefreshing={isRefreshing}
               onRefresh={handleRefresh}
             />
           </div>
 
-          <div style={{ marginTop: "14px", display: "flex", gap: "8px", flexWrap: "wrap" }}>
-            <ProfileDownloadCard user={user} stats={stats} score={score} displayName={displayName} />
+          <div
+            style={{
+              marginTop: "14px",
+              display: "flex",
+              gap: "8px",
+              flexWrap: "wrap",
+            }}
+          >
+            <ProfileDownloadCard
+              user={user}
+              stats={stats}
+              score={score}
+              displayName={displayName}
+            />
             <input
               ref={searchRef}
               type="text"
@@ -827,30 +1334,60 @@ export function ProfileView({
 
           <div style={{ display: "flex", gap: "20px", marginTop: "14px" }}>
             <span style={{ fontSize: "13px", color: "var(--color-ink-mute)" }}>
-              <strong style={{ color: "var(--color-ink)", fontWeight: 600 }}>{formatCount(user.followers)}</strong> followers
+              <strong style={{ color: "var(--color-ink)", fontWeight: 600 }}>
+                {formatCount(user.followers)}
+              </strong>{" "}
+              followers
             </span>
             <span style={{ fontSize: "13px", color: "var(--color-ink-mute)" }}>
-              <strong style={{ color: "var(--color-ink)", fontWeight: 600 }}>{formatCount(user.following)}</strong> following
+              <strong style={{ color: "var(--color-ink)", fontWeight: 600 }}>
+                {formatCount(user.following)}
+              </strong>{" "}
+              following
             </span>
             <span style={{ fontSize: "13px", color: "var(--color-ink-mute)" }}>
-              <strong style={{ color: "var(--color-ink)", fontWeight: 600 }}>{formatCount(user.public_repos)}</strong> repos
+              <strong style={{ color: "var(--color-ink)", fontWeight: 600 }}>
+                {formatCount(user.public_repos)}
+              </strong>{" "}
+              repos
             </span>
           </div>
 
           {/* Custom profile links (from Supabase custom_links) */}
           <div style={{ marginTop: "18px" }}>
-            <h2 style={{ fontSize: "13px", fontWeight: 600, color: "var(--color-ink-mute)", margin: 0, letterSpacing: "-0.2px" }}>
+            <h2
+              style={{
+                fontSize: "13px",
+                fontWeight: 600,
+                color: "var(--color-ink-mute)",
+                margin: 0,
+                letterSpacing: "-0.2px",
+              }}
+            >
               Links
             </h2>
 
             {!customizationLoaded ? (
               isOwner ? (
-                <p style={{ fontSize: "13px", color: "var(--color-ink-mute)", margin: "8px 0 0 0" }}>
+                <p
+                  style={{
+                    fontSize: "13px",
+                    color: "var(--color-ink-mute)",
+                    margin: "8px 0 0 0",
+                  }}
+                >
                   Loading your saved links...
                 </p>
               ) : null
             ) : customLinks.length > 0 ? (
-              <div style={{ display: "flex", flexWrap: "wrap", gap: "10px", marginTop: "10px" }}>
+              <div
+                style={{
+                  display: "flex",
+                  flexWrap: "wrap",
+                  gap: "10px",
+                  marginTop: "10px",
+                }}
+              >
                 {customLinks.map((l) => (
                   <a
                     key={`${l.label}-${l.url}`}
@@ -869,12 +1406,23 @@ export function ProfileView({
                       borderRadius: "9999px",
                       backgroundColor: "var(--color-canvas-soft)",
                     }}
-                    onMouseEnter={(e) => (e.currentTarget.style.color = "var(--color-ink)")}
-                    onMouseLeave={(e) => (e.currentTarget.style.color = "var(--color-ink-mute)")}
+                    onMouseEnter={(e) =>
+                      (e.currentTarget.style.color = "var(--color-ink)")
+                    }
+                    onMouseLeave={(e) =>
+                      (e.currentTarget.style.color = "var(--color-ink-mute)")
+                    }
                     aria-label={`${l.label} (opens in a new tab)`}
                   >
                     {l.label}
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <svg
+                      width="12"
+                      height="12"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                    >
                       <path d="M14 3h7v7" />
                       <path d="M10 14L21 3" />
                       <path d="M21 14v7H3V3h7" />
@@ -883,20 +1431,46 @@ export function ProfileView({
                 ))}
               </div>
             ) : isOwner ? (
-              <p style={{ fontSize: "13px", color: "var(--color-ink-mute)", margin: "8px 0 0 0" }}>
+              <p
+                style={{
+                  fontSize: "13px",
+                  color: "var(--color-ink-mute)",
+                  margin: "8px 0 0 0",
+                }}
+              >
                 No custom links saved yet.
               </p>
             ) : null}
           </div>
-
         </div>
       </div>
 
       {/* Badges section */}
       {(badgesList.length > 0 || isOwner) && (
-        <div style={{ marginTop: "32px", borderBottom: "1px solid var(--color-hairline)", paddingBottom: "32px" }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
-            <h2 style={{ fontSize: "16px", fontWeight: 600, color: "var(--color-ink)", margin: 0, letterSpacing: "-0.2px" }}>
+        <div
+          style={{
+            marginTop: "32px",
+            borderBottom: "1px solid var(--color-hairline)",
+            paddingBottom: "32px",
+          }}
+        >
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              marginBottom: "16px",
+            }}
+          >
+            <h2
+              style={{
+                fontSize: "16px",
+                fontWeight: 600,
+                color: "var(--color-ink)",
+                margin: 0,
+                letterSpacing: "-0.2px",
+              }}
+            >
               Badges
             </h2>
             {isOwner && (
@@ -919,101 +1493,135 @@ export function ProfileView({
                   transition: "background-color 0.15s",
                 }}
               >
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                  <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
+                <svg
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.5"
+                >
+                  <line x1="12" y1="5" x2="12" y2="19" />
+                  <line x1="5" y1="12" x2="19" y2="12" />
                 </svg>
                 Add badge
               </button>
             )}
           </div>
           {badgesList.length === 0 ? (
-            <p style={{ fontSize: "13px", color: "var(--color-ink-mute)", margin: 0 }}>No badges claimed yet. Click &quot;Add badge&quot; to show your participation.</p>
+            <p
+              style={{
+                fontSize: "13px",
+                color: "var(--color-ink-mute)",
+                margin: 0,
+              }}
+            >
+              No badges claimed yet. Click &quot;Add badge&quot; to show your
+              participation.
+            </p>
           ) : (
             <Tooltip.Provider delayDuration={200}>
-            <div style={{ display: "flex", flexWrap: "wrap", gap: "10px" }}>
-              {badgesList.map((badge) => {
-                if (!badge || !badge.program || !Array.isArray(badge.years)) return null;
-                const style = PROGRAM_STYLING[badge.program] || {
-                  gradient: "linear-gradient(135deg, #707070 0%, #9a9a9a 100%)",
-                  text: "#ffffff",
-                  bg: "rgba(128, 128, 128, 0.1)",
-                };
-                const fullName = PROGRAM_FULL_NAMES[badge.program] ?? badge.program;
-                return (
-                  <Tooltip.Root key={badge.program}>
-                    <Tooltip.Trigger asChild>
-                  <div
-                    tabIndex={0}
-                    aria-label={fullName}
-                    style={{
-                      display: "inline-flex",
-                      alignItems: "center",
-                      gap: "8px",
-                      padding: "6px 14px",
-                      borderRadius: "9999px",
-                      background: style.gradient,
-                      color: style.text,
-                      fontSize: "13px",
-                      fontWeight: 600,
-                      boxShadow: "0 2px 4px rgba(0,0,0,0.08)",
-                    }}
-                  >
-                    <span>{badge.program}</span>
-                    <span style={{ backgroundColor: "rgba(255, 255, 255, 0.25)", padding: "2px 6px", borderRadius: "9999px", fontSize: "11px", fontWeight: 500 }}>
-                      {badge.years.join(", ")}
-                    </span>
-                    {isOwner && (
-                      <button
-                        type="button"
-                        onClick={() => handleRemoveBadge(badge.program)}
-                        title={`Remove ${badge.program} badge`}
-                        aria-label={`Remove ${badge.program} badge`}
-                        style={{
-                          background: "none",
-                          border: "none",
-                          color: "rgba(255, 255, 255, 0.8)",
-                          cursor: "pointer",
-                          padding: 0,
-                          display: "flex",
-                          alignItems: "center",
-                          fontSize: "16px",
-                          marginLeft: "4px",
-                          lineHeight: 1,
-                        }}
-                      >
-                        &times;
-                      </button>
-                    )}
-                  </div>
-                    </Tooltip.Trigger>
-                    <Tooltip.Portal>
-                      <Tooltip.Content
-                        side="top"
-                        sideOffset={6}
-                        style={{
-                          padding: "6px 10px",
-                          borderRadius: "6px",
-                          fontSize: "12px",
-                          fontWeight: 500,
-                          lineHeight: 1.4,
-                          color: "var(--color-on-primary)",
-                          backgroundColor: "var(--color-ink)",
-                          boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
-                          zIndex: 50,
-                        }}
-                      >
-                        {fullName}
-                        <Tooltip.Arrow style={{ fill: "var(--color-ink)" }} />
-                      </Tooltip.Content>
-                    </Tooltip.Portal>
-                  </Tooltip.Root>
-                );
-              })}
-            </div>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: "10px" }}>
+                {badgesList.map((badge) => {
+                  if (!badge || !badge.program || !Array.isArray(badge.years))
+                    return null;
+                  const style = PROGRAM_STYLING[badge.program] || {
+                    gradient:
+                      "linear-gradient(135deg, #707070 0%, #9a9a9a 100%)",
+                    text: "#ffffff",
+                    bg: "rgba(128, 128, 128, 0.1)",
+                  };
+                  const fullName =
+                    PROGRAM_FULL_NAMES[badge.program] ?? badge.program;
+                  return (
+                    <Tooltip.Root key={badge.program}>
+                      <Tooltip.Trigger asChild>
+                        <div
+                          tabIndex={0}
+                          aria-label={fullName}
+                          style={{
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: "8px",
+                            padding: "6px 14px",
+                            borderRadius: "9999px",
+                            background: style.gradient,
+                            color: style.text,
+                            fontSize: "13px",
+                            fontWeight: 600,
+                            boxShadow: "0 2px 4px rgba(0,0,0,0.08)",
+                          }}
+                        >
+                          <span>{badge.program}</span>
+                          <span
+                            style={{
+                              backgroundColor: "rgba(255, 255, 255, 0.25)",
+                              padding: "2px 6px",
+                              borderRadius: "9999px",
+                              fontSize: "11px",
+                              fontWeight: 500,
+                            }}
+                          >
+                            {badge.years.join(", ")}
+                          </span>
+                          {isOwner && (
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveBadge(badge.program)}
+                              title={`Remove ${badge.program} badge`}
+                              aria-label={`Remove ${badge.program} badge`}
+                              style={{
+                                background: "none",
+                                border: "none",
+                                color: "rgba(255, 255, 255, 0.8)",
+                                cursor: "pointer",
+                                padding: 0,
+                                display: "flex",
+                                alignItems: "center",
+                                fontSize: "16px",
+                                marginLeft: "4px",
+                                lineHeight: 1,
+                              }}
+                            >
+                              &times;
+                            </button>
+                          )}
+                        </div>
+                      </Tooltip.Trigger>
+                      <Tooltip.Portal>
+                        <Tooltip.Content
+                          side="top"
+                          sideOffset={6}
+                          style={{
+                            padding: "6px 10px",
+                            borderRadius: "6px",
+                            fontSize: "12px",
+                            fontWeight: 500,
+                            lineHeight: 1.4,
+                            color: "var(--color-on-primary)",
+                            backgroundColor: "var(--color-ink)",
+                            boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+                            zIndex: 50,
+                          }}
+                        >
+                          {fullName}
+                          <Tooltip.Arrow style={{ fill: "var(--color-ink)" }} />
+                        </Tooltip.Content>
+                      </Tooltip.Portal>
+                    </Tooltip.Root>
+                  );
+                })}
+              </div>
             </Tooltip.Provider>
           )}
         </div>
       )}
+
+      {/* Achievements — auto-earned milestones, distinct from the self-declared badges above */}
+      <AchievementsGrid
+        achievements={achievements}
+        unlockedCount={unlockedCount}
+      />
 
       {/* Tab navigation */}
       <div
@@ -1037,18 +1645,22 @@ export function ProfileView({
             aria-selected={activeTab === tab.key}
             aria-controls={`profile-tabpanel-${tab.key}`}
             tabIndex={activeTab === tab.key ? 0 : -1}
-            onClick={() => setActiveTab(tab.key)}
+            onClick={() => setActiveTabDebounced(tab.key)}
             onKeyDown={handleTabKeyDown}
             style={{
               position: "relative",
               padding: "10px 18px",
               fontSize: "13px",
               fontWeight: activeTab === tab.key ? 600 : 400,
-              color: activeTab === tab.key ? "var(--color-ink)" : "var(--color-ink-mute)",
+              color:
+                activeTab === tab.key
+                  ? "var(--color-ink)"
+                  : "var(--color-ink-mute)",
               background: "none",
               border: "none",
               borderBottom: "2px solid",
-              borderBottomColor: activeTab === tab.key ? "#3ecf8e" : "transparent",
+              borderBottomColor:
+                activeTab === tab.key ? "#3ecf8e" : "transparent",
               cursor: "pointer",
               transition: "color 0.15s ease, border-color 0.15s ease",
               marginBottom: "-1px",
@@ -1081,184 +1693,489 @@ export function ProfileView({
             animate={tabAnimate}
             exit={tabExit}
           >
-      {/* Repos */}
-      <div style={{ marginTop: "24px" }}>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", margin: "0 0 12px 0", flexWrap: "wrap", gap: "12px" }}>
-          <h2 style={{ fontSize: "16px", fontWeight: 600, color: "var(--color-ink)", margin: 0, letterSpacing: "-0.2px" }}>
-            Popular repositories
-          </h2>
-          <div role="group" aria-label="Sort popular repositories" style={{ display: "flex", gap: "6px" }}>
-            {(["stars", "forks", "updated"] as const).map((option) => (
-              <button
-                key={option}
-                type="button"
-                aria-pressed={repoSort === option ? "true" : "false"}
-                onClick={() => setRepoSort(option)}
-                style={{
-                  padding: "4px 10px",
-                  fontSize: "12px",
-                  fontWeight: repoSort === option ? 600 : 400,
-                  color: repoSort === option ? "#171717" : "var(--color-ink-mute)",
-                  backgroundColor: repoSort === option ? "#3ecf8e" : "var(--color-canvas-soft)",
-                  border: repoSort === option ? "none" : "1px solid var(--color-hairline)",
-                  borderRadius: "9999px",
-                  cursor: "pointer",
-                }}
-              >
-                {option === "stars" ? "Stars" : option === "forks" ? "Forks" : "Recent"}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {repos.length === 0 ? (
-          <div style={{ padding: "40px", border: "1px dashed var(--color-hairline-strong)", borderRadius: "12px", textAlign: "center", backgroundColor: "var(--color-canvas-soft)", margin: "16px 0" }}>
-            <svg style={{ margin: "0 auto 12px", color: "var(--color-ink-mute-2)" }} width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <rect x="2" y="2" width="20" height="20" rx="2" ry="2" />
-              <path d="M12 18H12.01" />
-            </svg>
-            <p style={{ fontSize: "14px", fontWeight: 600, color: "var(--color-ink)", margin: 0 }}>No public repositories found</p>
-            <p style={{ fontSize: "13px", color: "var(--color-ink-mute)", margin: "4px 0 0 0" }}>Create public repositories on GitHub to display them here.</p>
-          </div>
-        ) : (
-          <>
-            {uniqueLanguages.length > 0 && (
+            {/* Repos */}
+            <div style={{ marginTop: "24px" }}>
               <div
-                role="group"
-                aria-label="Filter popular repositories by language"
                 style={{
                   display: "flex",
-                  gap: "8px",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  margin: "0 0 12px 0",
                   flexWrap: "wrap",
-                  marginBottom: "20px",
-                  borderBottom: "1px solid var(--color-hairline)",
-                  paddingBottom: "12px",
+                  gap: "12px",
                 }}
               >
-                <FilterTab
-                  label="All"
-                  isActive={activeLanguage === "All"}
-                  onClick={() => setActiveLanguage("All")}
-                />
-                {uniqueLanguages.map((lang) => (
-                  <FilterTab
-                    key={lang}
-                    label={lang}
-                    isActive={activeLanguage === lang}
-                    onClick={() => setActiveLanguage(lang)}
-                    dotColor={LANG_COLORS[lang] ?? "#9a9a9a"}
-                  />
-                ))}
-              </div>
-            )}
+                {/* 👇 HERE IS THE UPDATED H2 ELEMENT 👇 */}
+                <h2
+                  style={{
+                    fontSize: "16px",
+                    fontWeight: 600,
+                    color: "var(--color-ink)",
+                    margin: 0,
+                    letterSpacing: "-0.2px",
+                  }}
+                >
+                  {repoSectionTitle || "Popular repositories"}
+                </h2>
 
-            {filteredRepos.length === 0 ? (
-              <div style={{ padding: "40px", border: "1px dashed var(--color-hairline-strong)", borderRadius: "12px", textAlign: "center", backgroundColor: "var(--color-canvas-soft)", margin: "16px 0" }}>
-                <p style={{ fontSize: "14px", fontWeight: 600, color: "var(--color-ink)", margin: 0 }}>No matching repositories found</p>
-                <p style={{ fontSize: "13px", color: "var(--color-ink-mute)", margin: "4px 0 0 0" }}>Try adjusting your search or language filter.</p>
+                <div
+                  role="group"
+                  aria-label="Sort repositories"
+                  style={{ display: "flex", gap: "6px" }}
+                >
+                  {(["stars", "forks", "updated"] as const).map((option) => (
+                    <button
+                      key={option}
+                      type="button"
+                      aria-pressed={repoSort === option ? "true" : "false"}
+                      onClick={() => setRepoSort(option)}
+                      style={{
+                        padding: "4px 10px",
+                        fontSize: "12px",
+                        fontWeight: repoSort === option ? 600 : 400,
+                        color:
+                          repoSort === option
+                            ? "#171717"
+                            : "var(--color-ink-mute)",
+                        backgroundColor:
+                          repoSort === option
+                            ? "#3ecf8e"
+                            : "var(--color-canvas-soft)",
+                        border:
+                          repoSort === option
+                            ? "none"
+                            : "1px solid var(--color-hairline)",
+                        borderRadius: "9999px",
+                        cursor: "pointer",
+                      }}
+                    >
+                      {option === "stars"
+                        ? "Stars"
+                        : option === "forks"
+                          ? "Forks"
+                          : "Recent"}
+                    </button>
+                  ))}
+                </div>
               </div>
-            ) : (
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: "16px" }}>
-                {filteredRepos.map((repo) => (
-                  <a
-                    key={repo.id}
-                    href={repo.html_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
+
+              {repos.length === 0 ? (
+                <div
+                  style={{
+                    padding: "40px",
+                    border: "1px dashed var(--color-hairline-strong)",
+                    borderRadius: "12px",
+                    textAlign: "center",
+                    backgroundColor: "var(--color-canvas-soft)",
+                    margin: "16px 0",
+                  }}
+                >
+                  <svg
                     style={{
-                      display: "flex",
-                      flexDirection: "column",
-                      gap: "8px",
-                      padding: "20px",
-                      border: "1px solid var(--color-hairline)",
-                      borderRadius: "12px",
-                      textDecoration: "none",
-                      backgroundColor: "var(--color-canvas-soft)",
+                      margin: "0 auto 12px",
+                      color: "var(--color-ink-mute-2)",
                     }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.borderColor = "var(--color-hairline-strong)";
-                      e.currentTarget.style.boxShadow = "0 1px 3px rgba(0,0,0,0.12)";
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.borderColor = "var(--color-hairline)";
-                      e.currentTarget.style.boxShadow = "none";
+                    width="32"
+                    height="32"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                  >
+                    <rect x="2" y="2" width="20" height="20" rx="2" ry="2" />
+                    <path d="M12 18H12.01" />
+                  </svg>
+                  <p
+                    style={{
+                      fontSize: "14px",
+                      fontWeight: 600,
+                      color: "var(--color-ink)",
+                      margin: 0,
                     }}
                   >
-                    <p style={{ fontSize: "14px", fontWeight: 600, color: "var(--color-ink)", margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                      {repo.name}
-                    </p>
-                    <p style={{ fontSize: "13px", color: "var(--color-ink-mute)", margin: 0, lineHeight: 1.45, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" as const, overflow: "hidden", minHeight: "38px" }}>
-                      {repo.description || "No description"}
-                    </p>
-                    {repo.topics && repo.topics.length > 0 && (
-                      <div style={{ display: "flex", flexWrap: "wrap", gap: "4px", marginTop: "8px" }}>
-                        {repo.topics.slice(0, 3).map((topic) => (
-                          <span
-                            key={topic}
-                            style={{
-                              fontSize: "11px",
-                              padding: "2px 8px",
-                              borderRadius: "9999px",
-                              backgroundColor: "var(--color-canvas-soft)",
-                              color: "var(--color-ink-mute)",
-                              border: "1px solid var(--color-hairline)",
-                            }}
-                          >
-                            {topic}
-                          </span>
-                        ))}
-                        {repo.topics.length > 3 && (
-                          <span style={{ fontSize: "11px", padding: "2px 6px", color: "var(--color-ink-mute)" }}>
-                            +{repo.topics.length - 3} more
-                          </span>
-                        )}
-                      </div>
-                    )}
-                    <div style={{ display: "flex", alignItems: "center", gap: "16px", marginTop: "auto", paddingTop: "8px" }}>
-                      {repo.language && (
-                        <span style={{ display: "flex", alignItems: "center", gap: "5px", fontSize: "12px", color: "var(--color-ink-mute)" }}>
-                          <span style={{ width: "10px", height: "10px", borderRadius: "9999px", backgroundColor: LANG_COLORS[repo.language] ?? "#9a9a9a", flexShrink: 0 }} />
-                          {repo.language}
-                        </span>
-                      )}
-                      <span style={{ display: "flex", alignItems: "center", gap: "4px", fontSize: "12px", color: "var(--color-ink-mute)" }}>
-                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                          <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
-                        </svg>
-                        {repo.stargazers_count.toLocaleString("en-US")}
-                      </span>
-                      <span style={{ display: "flex", alignItems: "center", gap: "4px", fontSize: "12px", color: "var(--color-ink-mute)" }}>
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                          <circle cx="12" cy="18" r="3" /><circle cx="6" cy="6" r="3" /><circle cx="18" cy="6" r="3" />
-                          <path d="M18 9a9 9 0 0 1-9 9M6 9a9 9 0 0 0 9 9" />
-                        </svg>
-                        {repo.forks_count.toLocaleString("en-US")}
-                      </span>
+                    No public repositories found
+                  </p>
+                  <p
+                    style={{
+                      fontSize: "13px",
+                      color: "var(--color-ink-mute)",
+                      margin: "4px 0 0 0",
+                    }}
+                  >
+                    Create public repositories on GitHub to display them here.
+                  </p>
+                </div>
+              ) : (
+                <>
+                  {uniqueLanguages.length > 0 && (
+                    <div
+                      role="group"
+                      aria-label="Filter repositories by language"
+                      style={{
+                        display: "flex",
+                        gap: "8px",
+                        flexWrap: "wrap",
+                        marginBottom: "20px",
+                        borderBottom: "1px solid var(--color-hairline)",
+                        paddingBottom: "12px",
+                      }}
+                    >
+                      <FilterTab
+                        label="All"
+                        isActive={activeLanguage === "All"}
+                        onClick={() => setActiveLanguage("All")}
+                      />
+                      {uniqueLanguages.map((lang) => (
+                        <FilterTab
+                          key={lang}
+                          label={lang}
+                          isActive={activeLanguage === lang}
+                          onClick={() => setActiveLanguage(lang)}
+                          dotColor={LANG_COLORS[lang] ?? "#9a9a9a"}
+                        />
+                      ))}
                     </div>
-                  </a>
-                ))}
-              </div>
-            )}
+                  )}
 
-            <div style={{ marginTop: "20px" }}>
-              <a
-                href={`https://github.com/${user.login}?tab=repositories`}
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label="View all repositories on GitHub (opens in a new tab)"
-                style={{ fontSize: "13px", color: "var(--color-ink-mute)", textDecoration: "none", display: "inline-flex", alignItems: "center", gap: "4px" }}
-                onMouseEnter={(e) => (e.currentTarget.style.color = "var(--color-ink)")}
-                onMouseLeave={(e) => (e.currentTarget.style.color = "var(--color-ink-mute)")}
-              >
-                View all repositories on GitHub
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M5 12h14M12 5l7 7-7 7" />
-                </svg>
-              </a>
+                  {filteredRepos.length === 0 ? (
+                    <div
+                      style={{
+                        padding: "40px",
+                        border: "1px dashed var(--color-hairline-strong)",
+                        borderRadius: "12px",
+                        textAlign: "center",
+                        backgroundColor: "var(--color-canvas-soft)",
+                        margin: "16px 0",
+                      }}
+                    >
+                      <p
+                        style={{
+                          fontSize: "14px",
+                          fontWeight: 600,
+                          color: "var(--color-ink)",
+                          margin: 0,
+                        }}
+                      >
+                        No matching repositories found
+                      </p>
+                      <p
+                        style={{
+                          fontSize: "13px",
+                          color: "var(--color-ink-mute)",
+                          margin: "4px 0 0 0",
+                        }}
+                      >
+                        Try adjusting your search or language filter.
+                      </p>
+                    </div>
+                  ) : (
+                    <div
+                      style={{
+                        display: "grid",
+                        gridTemplateColumns:
+                          "repeat(auto-fill, minmax(280px, 1fr))",
+                        gap: "16px",
+                      }}
+                    >
+                      {filteredRepos.map((repo) => {
+                        const isPinnedRepo = pinnedList.includes(repo.name);
+                        return (
+                          <div
+                            key={repo.id}
+                            style={{ position: "relative", display: "flex" }}
+                          >
+                            <a
+                              href={repo.html_url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              style={{
+                                display: "flex",
+                                flexDirection: "column",
+                                gap: "8px",
+                                padding: "20px",
+                                paddingTop: isOwner ? "44px" : "20px",
+                                width: "100%",
+                                border: isPinnedRepo
+                                  ? "1px solid var(--color-primary)"
+                                  : "1px solid var(--color-hairline)",
+                                boxShadow: isPinnedRepo
+                                  ? "0 0 0 1px var(--color-primary)"
+                                  : "none",
+                                borderRadius: "12px",
+                                textDecoration: "none",
+                                backgroundColor: "var(--color-canvas-soft)",
+                              }}
+                              onMouseEnter={(e) => {
+                                if (!isPinnedRepo)
+                                  e.currentTarget.style.borderColor =
+                                    "var(--color-hairline-strong)";
+                                e.currentTarget.style.boxShadow = isPinnedRepo
+                                  ? "0 0 0 1px var(--color-primary), 0 1px 3px rgba(0,0,0,0.12)"
+                                  : "0 1px 3px rgba(0,0,0,0.12)";
+                              }}
+                              onMouseLeave={(e) => {
+                                e.currentTarget.style.borderColor = isPinnedRepo
+                                  ? "var(--color-primary)"
+                                  : "var(--color-hairline)";
+                                e.currentTarget.style.boxShadow = isPinnedRepo
+                                  ? "0 0 0 1px var(--color-primary)"
+                                  : "none";
+                              }}
+                            >
+                              <p
+                                style={{
+                                  fontSize: "14px",
+                                  fontWeight: 600,
+                                  color: "var(--color-ink)",
+                                  margin: 0,
+                                  overflow: "hidden",
+                                  textOverflow: "ellipsis",
+                                  whiteSpace: "nowrap",
+                                }}
+                              >
+                                {repo.name}
+                              </p>
+                              <p
+                                style={{
+                                  fontSize: "13px",
+                                  color: "var(--color-ink-mute)",
+                                  margin: 0,
+                                  lineHeight: 1.45,
+                                  display: "-webkit-box",
+                                  WebkitLineClamp: 2,
+                                  WebkitBoxOrient: "vertical" as const,
+                                  overflow: "hidden",
+                                  minHeight: "38px",
+                                }}
+                              >
+                                {repo.description || "No description"}
+                              </p>
+                              {repo.topics && repo.topics.length > 0 && (
+                                <div
+                                  style={{
+                                    display: "flex",
+                                    flexWrap: "wrap",
+                                    gap: "4px",
+                                    marginTop: "8px",
+                                  }}
+                                >
+                                  {repo.topics.slice(0, 3).map((topic) => (
+                                    <span
+                                      key={topic}
+                                      style={{
+                                        fontSize: "11px",
+                                        padding: "2px 8px",
+                                        borderRadius: "9999px",
+                                        backgroundColor:
+                                          "var(--color-canvas-soft)",
+                                        color: "var(--color-ink-mute)",
+                                        border:
+                                          "1px solid var(--color-hairline)",
+                                      }}
+                                    >
+                                      {topic}
+                                    </span>
+                                  ))}
+                                  {repo.topics.length > 3 && (
+                                    <span
+                                      style={{
+                                        fontSize: "11px",
+                                        padding: "2px 6px",
+                                        color: "var(--color-ink-mute)",
+                                      }}
+                                    >
+                                      +{repo.topics.length - 3} more
+                                    </span>
+                                  )}
+                                </div>
+                              )}
+                              <div
+                                style={{
+                                  display: "flex",
+                                  alignItems: "center",
+                                  gap: "16px",
+                                  marginTop: "auto",
+                                  paddingTop: "8px",
+                                }}
+                              >
+                                {repo.language && (
+                                  <span
+                                    style={{
+                                      display: "flex",
+                                      alignItems: "center",
+                                      gap: "5px",
+                                      fontSize: "12px",
+                                      color: "var(--color-ink-mute)",
+                                    }}
+                                  >
+                                    <span
+                                      style={{
+                                        width: "10px",
+                                        height: "10px",
+                                        borderRadius: "9999px",
+                                        backgroundColor:
+                                          LANG_COLORS[repo.language] ??
+                                          "#9a9a9a",
+                                        flexShrink: 0,
+                                      }}
+                                    />
+                                    {repo.language}
+                                  </span>
+                                )}
+                                <span
+                                  style={{
+                                    display: "flex",
+                                    alignItems: "center",
+                                    gap: "4px",
+                                    fontSize: "12px",
+                                    color: "var(--color-ink-mute)",
+                                  }}
+                                >
+                                  <svg
+                                    width="13"
+                                    height="13"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    strokeWidth="2"
+                                  >
+                                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                                  </svg>
+                                  {repo.stargazers_count.toLocaleString(
+                                    "en-US",
+                                  )}
+                                </span>
+                                <span
+                                  style={{
+                                    display: "flex",
+                                    alignItems: "center",
+                                    gap: "4px",
+                                    fontSize: "12px",
+                                    color: "var(--color-ink-mute)",
+                                  }}
+                                >
+                                  <svg
+                                    width="12"
+                                    height="12"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    strokeWidth="2"
+                                  >
+                                    <circle cx="12" cy="18" r="3" />
+                                    <circle cx="6" cy="6" r="3" />
+                                    <circle cx="18" cy="6" r="3" />
+                                    <path d="M18 9a9 9 0 0 1-9 9M6 9a9 9 0 0 0 9 9" />
+                                  </svg>
+                                  {repo.forks_count.toLocaleString("en-US")}
+                                </span>
+                              </div>
+                            </a>
+                            {isOwner && (
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  handleTogglePin(repo.name);
+                                }}
+                                disabled={pinningRepo !== null}
+                                aria-pressed={isPinnedRepo}
+                                aria-label={
+                                  isPinnedRepo
+                                    ? `Unpin ${repo.name}`
+                                    : `Pin ${repo.name}`
+                                }
+                                title={
+                                  isPinnedRepo
+                                    ? "Unpin from profile"
+                                    : "Pin to profile"
+                                }
+                                style={{
+                                  position: "absolute",
+                                  top: "12px",
+                                  right: "12px",
+                                  display: "flex",
+                                  alignItems: "center",
+                                  gap: "4px",
+                                  padding: "4px 10px",
+                                  fontSize: "12px",
+                                  fontWeight: 600,
+                                  color: isPinnedRepo
+                                    ? "var(--color-on-primary)"
+                                    : "var(--color-ink-mute)",
+                                  backgroundColor: isPinnedRepo
+                                    ? "var(--color-primary)"
+                                    : "var(--color-canvas)",
+                                  border: isPinnedRepo
+                                    ? "none"
+                                    : "1px solid var(--color-hairline)",
+                                  borderRadius: "9999px",
+                                  cursor:
+                                    pinningRepo !== null
+                                      ? "default"
+                                      : "pointer",
+                                  opacity: pinningRepo !== null ? 0.6 : 1,
+                                  zIndex: 1,
+                                }}
+                              >
+                                <svg
+                                  width="12"
+                                  height="12"
+                                  viewBox="0 0 24 24"
+                                  fill={isPinnedRepo ? "currentColor" : "none"}
+                                  stroke="currentColor"
+                                  strokeWidth="2"
+                                >
+                                  <line x1="12" y1="17" x2="12" y2="22" />
+                                  <path d="M5 17h14l-1.5-4.5a2 2 0 0 1 .5-2L20 8a2 2 0 0 0-1.4-3.4H5.4A2 2 0 0 0 4 8l1.9 2.5a2 2 0 0 1 .5 2z" />
+                                </svg>
+                                {isPinnedRepo ? "Pinned" : "Pin"}
+                              </button>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+
+                  <div style={{ marginTop: "20px" }}>
+                    <a
+                      href={`https://github.com/${user.login}?tab=repositories`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      aria-label="View all repositories on GitHub (opens in a new tab)"
+                      style={{
+                        fontSize: "13px",
+                        color: "var(--color-ink-mute)",
+                        textDecoration: "none",
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: "4px",
+                      }}
+                      onMouseEnter={(e) =>
+                        (e.currentTarget.style.color = "var(--color-ink)")
+                      }
+                      onMouseLeave={(e) =>
+                        (e.currentTarget.style.color = "var(--color-ink-mute)")
+                      }
+                    >
+                      View all repositories on GitHub
+                      <svg
+                        width="12"
+                        height="12"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                      >
+                        <path d="M5 12h14M12 5l7 7-7 7" />
+                      </svg>
+                    </a>
+                  </div>
+                </>
+              )}
             </div>
-          </>
-        )}
-      </div>
           </motion.div>
         )}
 
@@ -1272,52 +2189,98 @@ export function ProfileView({
             animate={tabAnimate}
             exit={tabExit}
           >
-      {/* Contribution stats */}
-      <div style={{ marginTop: "24px" }}>
-        <h2 style={{ fontSize: "16px", fontWeight: 600, color: "var(--color-ink)", margin: "0 0 16px 0", letterSpacing: "-0.2px" }}>
-          Contribution stats
-        </h2>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: "12px" }}>
-          {[
-            { label: "Contributions", value: stats.totalContributions },
-            { label: "Commits", value: stats.totalCommits },
-            { label: "Pull Requests", value: stats.totalPRs },
-            { label: "Issues", value: stats.totalIssues },
-            { label: "Reviews", value: stats.totalReviews },
-            { label: "Stars", value: totalStars },
-            { label: "Forks", value: totalForks },
-            { label: "Contributor score", value: score },
-          ].map((item) => (
-            <div
-              key={item.label}
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                justifyContent: "center",
-                padding: "20px 12px",
-                border: "1px solid var(--color-hairline)",
-                borderRadius: "12px",
-                backgroundColor: "var(--color-canvas-soft)",
-                textAlign: "center",
-              }}
-            >
-              <span style={{ fontSize: "24px", fontWeight: 700, color: "var(--color-ink)", letterSpacing: "-0.5px" }}>
-                {item.value.toLocaleString("en-US")}
-              </span>
-              <span style={{ fontSize: "12px", color: "var(--color-ink-mute)", marginTop: "4px" }}>{item.label}</span>
-              {item.label === "Contributor score" && (
-                <Link
-                  href="/score-explained"
-                  style={{ fontSize: "11px", color: "var(--color-ink-mute-2)", marginTop: "4px", textDecoration: "none" }}
-                >
-                  Score explained →
-                </Link>
-              )}
+            {/* Contribution stats */}
+            <div style={{ marginTop: "24px" }}>
+              <h2
+                style={{
+                  fontSize: "16px",
+                  fontWeight: 600,
+                  color: "var(--color-ink)",
+                  margin: "0 0 16px 0",
+                  letterSpacing: "-0.2px",
+                }}
+              >
+                Contribution stats
+              </h2>
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))",
+                  gap: "12px",
+                }}
+              >
+                {[
+                  { label: "Contributions", value: stats.totalContributions },
+                  { label: "Commits", value: stats.totalCommits },
+                  { label: "Pull Requests", value: stats.totalPRs },
+                  { label: "Issues", value: stats.totalIssues },
+                  { label: "Reviews", value: stats.totalReviews },
+                  { label: "Stars", value: totalStars },
+                  { label: "Forks", value: totalForks },
+                  { label: "Contributor score", value: score },
+                ].map((item) => {
+                  const card = (
+                    <div
+                      key={item.label}
+                      style={{
+                        display: "flex",
+                        flexDirection: "column",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        padding: "20px 12px",
+                        border: "1px solid var(--color-hairline)",
+                        borderRadius: "12px",
+                        backgroundColor: "var(--color-canvas-soft)",
+                        textAlign: "center",
+                      }}
+                    >
+                      <span
+                        style={{
+                          fontSize: "24px",
+                          fontWeight: 700,
+                          color: "var(--color-ink)",
+                          letterSpacing: "-0.5px",
+                        }}
+                      >
+                        {item.value.toLocaleString("en-US")}
+                      </span>
+
+                      <span
+                        style={{
+                          fontSize: "12px",
+                          color: "var(--color-ink-mute)",
+                          marginTop: "4px",
+                        }}
+                      >
+                        {item.label}
+                      </span>
+
+                      {item.label === "Contributor score" && (
+                        <Link
+                          href="/score-explained"
+                          style={{
+                            fontSize: "11px",
+                            color: "var(--color-ink-mute-2)",
+                            marginTop: "4px",
+                            textDecoration: "none",
+                          }}
+                        >
+                          Score explained →
+                        </Link>
+                      )}
+                    </div>
+                  );
+
+                  return item.label === "Contributor score" ? (
+                    <ContributorScoreCard key={item.label}>
+                      {card}
+                    </ContributorScoreCard>
+                  ) : (
+                    card
+                  );
+                })}
+              </div>
             </div>
-          ))}
-        </div>
-      </div>
           </motion.div>
         )}
 
@@ -1346,8 +2309,8 @@ export function ProfileView({
             animate={tabAnimate}
             exit={tabExit}
           >
-      {/* Contribution Timeline */}
-      <ContributionTimeline mergedPRs={mergedPRs} badges={badgesList} />
+            {/* Contribution Timeline */}
+            <ContributionTimeline mergedPRs={mergedPRs} badges={badgesList} />
           </motion.div>
         )}
       </AnimatePresence>
@@ -1355,14 +2318,28 @@ export function ProfileView({
       {/* Tech stack */}
       {techStack.length > 0 && (
         <div style={{ marginTop: "44px" }}>
-          <h2 style={{ fontSize: "16px", fontWeight: 600, color: "var(--color-ink)", margin: "0 0 16px 0", letterSpacing: "-0.2px" }}>
+          <h2
+            style={{
+              fontSize: "16px",
+              fontWeight: 600,
+              color: "var(--color-ink)",
+              margin: "0 0 16px 0",
+              letterSpacing: "-0.2px",
+            }}
+          >
             Tech stack
           </h2>
           {(() => {
-            const totalRepoCount = techStack.reduce((sum, t) => sum + t.repoCount, 0);
+            const totalRepoCount = techStack.reduce(
+              (sum, t) => sum + t.repoCount,
+              0,
+            );
             if (totalRepoCount === 0) return null;
             const summary = techStack
-              .map((t) => `${t.language} ${Math.round((t.repoCount / totalRepoCount) * 100)}%`)
+              .map(
+                (t) =>
+                  `${t.language} ${Math.round((t.repoCount / totalRepoCount) * 100)}%`,
+              )
               .join(", ");
             return (
               <div
@@ -1386,8 +2363,10 @@ export function ProfileView({
                       backgroundColor: LANG_COLORS[language] ?? "#9a9a9a",
                       borderTopLeftRadius: i === 0 ? "9999px" : 0,
                       borderBottomLeftRadius: i === 0 ? "9999px" : 0,
-                      borderTopRightRadius: i === techStack.length - 1 ? "9999px" : 0,
-                      borderBottomRightRadius: i === techStack.length - 1 ? "9999px" : 0,
+                      borderTopRightRadius:
+                        i === techStack.length - 1 ? "9999px" : 0,
+                      borderBottomRightRadius:
+                        i === techStack.length - 1 ? "9999px" : 0,
                     }}
                   />
                 ))}
@@ -1410,8 +2389,22 @@ export function ProfileView({
                   backgroundColor: "var(--color-canvas-soft)",
                 }}
               >
-                <span style={{ width: "10px", height: "10px", backgroundColor: LANG_COLORS[language] ?? "#9a9a9a", borderRadius: "9999px", flexShrink: 0, display: "inline-block" }}></span>{language}
-                <span style={{ color: "var(--color-ink-mute)", fontSize: "12px" }}>×{repoCount}</span>
+                <span
+                  style={{
+                    width: "10px",
+                    height: "10px",
+                    backgroundColor: LANG_COLORS[language] ?? "#9a9a9a",
+                    borderRadius: "9999px",
+                    flexShrink: 0,
+                    display: "inline-block",
+                  }}
+                ></span>
+                {language}
+                <span
+                  style={{ color: "var(--color-ink-mute)", fontSize: "12px" }}
+                >
+                  ×{repoCount}
+                </span>
               </span>
             ))}
           </div>
@@ -1453,7 +2446,17 @@ export function ProfileView({
             zIndex: 50,
           }}
         >
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <svg
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden="true"
+          >
             <polyline points="18 15 12 9 6 15" />
           </svg>
         </button>

@@ -72,25 +72,32 @@ export function ProfileSyncing({ username }: { username: string }) {
             />
           )}
 
-          <h1 style={{ fontSize: "22px", fontWeight: 500, margin: "0 0 12px 0" }}>
+          <h1
+            style={{ fontSize: "22px", fontWeight: 500, margin: "0 0 12px 0" }}
+          >
             {gaveUp ? "Still working on it" : "Building this profile"}
           </h1>
 
           <p
-            style={{ fontSize: "15px", color: "var(--color-ink-mute)", margin: 0 }}
+            style={{
+              fontSize: "15px",
+              color: "var(--color-ink-mute)",
+              margin: 0,
+            }}
             role="status"
             aria-live="polite"
           >
             {gaveUp ? (
               <>
-                We haven&apos;t been able to finish fetching <strong>@{username}</strong> from
-                GitHub yet. This usually means GitHub is rate-limiting us — please try again in
-                a few minutes.
+                We haven&apos;t been able to finish fetching{" "}
+                <strong>@{username}</strong> from GitHub yet. This usually means
+                GitHub is rate-limiting us — please try again in a few minutes.
               </>
             ) : (
               <>
-                We&apos;re fetching <strong>@{username}</strong>&apos;s data from GitHub for the
-                first time. This page will update on its own in a moment.
+                We&apos;re fetching <strong>@{username}</strong>&apos;s data
+                from GitHub for the first time. This page will update on its own
+                in a moment.
               </>
             )}
           </p>

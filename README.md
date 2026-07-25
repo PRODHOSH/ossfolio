@@ -27,6 +27,7 @@ OSSfolio is a free, open-source platform where every contributor gets a public p
 No manual input. Just sign in with GitHub and your profile is ready.
 
 ## Documentation
+
 - See [API Reference Architecture](docs/api-reference-architecture.md) for endpoint specs.
 - See [System Flow Diagrams](docs/system-diagrams.md) for database and network flows.
 
@@ -75,10 +76,10 @@ The score combines different types of contributions across GitHub and assigns a 
 
 The score is designed to capture a mix of:
 
-* Code contributions through commits
-* Collaboration through pull requests and reviews
-* Community participation through issues
-* Project impact through repository stars
+- Code contributions through commits
+- Collaboration through pull requests and reviews
+- Community participation through issues
+- Project impact through repository stars
 
 ### What the Score Does Not Measure
 
@@ -96,21 +97,21 @@ src/lib/score.ts
 
 ---
 
-
 ## Tech Stack
 
-| Layer | Tech |
-|---|---|
+| Layer    | Tech                                                            |
+| -------- | --------------------------------------------------------------- |
 | Frontend | Next.js · TypeScript · Tailwind CSS · shadcn/ui · Framer Motion |
-| Backend | Supabase · PostgreSQL |
-| Data | GitHub GraphQL API |
-| Hosting | Cloudflare Pages |
+| Backend  | Supabase · PostgreSQL                                           |
+| Data     | GitHub GraphQL API                                              |
+| Hosting  | Cloudflare Pages                                                |
 
 ---
 
 ## Running it locally
 
 **What you need before starting:**
+
 - Node.js 20+
 - A free [Supabase](https://supabase.com) account
 - Git
@@ -132,12 +133,14 @@ cp .env.example .env.local
 **Setting up the database (pick one):**
 
 > **Option A — Supabase Dashboard** (recommended for most contributors, no extra tools needed)
+>
 > 1. Create a free project at [supabase.com](https://supabase.com)
 > 2. Go to your project → **SQL Editor → New query**
 > 3. Copy the contents of [`supabase/schema.sql`](supabase/schema.sql) → paste → click **Run**
 > 4. All tables and permissions are created instantly
 
 > **Option B — Supabase CLI** (if you prefer local development with Docker)
+>
 > ```bash
 > npm install -g supabase
 > supabase start       # starts a local Supabase instance
@@ -246,6 +249,17 @@ Everyone who has helped build OSSfolio — code, design, docs, ideas, all of it.
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/blut-agent"><img src="https://avatars.githubusercontent.com/u/278569635?v=4?s=100" width="100px;" alt="Blut-agent"/><br /><sub><b>Blut-agent</b></sub></a><br /><a href="https://github.com/PRODHOSH/ossfolio/commits?author=blut-agent" title="Code">💻</a></td>
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/Gaurika-05"><img src="https://avatars.githubusercontent.com/u/182803515?v=4?s=100" width="100px;" alt="Gaurika"/><br /><sub><b>Gaurika</b></sub></a><br /><a href="https://github.com/PRODHOSH/ossfolio/commits?author=Gaurika-05" title="Code">💻</a></td>
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/Ayush-0918"><img src="https://avatars.githubusercontent.com/u/184804819?v=4?s=100" width="100px;" alt="AYUSH PANDEY"/><br /><sub><b>AYUSH PANDEY</b></sub></a><br /><a href="https://github.com/PRODHOSH/ossfolio/commits?author=Ayush-0918" title="Code">💻</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/DebasmitaBose0"><img src="https://avatars.githubusercontent.com/u/144198639?v=4?s=100" width="100px;" alt="Debasmita Bose 🧿"/><br /><sub><b>Debasmita Bose 🧿</b></sub></a><br /><a href="https://github.com/PRODHOSH/ossfolio/commits?author=DebasmitaBose0" title="Code">💻</a> <a href="https://github.com/PRODHOSH/ossfolio/commits?author=DebasmitaBose0" title="Documentation">📖</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://alimahmoud-dev.vercel.app/"><img src="https://avatars.githubusercontent.com/u/127209252?v=4?s=100" width="100px;" alt="Ali Mahmmoud"/><br /><sub><b>Ali Mahmmoud</b></sub></a><br /><a href="https://github.com/PRODHOSH/ossfolio/commits?author=AliMahmoudDev" title="Code">💻</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/asiya2123"><img src="https://avatars.githubusercontent.com/u/228271347?v=4?s=100" width="100px;" alt="Shaik Asiya "/><br /><sub><b>Shaik Asiya </b></sub></a><br /><a href="https://github.com/PRODHOSH/ossfolio/commits?author=asiya2123" title="Code">💻</a></td>
+    </tr>
+    <tr>
+      <td align="center" valign="top" width="14.28%"><a href="http://www.houssemeddinechaouch.me"><img src="https://avatars.githubusercontent.com/u/121398886?v=4?s=100" width="100px;" alt="Houssem Eddine Chaouch"/><br /><sub><b>Houssem Eddine Chaouch</b></sub></a><br /><a href="https://github.com/PRODHOSH/ossfolio/commits?author=HoussemEddineChaouch" title="Code">💻</a> <a href="#design-HoussemEddineChaouch" title="Design">🎨</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/anushka17jaiswal"><img src="https://avatars.githubusercontent.com/u/243538993?v=4?s=100" width="100px;" alt="ANUSHKA JAISWAL"/><br /><sub><b>ANUSHKA JAISWAL</b></sub></a><br /><a href="https://github.com/PRODHOSH/ossfolio/commits?author=anushka17jaiswal" title="Code">💻</a> <a href="#design-anushka17jaiswal" title="Design">🎨</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/mspandey"><img src="https://avatars.githubusercontent.com/u/226774300?v=4?s=100" width="100px;" alt="Amisha Pandey"/><br /><sub><b>Amisha Pandey</b></sub></a><br /><a href="https://github.com/PRODHOSH/ossfolio/commits?author=mspandey" title="Code">💻</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/hanu-14"><img src="https://avatars.githubusercontent.com/u/91409429?v=4?s=100" width="100px;" alt="MOHAMMED HANAN M T P"/><br /><sub><b>MOHAMMED HANAN M T P</b></sub></a><br /><a href="https://github.com/PRODHOSH/ossfolio/commits?author=hanu-14" title="Code">💻</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/Shikha18Shukla"><img src="https://avatars.githubusercontent.com/u/154722305?v=4?s=100" width="100px;" alt="Shikha Shukla"/><br /><sub><b>Shikha Shukla</b></sub></a><br /><a href="https://github.com/PRODHOSH/ossfolio/commits?author=Shikha18Shukla" title="Code">💻</a> <a href="#design-Shikha18Shukla" title="Design">🎨</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/rohitkumarnaidu"><img src="https://avatars.githubusercontent.com/u/198095685?v=4?s=100" width="100px;" alt="Bappadala Rohith Kumar Naidu"/><br /><sub><b>Bappadala Rohith Kumar Naidu</b></sub></a><br /><a href="https://github.com/PRODHOSH/ossfolio/commits?author=rohitkumarnaidu" title="Code">💻</a> <a href="https://github.com/PRODHOSH/ossfolio/commits?author=rohitkumarnaidu" title="Documentation">📖</a> <a href="#infra-rohitkumarnaidu" title="Infrastructure (Hosting, Build-Tools, etc)">🚇</a></td>
     </tr>
   </tbody>
 </table>
@@ -268,6 +282,7 @@ Everyone who has helped build OSSfolio — code, design, docs, ideas, all of it.
 </a>
 
 ---
+
 ### My ELUSOC 2026 Admin Badges!
 
 <a href="https://edulinkup.dev/elusoc/profile/PRODHOSH">
@@ -279,4 +294,3 @@ Everyone who has helped build OSSfolio — code, design, docs, ideas, all of it.
 ## License
 
 [MIT](LICENSE) — free to use, fork, and build on.
-

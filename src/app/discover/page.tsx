@@ -10,7 +10,8 @@ export const metadata: Metadata = {
     "Search and discover open-source contributors by username, programming language, or contribution score. Find developers making an impact across GitHub.",
   openGraph: {
     title: "Discover Contributors - OSSfolio",
-    description: "Find and connect with top open-source contributors on OSSfolio.",
+    description:
+      "Find and connect with top open-source contributors on OSSfolio.",
   },
 };
 
@@ -18,8 +19,18 @@ export default function DiscoverPage() {
   return (
     <>
       <Navbar />
-      <main id="main-content" style={{ backgroundColor: "var(--color-canvas)", color: "var(--color-ink)", minHeight: "100vh", transition: "background-color 0.2s ease, color 0.2s ease" }}>
-        <div style={{ maxWidth: "72rem", margin: "0 auto", padding: "56px 20px" }}>
+      <main
+        id="main-content"
+        style={{
+          backgroundColor: "var(--color-canvas)",
+          color: "var(--color-ink)",
+          minHeight: "100vh",
+          transition: "background-color 0.2s ease, color 0.2s ease",
+        }}
+      >
+        <div
+          style={{ maxWidth: "72rem", margin: "0 auto", padding: "56px 20px" }}
+        >
           <header style={{ marginBottom: "32px" }}>
             <h1
               style={{
@@ -32,9 +43,15 @@ export default function DiscoverPage() {
             >
               Discover Contributors
             </h1>
-            <p style={{ fontSize: "15px", color: "var(--color-ink-mute)", margin: "8px 0 0 0" }}>
-              Search profiles by name, username, or language. Filter by score and sort by what matters
-              to you.
+            <p
+              style={{
+                fontSize: "15px",
+                color: "var(--color-ink-mute)",
+                margin: "8px 0 0 0",
+              }}
+            >
+              Search profiles by name, username, or language. Filter by score
+              and sort by what matters to you.
             </p>
           </header>
           <Suspense fallback={<DiscoverSkeleton />}>
@@ -51,8 +68,21 @@ export default function DiscoverPage() {
 function DiscoverSkeleton() {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-      <div style={{ height: "48px", borderRadius: "8px", backgroundColor: "var(--color-hairline-cool)" }} />
-      <div style={{ height: "40px", borderRadius: "6px", backgroundColor: "var(--color-hairline-cool)", width: "60%" }} />
+      <div
+        style={{
+          height: "48px",
+          borderRadius: "8px",
+          backgroundColor: "var(--color-hairline-cool)",
+        }}
+      />
+      <div
+        style={{
+          height: "40px",
+          borderRadius: "6px",
+          backgroundColor: "var(--color-hairline-cool)",
+          width: "60%",
+        }}
+      />
       <div
         style={{
           display: "grid",

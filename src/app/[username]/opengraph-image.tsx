@@ -1,6 +1,5 @@
-
 import { ImageResponse } from "next/og";
-import { supabase } from "@/lib/supabase";
+import { getProfileByUsername } from "@/lib/db";
 
 export const runtime = "edge";
 
@@ -36,44 +35,63 @@ export default async function OGImage({ params }: OGImageProps) {
         "User-Agent":
           "Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10_6_8; de-at) AppleWebKit/533.21.1 (KHTML, like Gecko) Version/5.0.5 Safari/533.21.1",
       },
-    }
+    },
   ).then((res) => res.text());
 
   // Extract the font file URL for weight 500 (medium) — used for display text
   const mediumUrlMatch = interFontData.match(
-    /font-weight:\s*500;[^}]*?src:\s*url\(([^)]+)\)/
+    /font-weight:\s*500;[^}]*?src:\s*url\(([^)]+)\)/,
   );
   // Extract the font file URL for weight 400 (regular) — used for body text
   const regularUrlMatch = interFontData.match(
-    /font-weight:\s*400;[^}]*?src:\s*url\(([^)]+)\)/
+    /font-weight:\s*400;[^}]*?src:\s*url\(([^)]+)\)/,
   );
 
   const [interMedium, interRegular] = await Promise.all([
-    fetch(mediumUrlMatch?.[1] ?? "https://fonts.gstatic.com/s/inter/v18/UcC73FwrK3iLTeHuS_fjbvMwCp50SjIa1ZL7.woff2").then(
-      (res) => res.arrayBuffer()
-    ),
-    fetch(regularUrlMatch?.[1] ?? "https://fonts.gstatic.com/s/inter/v18/UcC73FwrK3iLTeHuS_fvbvMwCp50SjIa1ZL7.woff2").then(
-      (res) => res.arrayBuffer()
-    ),
+    fetch(
+      mediumUrlMatch?.[1] ??
+        "https://fonts.gstatic.com/s/inter/v18/UcC73FwrK3iLTeHuS_fjbvMwCp50SjIa1ZL7.woff2",
+    ).then((res) => res.arrayBuffer()),
+    fetch(
+      regularUrlMatch?.[1] ??
+        "https://fonts.gstatic.com/s/inter/v18/UcC73FwrK3iLTeHuS_fvbvMwCp50SjIa1ZL7.woff2",
+    ).then((res) => res.arrayBuffer()),
   ]);
 
   // Fetch user data and the stored profile summary in parallel
-  const [user, profileRow] = await Promise.all([
+  const [user, profileResult] = await Promise.all([
     fetchGitHubUser(username),
-    supabase
-      .from("profiles")
-      .select("score, total_commits, total_prs, total_issues, total_reviews")
-      .eq("username", username)
-      .maybeSingle()
-      .then((r) => r.data),
+    getProfileByUsername(
+      username,
+      "score, total_commits, total_prs, total_issues, total_reviews, visibility",
+    ),
   ]);
+
+  // Fail closed. This previously did `.then((r) => r.data)`, which discards the error — and the
+  // Supabase client resolves with `{ data: null, error }` rather than throwing, so any database
+  // failure left `profileRow` null, the private check below passed, and a private profile got a
+  // fully rendered, fully shareable social card.
+  if (profileResult.error) {
+    return new Response(null, { status: 404 });
+  }
+
+  const profileRow = profileResult.data;
+
+  // A private profile has no page, so it must not have a social card either.
+  //
+  // This has to short-circuit rather than filter the row, which is what it did before. Everything on
+  // the card below — avatar, display name, @username, the OSSfolio branding and the profile URL — is
+  // built from the GitHub response, not from `profileRow`. Excluding the row only zeroed the stored
+  // stats: the card still rendered, still carried the person's face and handle, and was still
+  // shareable. It just claimed a score of 0. That is not privacy, it is a worse-looking leak.
+  if (profileRow?.visibility === "private") {
+    return new Response(null, { status: 404 });
+  }
 
   const displayName = user?.name || username;
   const avatarUrl = user?.avatar_url || `https://github.com/${username}.png`;
   const score =
-    profileRow && typeof profileRow.score === "number"
-      ? profileRow.score
-      : 0;
+    profileRow && typeof profileRow.score === "number" ? profileRow.score : 0;
 
   // Stored contribution totals. Rendered only when the profile has been synced —
   // an unsynced profile keeps the original avatar + score layout rather than
@@ -87,229 +105,227 @@ export default async function OGImage({ params }: OGImageProps) {
   ].filter((s): s is { label: string; value: number } => s.value !== null);
 
   return new ImageResponse(
-    (
+    <div
+      style={{
+        width: "100%",
+        height: "100%",
+        display: "flex",
+        flexDirection: "column",
+        backgroundColor: "#ffffff",
+        fontFamily: "Inter",
+        padding: "48px 64px",
+      }}
+    >
+      {/* Top bar — logo */}
       <div
         style={{
-          width: "100%",
-          height: "100%",
           display: "flex",
-          flexDirection: "column",
-          backgroundColor: "#ffffff",
-          fontFamily: "Inter",
-          padding: "48px 64px",
+          alignItems: "center",
+          gap: "10px",
         }}
       >
-        {/* Top bar — logo */}
+        {/* Emerald dot */}
+        <div
+          style={{
+            width: "16px",
+            height: "16px",
+            borderRadius: "9999px",
+            backgroundColor: "#3ecf8e",
+          }}
+        />
+        <span
+          style={{
+            fontSize: "24px",
+            fontWeight: 500,
+            color: "#171717",
+            letterSpacing: "-0.42px",
+          }}
+        >
+          OSSfolio
+        </span>
+      </div>
+
+      {/* Main content area — avatar + name (left) and score card (right) */}
+      <div
+        style={{
+          display: "flex",
+          flexGrow: 1,
+          alignItems: "center",
+          justifyContent: "space-between",
+          marginTop: "24px",
+        }}
+      >
+        {/* Left: avatar + name */}
         <div
           style={{
             display: "flex",
             alignItems: "center",
-            gap: "10px",
+            gap: "28px",
           }}
         >
-          {/* Emerald dot */}
-          <div
+          {/* Avatar — circular */}
+          <img
+            src={avatarUrl}
+            alt={`${displayName} avatar`}
+            width={120}
+            height={120}
             style={{
-              width: "16px",
-              height: "16px",
               borderRadius: "9999px",
-              backgroundColor: "#3ecf8e",
+              objectFit: "cover",
             }}
           />
-          <span
-            style={{
-              fontSize: "24px",
-              fontWeight: 500,
-              color: "#171717",
-              letterSpacing: "-0.42px",
-            }}
-          >
-            OSSfolio
-          </span>
-        </div>
-
-        {/* Main content area — avatar + name (left) and score card (right) */}
-        <div
-          style={{
-            display: "flex",
-            flexGrow: 1,
-            alignItems: "center",
-            justifyContent: "space-between",
-            marginTop: "24px",
-          }}
-        >
-          {/* Left: avatar + name */}
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "28px",
-            }}
-          >
-            {/* Avatar — circular */}
-            <img
-              src={avatarUrl}
-              alt={`${displayName} avatar`}
-              width={120}
-              height={120}
-              style={{
-                borderRadius: "9999px",
-                objectFit: "cover",
-              }}
-            />
-            {/* Name + username */}
-            <div
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                gap: "6px",
-              }}
-            >
-              <span
-                style={{
-                  fontSize: "36px",
-                  fontWeight: 500,
-                  color: "#171717",
-                  letterSpacing: "-0.72px",
-                  lineHeight: 1.15,
-                }}
-              >
-                {displayName}
-              </span>
-              <span
-                style={{
-                  fontSize: "20px",
-                  fontWeight: 400,
-                  color: "#707070",
-                  lineHeight: 1.4,
-                }}
-              >
-                @{username}
-              </span>
-            </div>
-          </div>
-
-          {/* Right: score card */}
+          {/* Name + username */}
           <div
             style={{
               display: "flex",
               flexDirection: "column",
-              alignItems: "center",
-              justifyContent: "center",
-              border: "2px solid #3ecf8e",
-              borderRadius: "12px",
-              padding: "20px 40px",
-              minWidth: "180px",
+              gap: "6px",
             }}
           >
             <span
               style={{
-                fontSize: "12px",
+                fontSize: "36px",
                 fontWeight: 500,
-                color: "#707070",
-                letterSpacing: "1.2px",
-                textTransform: "uppercase" as const,
-                lineHeight: 1.45,
+                color: "#171717",
+                letterSpacing: "-0.72px",
+                lineHeight: 1.15,
               }}
             >
-              Contributor Score
+              {displayName}
             </span>
             <span
               style={{
-                fontSize: "56px",
-                fontWeight: 500,
-                color: "#3ecf8e",
-                lineHeight: 1.1,
-                letterSpacing: "-1.44px",
-                marginTop: "4px",
+                fontSize: "20px",
+                fontWeight: 400,
+                color: "#707070",
+                lineHeight: 1.4,
               }}
             >
-              {score}
+              @{username}
             </span>
           </div>
         </div>
 
-        {/* Stored contribution stats — only when the profile has been synced */}
-        {stats.length > 0 ? (
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "48px",
-              marginTop: "8px",
-            }}
-          >
-            {stats.map((stat) => (
-              <div
-                key={stat.label}
-                style={{
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: "2px",
-                }}
-              >
-                <span
-                  style={{
-                    fontSize: "30px",
-                    fontWeight: 500,
-                    color: "#171717",
-                    lineHeight: 1.15,
-                    letterSpacing: "-0.6px",
-                  }}
-                >
-                  {stat.value.toLocaleString("en-US")}
-                </span>
-                <span
-                  style={{
-                    fontSize: "12px",
-                    fontWeight: 500,
-                    color: "#707070",
-                    letterSpacing: "1.2px",
-                    textTransform: "uppercase" as const,
-                    lineHeight: 1.45,
-                  }}
-                >
-                  {stat.label}
-                </span>
-              </div>
-            ))}
-          </div>
-        ) : null}
-
-        {/* Bottom bar — URL + tagline */}
+        {/* Right: score card */}
         <div
           style={{
             display: "flex",
+            flexDirection: "column",
             alignItems: "center",
-            justifyContent: "space-between",
-            borderTop: "1px solid #dfdfdf",
-            paddingTop: "20px",
-            marginTop: "8px",
+            justifyContent: "center",
+            border: "2px solid #3ecf8e",
+            borderRadius: "12px",
+            padding: "20px 40px",
+            minWidth: "180px",
           }}
         >
           <span
             style={{
-              fontSize: "16px",
-              fontWeight: 400,
+              fontSize: "12px",
+              fontWeight: 500,
               color: "#707070",
-              lineHeight: 1.5,
+              letterSpacing: "1.2px",
+              textTransform: "uppercase" as const,
+              lineHeight: 1.45,
             }}
           >
-            ossfolio.qzz.io/{username}
+            Contributor Score
           </span>
           <span
             style={{
-              fontSize: "16px",
-              fontWeight: 400,
-              color: "#707070",
-              lineHeight: 1.5,
+              fontSize: "56px",
+              fontWeight: 500,
+              color: "#3ecf8e",
+              lineHeight: 1.1,
+              letterSpacing: "-1.44px",
+              marginTop: "4px",
             }}
           >
-            Your open-source identity, beyond GitHub.
+            {score}
           </span>
         </div>
       </div>
-    ),
+
+      {/* Stored contribution stats — only when the profile has been synced */}
+      {stats.length > 0 ? (
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "48px",
+            marginTop: "8px",
+          }}
+        >
+          {stats.map((stat) => (
+            <div
+              key={stat.label}
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                gap: "2px",
+              }}
+            >
+              <span
+                style={{
+                  fontSize: "30px",
+                  fontWeight: 500,
+                  color: "#171717",
+                  lineHeight: 1.15,
+                  letterSpacing: "-0.6px",
+                }}
+              >
+                {stat.value.toLocaleString("en-US")}
+              </span>
+              <span
+                style={{
+                  fontSize: "12px",
+                  fontWeight: 500,
+                  color: "#707070",
+                  letterSpacing: "1.2px",
+                  textTransform: "uppercase" as const,
+                  lineHeight: 1.45,
+                }}
+              >
+                {stat.label}
+              </span>
+            </div>
+          ))}
+        </div>
+      ) : null}
+
+      {/* Bottom bar — URL + tagline */}
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          borderTop: "1px solid #dfdfdf",
+          paddingTop: "20px",
+          marginTop: "8px",
+        }}
+      >
+        <span
+          style={{
+            fontSize: "16px",
+            fontWeight: 400,
+            color: "#707070",
+            lineHeight: 1.5,
+          }}
+        >
+          ossfolio.qzz.io/{username}
+        </span>
+        <span
+          style={{
+            fontSize: "16px",
+            fontWeight: 400,
+            color: "#707070",
+            lineHeight: 1.5,
+          }}
+        >
+          Your open-source identity, beyond GitHub.
+        </span>
+      </div>
+    </div>,
     {
       ...size,
       fonts: [
@@ -326,6 +342,6 @@ export default async function OGImage({ params }: OGImageProps) {
           style: "normal",
         },
       ],
-    }
+    },
   );
 }

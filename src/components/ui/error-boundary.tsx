@@ -14,7 +14,10 @@ interface ErrorBoundaryState {
   error: Error | null;
 }
 
-export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
+export class ErrorBoundary extends Component<
+  ErrorBoundaryProps,
+  ErrorBoundaryState
+> {
   constructor(props: ErrorBoundaryProps) {
     super(props);
     this.state = { hasError: false, error: null };
@@ -56,11 +59,25 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
             <line x1="12" y1="8" x2="12" y2="12" />
             <line x1="12" y1="16" x2="12.01" y2="16" />
           </svg>
-          <p style={{ fontSize: "15px", fontWeight: 600, color: "var(--color-ink)", margin: "0 0 4px" }}>
+          <p
+            style={{
+              fontSize: "15px",
+              fontWeight: 600,
+              color: "var(--color-ink)",
+              margin: "0 0 4px",
+            }}
+          >
             Something went wrong
           </p>
-          <p style={{ fontSize: "13px", color: "var(--color-ink-mute)", margin: "0 0 16px" }}>
-            {this.state.error?.message || "An unexpected error occurred in this section."}
+          <p
+            style={{
+              fontSize: "13px",
+              color: "var(--color-ink-mute)",
+              margin: "0 0 16px",
+            }}
+          >
+            {this.state.error?.message ||
+              "An unexpected error occurred in this section."}
           </p>
           <button
             onClick={() => this.setState({ hasError: false, error: null })}

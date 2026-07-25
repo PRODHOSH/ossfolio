@@ -55,8 +55,13 @@ export async function refreshProfile(username: string): Promise<RefreshResult> {
     const lastRefresh = exists.last_refreshed_at
       ? new Date(exists.last_refreshed_at).getTime()
       : 0;
-    const retryAfter = Math.ceil((RATE_LIMIT_MS - (Date.now() - lastRefresh)) / 1000);
-    return { status: "rate_limited", retryAfterSeconds: Math.max(retryAfter, 1) };
+    const retryAfter = Math.ceil(
+      (RATE_LIMIT_MS - (Date.now() - lastRefresh)) / 1000,
+    );
+    return {
+      status: "rate_limited",
+      retryAfterSeconds: Math.max(retryAfter, 1),
+    };
   }
 
   if (error) {

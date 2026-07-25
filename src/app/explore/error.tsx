@@ -22,7 +22,14 @@ export default function ExploreError({
           transition: "background-color 0.2s ease, color 0.2s ease",
         }}
       >
-        <div style={{ maxWidth: "56rem", margin: "0 auto", padding: "56px 20px", textAlign: "center" }}>
+        <div
+          style={{
+            maxWidth: "56rem",
+            margin: "0 auto",
+            padding: "56px 20px",
+            textAlign: "center",
+          }}
+        >
           <div
             style={{
               maxWidth: "28rem",
@@ -56,10 +63,19 @@ export default function ExploreError({
             >
               Leaderboard unavailable
             </h1>
-            <p style={{ fontSize: "14px", color: "var(--color-ink-mute)", margin: "0 0 24px" }}>
-              {error.message || "Could not load the leaderboard. Please try again later."}
+            <p
+              style={{
+                fontSize: "14px",
+                color: "var(--color-ink-mute)",
+                margin: "0 0 24px",
+              }}
+            >
+              {error.message ||
+                "Could not load the leaderboard. Please try again later."}
             </p>
-            <div style={{ display: "flex", justifyContent: "center", gap: "12px" }}>
+            <div
+              style={{ display: "flex", justifyContent: "center", gap: "12px" }}
+            >
               <button
                 onClick={reset}
                 style={{

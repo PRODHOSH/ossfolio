@@ -2,7 +2,16 @@ import { createRequire } from "module";
 
 const require = createRequire(import.meta.url);
 
-// eslint-config-next ships a native flat config array in v16+
 const nextConfig = require("eslint-config-next");
 
-export default [...nextConfig];
+export default [
+  ...nextConfig,
+  {
+    rules: {
+      "no-console": ["warn", { allow: ["warn", "error"] }],
+      "prefer-const": "error",
+      "no-unused-vars": ["warn", { argsIgnorePattern: "^_" }],
+      "no-duplicate-imports": "error",
+    },
+  },
+];

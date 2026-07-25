@@ -104,9 +104,7 @@ export function Features() {
           viewport={{ once: true }}
           style={{ textAlign: "center", marginBottom: "48px" }}
         >
-          <p style={sectionEyebrowStyle}>
-            What you get
-          </p>
+          <p style={sectionEyebrowStyle}>What you get</p>
           <h2
             style={{
               fontSize: "clamp(28px, 3.5vw, 36px)",
@@ -159,7 +157,8 @@ export function Features() {
                 display: "flex",
                 flexDirection: "column",
                 gap: "12px",
-                transition: "background-color 0.2s ease, border-color 0.2s ease",
+                transition:
+                  "background-color 0.2s ease, border-color 0.2s ease",
               }}
             >
               <div
@@ -175,20 +174,20 @@ export function Features() {
               >
                 <Icon size={17} style={{ color: "var(--color-primary)" }} />
               </div>
-              <h3 
-                style={{ 
-                  fontSize: "14px", 
-                  fontWeight: 600, 
+              <h3
+                style={{
+                  fontSize: "14px",
+                  fontWeight: 600,
                   color: "var(--color-ink)",
                   transition: "color 0.2s ease",
                 }}
               >
                 {title}
               </h3>
-              <p 
-                style={{ 
-                  fontSize: "13px", 
-                  lineHeight: 1.6, 
+              <p
+                style={{
+                  fontSize: "13px",
+                  lineHeight: 1.6,
                   color: "var(--color-ink-mute)",
                   transition: "color 0.2s ease",
                 }}

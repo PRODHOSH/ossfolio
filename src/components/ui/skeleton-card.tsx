@@ -4,7 +4,11 @@ interface SkeletonCardProps {
   variant?: "card" | "list" | "profile-header";
 }
 
-export function SkeletonCard({ lines = 3, height, variant = "card" }: SkeletonCardProps) {
+export function SkeletonCard({
+  lines = 3,
+  height,
+  variant = "card",
+}: SkeletonCardProps) {
   const pulseKeyframes = `
     @keyframes sk-pulse {
       0%, 100% { opacity: 0.4; }
@@ -34,14 +38,33 @@ export function SkeletonCard({ lines = 3, height, variant = "card" }: SkeletonCa
             backgroundColor: "var(--color-canvas-soft)",
           }}
         >
-          <div style={{ ...skeletonStyle, width: "88px", height: "88px", borderRadius: "9999px", flexShrink: 0 }} />
-          <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: "12px" }}>
+          <div
+            style={{
+              ...skeletonStyle,
+              width: "88px",
+              height: "88px",
+              borderRadius: "9999px",
+              flexShrink: 0,
+            }}
+          />
+          <div
+            style={{
+              flex: 1,
+              display: "flex",
+              flexDirection: "column",
+              gap: "12px",
+            }}
+          >
             <div style={{ ...skeletonStyle, width: "200px", height: "24px" }} />
             <div style={{ ...skeletonStyle, width: "140px", height: "14px" }} />
             <div style={{ ...skeletonStyle, width: "100%", height: "14px" }} />
             <div style={{ display: "flex", gap: "12px" }}>
-              <div style={{ ...skeletonStyle, width: "80px", height: "14px" }} />
-              <div style={{ ...skeletonStyle, width: "80px", height: "14px" }} />
+              <div
+                style={{ ...skeletonStyle, width: "80px", height: "14px" }}
+              />
+              <div
+                style={{ ...skeletonStyle, width: "80px", height: "14px" }}
+              />
             </div>
           </div>
         </div>
@@ -64,12 +87,34 @@ export function SkeletonCard({ lines = 3, height, variant = "card" }: SkeletonCa
             backgroundColor: "var(--color-canvas-soft)",
           }}
         >
-          <div style={{ ...skeletonStyle, width: "40px", height: "40px", borderRadius: "9999px", flexShrink: 0 }} />
-          <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: "6px" }}>
+          <div
+            style={{
+              ...skeletonStyle,
+              width: "40px",
+              height: "40px",
+              borderRadius: "9999px",
+              flexShrink: 0,
+            }}
+          />
+          <div
+            style={{
+              flex: 1,
+              display: "flex",
+              flexDirection: "column",
+              gap: "6px",
+            }}
+          >
             <div style={{ ...skeletonStyle, width: "160px", height: "16px" }} />
             <div style={{ ...skeletonStyle, width: "100px", height: "12px" }} />
           </div>
-          <div style={{ ...skeletonStyle, width: "60px", height: "40px", borderRadius: "8px" }} />
+          <div
+            style={{
+              ...skeletonStyle,
+              width: "60px",
+              height: "40px",
+              borderRadius: "8px",
+            }}
+          />
         </div>
       </>
     );
@@ -86,10 +131,32 @@ export function SkeletonCard({ lines = 3, height, variant = "card" }: SkeletonCa
           backgroundColor: "var(--color-canvas-soft)",
         }}
       >
-        <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "12px" }}>
-          <div style={{ ...skeletonStyle, width: "44px", height: "44px", borderRadius: "9999px", flexShrink: 0 }} />
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "12px",
+            marginBottom: "12px",
+          }}
+        >
+          <div
+            style={{
+              ...skeletonStyle,
+              width: "44px",
+              height: "44px",
+              borderRadius: "9999px",
+              flexShrink: 0,
+            }}
+          />
           <div style={{ flex: 1 }}>
-            <div style={{ ...skeletonStyle, width: "140px", height: "16px", marginBottom: "6px" }} />
+            <div
+              style={{
+                ...skeletonStyle,
+                width: "140px",
+                height: "16px",
+                marginBottom: "6px",
+              }}
+            />
             <div style={{ ...skeletonStyle, width: "100px", height: "12px" }} />
           </div>
           <div style={{ ...skeletonStyle, width: "50px", height: "40px" }} />
@@ -107,7 +174,15 @@ export function SkeletonCard({ lines = 3, height, variant = "card" }: SkeletonCa
         ))}
         <div style={{ display: "flex", gap: "8px", marginTop: "8px" }}>
           {[1, 2, 3].map((i) => (
-            <div key={i} style={{ ...skeletonStyle, width: "60px", height: "20px", borderRadius: "4px" }} />
+            <div
+              key={i}
+              style={{
+                ...skeletonStyle,
+                width: "60px",
+                height: "20px",
+                borderRadius: "4px",
+              }}
+            />
           ))}
         </div>
       </div>
