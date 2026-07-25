@@ -16,7 +16,9 @@
     "closeMenu": "Close navigation menu",
     "toggleTheme": "Toggle theme",
     "switchToLight": "Switch to light mode",
-    "switchToDark": "Switch to dark mode"
+    "switchToDark": "Switch to dark mode",
+    "settings": "Settings",
+    "compare": "Compare Profiles"
   },
   "Navigation": {
     "skipToMainContent": "Skip to main content"
