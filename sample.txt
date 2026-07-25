@@ -1,0 +1,264 @@
+
+Select all issues: Search results
+0 of 24 selected0 issues of 24 selected
+Open
+24
+ (24)
+Closed
+221
+ (221)
+[ELUSOC'26] [DOCS] Enhance ARCHITECTURE.md with detailed system architecture and application workflow documentation
+documentation
+Additions to docs
+
+Status: Open.
+#547 In PRODHOSH/ossfolio;· mds06f opened 1h ago
+3
+comments
+mds06f
+[FEAT] :Add AI-powered Developer Insights for GitHub Profiles
+enhancement
+New feature or improvement
+
+Status: Open.
+#545 In PRODHOSH/ossfolio;· Shikha18Shukla opened 15h ago
+2
+comments
+Shikha18Shukla
+[FEAT] Gamified Streaks & Milestone Celebrations
+enhancement
+New feature or improvement
+
+Status: Open.
+#542 In PRODHOSH/ossfolio;· Aditya8369 opened 19h ago
+2
+comments
+Aditya8369
+[FEAT] Team / Organization Dashboard
+enhancement
+New feature or improvement
+
+Status: Open.
+#541 In PRODHOSH/ossfolio;· Aditya8369 opened 19h ago
+2
+comments
+Aditya8369
+[FEAT] Contribution Calendar Export & Embed
+enhancement
+New feature or improvement
+
+Status: Open.
+#540 In PRODHOSH/ossfolio;· Aditya8369 opened 19h ago
+2
+comments
+Aditya8369
+[FEAT] Sponsorship & Funding Integration
+enhancement
+New feature or improvement
+
+Status: Open.
+#539 In PRODHOSH/ossfolio;· Aditya8369 opened 19h ago
+2
+comments
+Aditya8369
+[FEAT] Automated Contribution Digest
+enhancement
+New feature or improvement
+
+Status: Open.
+#538 In PRODHOSH/ossfolio;· Aditya8369 opened 20h ago
+2
+comments
+Aditya8369
+[FEAT] Profile Analytics Dashboard
+enhancement
+New feature or improvement
+
+Status: Open.
+#537 In PRODHOSH/ossfolio;· Aditya8369 opened 20h ago
+2
+comments
+Aditya8369
+[FEAT] Contribution Impact Network
+enhancement
+New feature or improvement
+
+Status: Open.
+#536 In PRODHOSH/ossfolio;· Aditya8369 opened 20h ago
+2
+comments
+Aditya8369
+[FEAT] Add smooth transition effects to interactive buttons
+enhancement
+New feature or improvement
+
+Status: Closed (completed).
+#522 In PRODHOSH/ossfolio;· by Shikha18Shukla was closed 9m ago
+2
+comments
+Shikha18Shukla
+[REFACTOR] Abstract hardcoded GitHub API URLs into a centralized constant
+
+New activity.
+Status: Open.
+#518 In PRODHOSH/ossfolio;· rohitkumarnaidu opened 2d ago
+3
+comments
+rohitkumarnaidu
+[REFACTOR] Remove excessive usage of 'as any' cast in src/app/explore/page.tsx
+
+New activity.
+Status: Open.
+#517 In PRODHOSH/ossfolio;· rohitkumarnaidu opened 2d ago
+3
+comments
+rohitkumarnaidu
+[REFACTOR] Remove excessive usage of 'any' type in src/app/[username]/page.tsx
+
+New activity.
+Status: Open.
+#516 In PRODHOSH/ossfolio;· rohitkumarnaidu opened 2d ago
+3
+comments
+rohitkumarnaidu
+[BUG] CI Build & Lint failing on main branch
+
+Status: Open.
+#514 In PRODHOSH/ossfolio;· rohitkumarnaidu opened 2d ago
+3
+comments
+rohitkumarnaidu
+[ELUSOC] Accessibility — ARIA & Keyboard Navigation
+ELUSOC
+ELUSOC project submission
+
+Status: Open.
+#420 In PRODHOSH/ossfolio;· DebasmitaBose0 opened 2w ago
+4
+comments
+DebasmitaBose0
+[FEAT] Display User Organizations
+ELUSOC
+ELUSOC project submission
+enhancement
+New feature or improvement
+NEWBIE
+Beginner — 10 pts
+
+Status: Open.
+#391 In PRODHOSH/ossfolio;· github-actions opened 2w ago
+2
+comments
+anushka17jaiswal
+[FEAT] Auto-merge PRs immediately upon maintainer approval
+ELUSOC
+ELUSOC project submission
+enhancement
+New feature or improvement
+github-actions
+CI/CD & Workflows
+VETERAN
+Advanced — 50 pts
+
+Status: Open.
+#329 In PRODHOSH/ossfolio;· github-actions opened 3w ago
+5
+comments
+[GOOD FIRST ISSUE] Add rel="noopener noreferrer" to external links in the Footer
+ELUSOC
+ELUSOC project submission
+enhancement
+New feature or improvement
+frontend
+Related to UI / Next.js
+good first issue
+Great for first-time contributors
+NEWBIE
+Beginner — 10 pts
+
+Status: Open.
+#313 In PRODHOSH/ossfolio;· github-actions opened 3w ago
+3
+comments
+Aditya8369
+[FEAT] Data Inconsistency Between Authenticated and Public Views
+ADVENTURER
+Intermediate — 25 pts
+ELUSOC
+ELUSOC project submission
+enhancement
+New feature or improvement
+
+Status: Open.
+#264 In PRODHOSH/ossfolio;· Shanxoxo-glitch opened 3w ago
+7
+comments
+Shanxoxo-glitch
+# Enhancement: Improve UI with Interactive Hover Effects
+ADVENTURER
+Intermediate — 25 pts
+ELUSOC
+ELUSOC project submission
+enhancement
+New feature or improvement
+frontend
+Related to UI / Next.js
+
+Status: Open.
+#198 In PRODHOSH/ossfolio;· rakhi-3008 opened on Jun 24
+7
+comments
+manan-soni15
+[FEAT] Refresh and redesign the Testimonials section on the homepage
+ELUSOC
+ELUSOC project submission
+enhancement
+New feature or improvement
+frontend
+Related to UI / Next.js
+good first issue
+Great for first-time contributors
+help wanted
+Open for anyone
+UI
+Visual / design changes
+VETERAN
+Advanced — 50 pts
+
+Status: Open.
+#140 In PRODHOSH/ossfolio;· github-actions opened on Jun 20
+6
+comments
+Join Discord Server
+good first issue
+Great for first-time contributors
+help wanted
+Open for anyone
+
+Status: Open.
+#34 In PRODHOSH/ossfolio;· PRODHOSH opened on May 25
+PRODHOSH
+[GOOD FIRST ISSUE] Add loading skeleton states for the profile page
+ELUSOC
+ELUSOC project submission
+frontend
+Related to UI / Next.js
+good first issue
+Great for first-time contributors
+help wanted
+Open for anyone
+NEWBIE
+Beginner — 10 pts
+UI
+Visual / design changes
+
+Status: Open.
+#22 In PRODHOSH/ossfolio;· github-actions opened on May 25
+1
+comment
+Contribution Policy - Please Read Before Opening a PR
+good first issue
+Great for first-time contributors
+
+Status: Open.
+#19 In PRODHOSH/ossfolio;· PRODHOSH opened on May 25
