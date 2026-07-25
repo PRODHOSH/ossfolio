@@ -53,7 +53,7 @@ test.describe('critical paths', () => {
     // e2e-alice has a stored snapshot in the fixtures, so the DB-first path from #300 should
     // render her straight from it — no GitHub call, and no syncing state.
     await expect(page.getByRole('heading', { name: 'E2E Alice' })).toBeVisible();
-    await expect(page.getByRole('heading', { name: /e2e-alice/i })).toBeVisible();
+    await expect(page.getByText('@e2e-alice', { exact: true })).toBeVisible();
 
     await expect(page.getByText(/Building this profile/i)).toHaveCount(0);
   });
