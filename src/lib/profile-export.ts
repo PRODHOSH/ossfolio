@@ -214,7 +214,6 @@ export async function generateBadgeSvg(
     // Mini contribution activity graph
     const rects: string[] = [];
     const colors = ["rgba(99, 102, 241, 0.15)", "#818cf8", "#6366f1", "#4f46e5", "#4338ca"];
-    let col = 0;
     for (let i = 0; i < 28; i++) {
       const x = 16 + (i % 14) * 14;
       const y = 42 + Math.floor(i / 14) * 14;

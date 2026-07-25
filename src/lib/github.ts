@@ -3,7 +3,8 @@ import { redis } from "./redis";
 import { fetchWithTimeout, FetchTimeoutError } from "@/lib/fetch-with-timeout";
 import { GitHubRateLimitError } from "@/lib/errors";
 
-const GITHUB_GRAPHQL_URL = "https://api.github.com/graphql";
+export const GITHUB_API_URL = "https://api.github.com";
+const GITHUB_GRAPHQL_URL = `${GITHUB_API_URL}/graphql`;
 
 const RETRY_CONFIG = {
   maxRetries: 3,

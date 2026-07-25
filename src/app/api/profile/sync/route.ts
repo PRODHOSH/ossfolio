@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import {
+  GITHUB_API_URL,
   fetchContributorProfile,
   contributorToScoreInputs,
 } from "@/lib/github";
@@ -52,7 +53,7 @@ async function statsFromRest(
   // SYNC_TIMEOUT_MS and redirects, but the invocation itself would otherwise keep running
   // until GitHub answers, so the request is aborted rather than merely abandoned.
   const reposRes = await fetchWithTimeout(
-    `https://api.github.com/users/${encodeURIComponent(username)}/repos?sort=stars&per_page=12&type=owner`,
+    `${GITHUB_API_URL}/users/${encodeURIComponent(username)}/repos?sort=stars&per_page=12&type=owner`,
     {
       headers: { Accept: "application/vnd.github.v3+json" },
       cache: "no-store",

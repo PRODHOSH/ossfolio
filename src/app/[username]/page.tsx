@@ -167,8 +167,16 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
   const stats = { ...liveStats, totalContributions };
   const liveScore = calculateScore(stats, mappedRepos);
 
-  // --- NEW: Fetch GraphQL profile specifically for Pinned Repos ---
-  let pinnedReposRaw: any[] = [];
+  let pinnedReposRaw: {
+    id: number;
+    name: string;
+    description: string | null;
+    stargazers_count: number;
+    forks_count: number;
+    language: string | null;
+    html_url: string;
+    topics: string[];
+  }[] = [];
   try {
     const token =
       process.env.GITHUB_TOKEN || process.env.GITHUB_API_TOKEN || "";
@@ -176,7 +184,8 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
       const gqlProfile = await fetchContributorProfile(username, token);
       if (gqlProfile?.pinnedItems?.nodes?.length > 0) {
         // Map GraphQL shape to match REST API shape expected by ProfileView
-        pinnedReposRaw = gqlProfile.pinnedItems.nodes.map((n: any) => ({
+        pinnedReposRaw = gqlProfile.pinnedItems.nodes.map((n: { name: string, description: string | null, stargazerCount: number, forkCount: number, primaryLanguage?: { name: string } | null, url: string }) => ({
+          id: Math.floor(Math.random() * 1000000),
           name: n.name,
           description: n.description,
           stargazers_count: n.stargazerCount,
@@ -199,9 +208,9 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
 
   let score = liveScore;
   let updatedAt: string | null = null;
-  let badges: any[] = [];
+  let badges: { program: string; years: number[] }[] = [];
   let profileId: string | null = null;
-  let profileRow: any = null;
+  let profileRow: { id: string; score: number | null; updated_at: string | null; badges: { program: string; years: number[] }[] | null; headline: string | null; pinned_repos: string[] | null; custom_links: { label: string; url: string }[] | null; visibility: string; } | null = null;
   let customizationFetchSettled = false;
   let visibilityUnknown = false;
   try {
@@ -219,7 +228,16 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
     if (error) {
       visibilityUnknown = true;
     } else {
-      profileRow = data;
+      profileRow = data as unknown as {
+        id: string;
+        score: number | null;
+        updated_at: string | null;
+        badges: { program: string; years: number[] }[] | null;
+        headline: string | null;
+        pinned_repos: string[] | null;
+        custom_links: { label: string; url: string }[] | null;
+        visibility: string;
+      };
     }
 
     if (profileRow) {
@@ -233,16 +251,16 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
       if (Array.isArray(profileRow.badges)) {
         badges = profileRow.badges
           .filter(
-            (b: any) =>
+            (b: { program?: string; years?: (number | string)[] } | null) =>
               b &&
               typeof b.program === "string" &&
               b.program.trim() !== "" &&
               Array.isArray(b.years),
           )
-          .map((b: any) => ({
-            program: b.program,
-            years: b.years
-              .map((y: any) => Number(y))
+          .map((b: { program?: string; years?: (number | string)[] } | null) => ({
+            program: b!.program!,
+            years: b!.years!
+              .map((y: string | number) => Number(y))
               .filter((y: number) => !isNaN(y)),
           }));
       }

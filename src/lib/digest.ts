@@ -1,3 +1,4 @@
+import { GITHUB_API_URL } from "@/lib/github";
 import { supabase } from "@/lib/supabase";
 import { fetchMergedPRs, fetchOrganizations } from "@/lib/profile-data";
 import type { MergedPR, Org } from "@/types";
@@ -121,7 +122,7 @@ export async function getContributionDigest(
     const [prData, orgData, userRes] = await Promise.allSettled([
       fetchMergedPRs(cleanUsername, 50),
       fetchOrganizations(cleanUsername),
-      fetch(`https://api.github.com/users/${encodeURIComponent(cleanUsername)}`, {
+      fetch(`${GITHUB_API_URL}/users/${encodeURIComponent(cleanUsername)}`, {
         headers: { Accept: "application/vnd.github.v3+json" },
       }).then((res) => (res.ok ? res.json() : null)),
     ]);

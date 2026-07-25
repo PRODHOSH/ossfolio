@@ -1,3 +1,4 @@
+import { GITHUB_API_URL } from "@/lib/github";
 import { ImageResponse } from "next/og";
 import { getProfileByUsername } from "@/lib/db";
 
@@ -12,7 +13,7 @@ interface OGImageProps {
 }
 
 async function fetchGitHubUser(username: string) {
-  const res = await fetch(`https://api.github.com/users/${username}`, {
+  const res = await fetch(`${GITHUB_API_URL}/users/${username}`, {
     headers: { Accept: "application/vnd.github.v3+json" },
     next: { revalidate: 3600 },
   });

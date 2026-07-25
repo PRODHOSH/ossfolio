@@ -1,3 +1,4 @@
+
 import Image from "next/image";
 import Link from "next/link";
 import type { Metadata } from "next";
@@ -9,7 +10,7 @@ import {
   deriveTechStack,
   mapRepos,
 } from "@/lib/profile-data";
-import { fetchContributionCalendar } from "@/lib/github";
+import { GITHUB_API_URL, fetchContributionCalendar } from "@/lib/github";
 import { generateMockHeatmap } from "@/lib/mock";
 import { calculateScore } from "@/lib/score";
 import { getProfileByUsername } from "@/lib/db";
@@ -42,7 +43,7 @@ interface ProfileData {
 
 async function fetchGitHubUser(username: string) {
   const encodedUsername = encodeURIComponent(username);
-  const res = await fetch(`https://api.github.com/users/${encodedUsername}`, {
+  const res = await fetch(`${GITHUB_API_URL}/users/${encodedUsername}`, {
     headers: { Accept: "application/vnd.github.v3+json" },
     next: { revalidate: 3600 },
   });
@@ -58,7 +59,7 @@ async function fetchGitHubRepos(username: string) {
   // (only created, updated, pushed, full_name). Fetch a page of repos with a
   // supported sort, then order by stargazers_count client-side for the top 6.
   const res = await fetch(
-    `https://api.github.com/users/${encodeURIComponent(username)}/repos?sort=updated&per_page=100&type=owner`,
+    `${GITHUB_API_URL}/users/${encodeURIComponent(username)}/repos?sort=updated&per_page=100&type=owner`,
     {
       headers: { Accept: "application/vnd.github.v3+json" },
       next: { revalidate: 3600 },

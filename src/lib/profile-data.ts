@@ -1,3 +1,4 @@
+import { GITHUB_API_URL } from "@/lib/github";
 import type { ContributorStats, Org, Repo, TechEntry, MergedPR } from "@/types";
 import { LANG_COLORS } from "@/lib/languages";
 import { fetchWithTimeout } from "@/lib/fetch-with-timeout";
@@ -125,7 +126,7 @@ export function deriveTechStack(repos: GitHubRepoLike[]): TechEntry[] {
 async function searchCount(query: string, accept?: string): Promise<number> {
   try {
     const res = await fetchWithTimeout(
-      `https://api.github.com/search/${query}&per_page=1`,
+      `${GITHUB_API_URL}/search/${query}&per_page=1`,
       {
         headers: {
           Accept: accept ?? "application/vnd.github.v3+json",
@@ -181,7 +182,7 @@ interface GitHubOrgLike {
 export async function fetchOrganizations(username: string): Promise<Org[]> {
   try {
     const res = await fetchWithTimeout(
-      `https://api.github.com/users/${encodeURIComponent(username)}/orgs`,
+      `${GITHUB_API_URL}/users/${encodeURIComponent(username)}/orgs`,
       {
         headers: { Accept: "application/vnd.github.v3+json" },
         cache: "no-store",
@@ -217,7 +218,7 @@ export async function fetchMergedPRs(
   const query = `search/issues?q=author:${encodeURIComponent(username)}+type:pr&sort=updated&order=desc&per_page=${limit}`;
   try {
     const res = await fetchWithTimeout(
-      `https://api.github.com/${query}`,
+      `${GITHUB_API_URL}/${query}`,
       {
         headers: { Accept: "application/vnd.github.v3+json" },
         cache: "no-store",
@@ -276,7 +277,7 @@ export async function fetchGitHubUser(
   username: string,
 ): Promise<GitHubUser | null> {
   const res = await fetchWithTimeout(
-    `https://api.github.com/users/${username}`,
+    `${GITHUB_API_URL}/users/${username}`,
     {
       headers: { Accept: "application/vnd.github.v3+json" },
       // The snapshot TTL in the DB is now the single source of freshness. A second,
@@ -305,7 +306,7 @@ export async function fetchGitHubRepos(
   username: string,
 ): Promise<GitHubRepoPayload[]> {
   const res = await fetchWithTimeout(
-    `https://api.github.com/users/${username}/repos?sort=stars&per_page=100&type=owner`,
+    `${GITHUB_API_URL}/users/${username}/repos?sort=stars&per_page=100&type=owner`,
     {
       headers: { Accept: "application/vnd.github.mercy-preview+json" },
       cache: "no-store",
