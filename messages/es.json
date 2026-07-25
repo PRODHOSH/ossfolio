@@ -1,5 +1,6 @@
 {
   "Nav": {
+    "skipToMainContent": "Saltar al contenido principal",
     "features": "Funciones",
     "howItWorks": "Cómo funciona",
     "leaderboard": "Clasificación",
@@ -16,6 +17,9 @@
     "toggleTheme": "Cambiar tema",
     "switchToLight": "Cambiar a modo claro",
     "switchToDark": "Cambiar a modo oscuro"
+  },
+  "Navigation": {
+    "skipToMainContent": "Saltar al contenido principal"
   },
   "Footer": {
     "tagline": "Tu identidad de código abierto, más allá de GitHub.",

@@ -1,5 +1,6 @@
 {
   "Nav": {
+    "skipToMainContent": "Skip to main content",
     "features": "Features",
     "howItWorks": "How it works",
     "leaderboard": "Leaderboard",
@@ -16,6 +17,9 @@
     "toggleTheme": "Toggle theme",
     "switchToLight": "Switch to light mode",
     "switchToDark": "Switch to dark mode"
+  },
+  "Navigation": {
+    "skipToMainContent": "Skip to main content"
   },
   "Footer": {
     "tagline": "Your open-source identity, beyond GitHub.",
