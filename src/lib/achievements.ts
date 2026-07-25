@@ -45,6 +45,7 @@ export interface Achievement {
 export interface AchievementInput {
   stats: ContributorStats;
   longestStreak: number;
+  hasFunding?: boolean;
 }
 
 interface AchievementDefinition {
@@ -56,13 +57,7 @@ interface AchievementDefinition {
 }
 
 /**
- * The registry. Starting with three, as the issue asks.
- *
- * They're deliberately spread across three different kinds of contribution rather than
- * three sizes of the same one — volume, consistency, and helping other people — so the
- * set rewards more than just shipping a lot of code.
- *
- * Adding a fourth is a five-line entry here; nothing else needs to change.
+ * The registry.
  */
 const DEFINITIONS: readonly AchievementDefinition[] = [
   {
@@ -85,6 +80,13 @@ const DEFINITIONS: readonly AchievementDefinition[] = [
     tagline: "50 code reviews for other people",
     target: 50,
     measure: ({ stats }) => stats.totalReviews,
+  },
+  {
+    id: "sponsored_creator",
+    name: "Sponsored Creator",
+    tagline: "Configured sponsorship and open-source funding options",
+    target: 1,
+    measure: ({ hasFunding }) => (hasFunding ? 1 : 0),
   },
 ];
 
