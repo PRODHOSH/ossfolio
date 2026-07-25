@@ -1,3 +1,16 @@
+export interface FundingLink {
+  platform: "GitHub Sponsors" | "Patreon" | "Open Collective" | "Buy Me a Coffee" | "Custom";
+  url: string;
+}
+
+export interface SponsorItem {
+  id?: string;
+  name: string;
+  tier?: string;
+  logoUrl?: string;
+  url?: string;
+}
+
 export interface ContributorProfile {
   username: string;
   name: string | null;
@@ -15,6 +28,8 @@ export interface ContributorProfile {
   organizations: Org[];
   heatmap: HeatmapWeek[];
   techStack: TechEntry[];
+  fundingLinks?: FundingLink[];
+  sponsors?: SponsorItem[];
 }
 
 export interface ContributorStats {

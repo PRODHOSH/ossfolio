@@ -14,12 +14,16 @@ interface Badge {
   years: number[];
 }
 
+import type { FundingLink, SponsorItem } from "@/types";
+
 interface ProfileSettings {
   headline: string;
   pinned_repos: string[];
   custom_links: CustomLink[];
   badges: Badge[];
   visibility: "public" | "unlisted" | "private";
+  funding_links: FundingLink[];
+  sponsors: SponsorItem[];
 }
 
 const AVAILABLE_BADGES = [
@@ -52,6 +56,8 @@ export function SettingsClient() {
     custom_links: [],
     badges: [],
     visibility: "public",
+    funding_links: [],
+    sponsors: [],
   });
 
   const fetchSettings = async (token: string) => {
@@ -67,6 +73,8 @@ export function SettingsClient() {
           custom_links: data.custom_links || [],
           badges: data.badges || [],
           visibility: data.visibility || "public",
+          funding_links: data.funding_links || [],
+          sponsors: data.sponsors || [],
         });
         setLoaded(true);
       }
@@ -105,6 +113,8 @@ export function SettingsClient() {
       ),
       badges: settings.badges.filter((b) => b.program.trim()),
       visibility: settings.visibility,
+      funding_links: settings.funding_links.filter((f) => f.url.trim()),
+      sponsors: settings.sponsors.filter((s) => s.name.trim()),
     };
 
     try {

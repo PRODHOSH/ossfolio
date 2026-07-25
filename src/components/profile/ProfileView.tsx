@@ -32,6 +32,8 @@ import { ProfileActions } from "@/components/profile/ProfileActions";
 import { OrganizationSection } from "@/components/profile/OrganizationSection";
 import { ProfileReposSection } from "@/components/profile/ProfileReposSection";
 import { ProfileBadgeModal } from "@/components/profile/ProfileBadgeModal";
+import { SponsorshipSection } from "@/components/profile/SponsorshipSection";
+import { getSponsorshipData, type SponsorshipData } from "@/lib/sponsors";
 import * as Tooltip from "@radix-ui/react-tooltip";
 
 // Code-split the contribution heatmap out of the initial ProfileView bundle.
@@ -156,6 +158,7 @@ interface ProfileExtras {
   rateLimited?: boolean;
   mergedPRs: MergedPR[];
   coContributors?: CoContributor[];
+  sponsorshipData?: SponsorshipData;
 }
 
 function formatCount(n: number): string {
@@ -680,7 +683,8 @@ export function ProfileView({
   customLinks = [],
   pinnedRepos = [],
   customizationLoaded = false,
-  repoSectionTitle, // <-- NEW: Added this prop
+  repoSectionTitle,
+  sponsorshipData: initialSponsorshipData,
 }: {
   user: GitHubUser;
   repos: GitHubRepo[];
@@ -689,15 +693,24 @@ export function ProfileView({
     customLinks?: Array<{ label: string; url: string }>;
     pinnedRepos?: string[];
     customizationLoaded?: boolean;
-    repoSectionTitle?: string; // <-- NEW: Added to TypeScript definitions
+    repoSectionTitle?: string;
   }) {
-  // Derived from stats the page already fetched and passed down, so the whole feature
-  // costs no extra GitHub calls and no extra database queries. `useMemo` keeps the array
-  // referentially stable across the many re-renders this component does (tab switches,
-  // repo filtering, sorting), so the cards don't rebuild on every keystroke.
+  const [sponsorshipData, setSponsorshipData] = useState<SponsorshipData | undefined>(initialSponsorshipData);
+
+  useEffect(() => {
+    if (!sponsorshipData && user.login) {
+      getSponsorshipData(user.login).then((data) => setSponsorshipData(data));
+    }
+  }, [user.login, sponsorshipData]);
+
+  const hasFunding = !!(
+    sponsorshipData &&
+    (sponsorshipData.fundingLinks.length > 0 || sponsorshipData.sponsors.length > 0)
+  );
+
   const achievements = useMemo(
-    () => evaluateAchievements({ stats, longestStreak }),
-    [stats, longestStreak],
+    () => evaluateAchievements({ stats, longestStreak, hasFunding }),
+    [stats, longestStreak, hasFunding],
   );
   const unlockedCount = useMemo(
     () => countUnlocked(achievements),
@@ -2447,6 +2460,9 @@ export function ProfileView({
           </div>
         </div>
       )}
+
+      {/* Sponsorship & Funding */}
+      {sponsorshipData && <SponsorshipSection sponsorshipData={sponsorshipData} />}
 
       {/* Organizations */}
       <OrganizationSection orgs={orgs} />
