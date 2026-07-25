@@ -1,8 +1,15 @@
 "use client";
 
+import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
+
+/**
+ * Contact address surfaced in the footer. Defined as a constant so it lives in
+ * one place if it changes.
+ */
+const CONTACT_EMAIL = "support@ossfolio.com";
 
 const linkSections = [
   {
@@ -33,6 +40,7 @@ const linkSections = [
 ] as const;
 
 export function Footer() {
+  const [copied, setCopied] = useState(false);
   const t = useTranslations("Footer");
   const tSections = useTranslations("Footer.sections");
   const tLinks = useTranslations("Footer.links");
@@ -95,6 +103,41 @@ export function Footer() {
               </svg>
               {t("starOnGitHub")}
             </a>
+
+            {/* Copy the contact address. Mirrors the inline "copied" feedback used by
+                ProfileActions rather than introducing a toast dependency. */}
+            <button
+              type="button"
+              onClick={async () => {
+                try {
+                  await navigator.clipboard.writeText(CONTACT_EMAIL);
+                  setCopied(true);
+                  setTimeout(() => setCopied(false), 2000);
+                } catch (err) {
+                  console.error("Copy to clipboard failed:", err);
+                }
+              }}
+              aria-label={t("copyEmailAria", { email: CONTACT_EMAIL })}
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "6px",
+                fontSize: "12px",
+                color: copied ? "var(--color-primary)" : "var(--color-ink-mute-2)",
+                background: "none",
+                border: "none",
+                padding: 0,
+                cursor: "pointer",
+                textAlign: "left",
+                transition: "color 0.2s ease",
+              }}
+            >
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <rect x="2" y="4" width="20" height="16" rx="2" />
+                <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
+              </svg>
+              {copied ? t("emailCopied") : t("copyEmail")}
+            </button>
           </div>
 
           {/* Link cols */}
