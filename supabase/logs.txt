@@ -1,0 +1,226 @@
+Cloning repository...
+2026-07-25T05:14:30.134804Z	From https://github.com/PRODHOSH/ossfolio
+2026-07-25T05:14:30.135185Z	 * branch            6430528d90683699f8614e93eaaa088184d0cc2a -> FETCH_HEAD
+2026-07-25T05:14:30.135308Z	
+2026-07-25T05:14:30.199193Z	HEAD is now at 6430528 fix cloudfare error
+2026-07-25T05:14:30.199602Z	
+2026-07-25T05:14:30.284042Z	
+2026-07-25T05:14:30.284376Z	Using v2 root directory strategy
+2026-07-25T05:14:30.303245Z	Success: Finished cloning repository files
+2026-07-25T05:14:32.642139Z	Checking for configuration in a Wrangler configuration file (BETA)
+2026-07-25T05:14:32.642685Z	
+2026-07-25T05:14:32.642813Z	Found wrangler.toml file. Reading build configuration...
+2026-07-25T05:14:32.649324Z	pages_build_output_dir: .open-next
+2026-07-25T05:14:32.649562Z	Build environment variables: (none found)
+2026-07-25T05:14:32.841882Z	Successfully read the Wrangler configuration file.
+2026-07-25T05:14:33.228406Z	Detected the following tools from environment: npm@10.9.2, nodejs@22.16.0
+2026-07-25T05:14:33.228946Z	Installing project dependencies: npm clean-install --progress=false
+2026-07-25T05:14:36.22295Z	npm warn EBADENGINE Unsupported engine {
+2026-07-25T05:14:36.223364Z	npm warn EBADENGINE   package: 'lint-staged@17.0.8',
+2026-07-25T05:14:36.223632Z	npm warn EBADENGINE   required: { node: '>=22.22.1' },
+2026-07-25T05:14:36.22374Z	npm warn EBADENGINE   current: { node: 'v22.16.0', npm: '10.9.2' }
+2026-07-25T05:14:36.223803Z	npm warn EBADENGINE }
+2026-07-25T05:14:42.433964Z	npm warn deprecated node-domexception@1.0.0: Use your platform's native DOMException instead
+2026-07-25T05:14:48.307934Z	npm warn deprecated glob@9.3.5: Old versions of glob are not supported, and contain widely publicized security vulnerabilities, which have been fixed in the current version. Please update. Support for old versions may be purchased (at exorbitant rates) by contacting i@izs.me
+2026-07-25T05:14:53.006511Z	npm warn deprecated recharts@2.15.4: 1.x and 2.x branches are no longer active. Bump to Recharts v3 to receive latest features and bugfixes. See https://github.com/recharts/recharts/wiki/3.0-migration-guide
+2026-07-25T05:15:20.574528Z	
+2026-07-25T05:15:20.574975Z	> ossfolio@0.1.0 prepare
+2026-07-25T05:15:20.575486Z	> husky
+2026-07-25T05:15:20.575599Z	
+2026-07-25T05:15:20.687374Z	
+2026-07-25T05:15:20.687742Z	added 887 packages, and audited 888 packages in 46s
+2026-07-25T05:15:20.687882Z	
+2026-07-25T05:15:20.687953Z	240 packages are looking for funding
+2026-07-25T05:15:20.688043Z	  run `npm fund` for details
+2026-07-25T05:15:20.931276Z	
+2026-07-25T05:15:20.931595Z	18 high severity vulnerabilities
+2026-07-25T05:15:20.93167Z	
+2026-07-25T05:15:20.931722Z	To address issues that do not require attention, run:
+2026-07-25T05:15:20.931776Z	  npm audit fix
+2026-07-25T05:15:20.931837Z	
+2026-07-25T05:15:20.93189Z	To address all issues (including breaking changes), run:
+2026-07-25T05:15:20.931939Z	  npm audit fix --force
+2026-07-25T05:15:20.931982Z	
+2026-07-25T05:15:20.932058Z	Run `npm audit` for details.
+2026-07-25T05:15:21.029777Z	Executing user command: npm run build:cf
+2026-07-25T05:15:21.375211Z	
+2026-07-25T05:15:21.375551Z	> ossfolio@0.1.0 build:cf
+2026-07-25T05:15:21.375653Z	> opennextjs-cloudflare build && node scripts/build-cf-pages.js
+2026-07-25T05:15:21.375713Z	
+2026-07-25T05:15:23.893919Z	
+2026-07-25T05:15:23.894334Z	┌─────────────────────────────┐
+2026-07-25T05:15:23.894535Z	│ OpenNext — Cloudflare build │
+2026-07-25T05:15:23.894647Z	└─────────────────────────────┘
+2026-07-25T05:15:23.894735Z	
+2026-07-25T05:15:24.131418Z	App directory: /opt/buildhome/repo
+2026-07-25T05:15:24.132129Z	Next.js version : 16.2.10
+2026-07-25T05:15:24.133871Z	@opennextjs/cloudflare version: 1.20.1
+2026-07-25T05:15:24.133985Z	@opennextjs/aws version: 4.0.2
+2026-07-25T05:15:24.134046Z	workerd compatibility_date: 2026-05-28
+2026-07-25T05:15:24.139364Z	
+2026-07-25T05:15:24.139484Z	┌─────────────────────────────────┐
+2026-07-25T05:15:24.13954Z	│ OpenNext — Building Next.js app │
+2026-07-25T05:15:24.139585Z	└─────────────────────────────────┘
+2026-07-25T05:15:24.139639Z	
+2026-07-25T05:15:24.428852Z	
+2026-07-25T05:15:24.429403Z	> ossfolio@0.1.0 build
+2026-07-25T05:15:24.429546Z	> next build
+2026-07-25T05:15:24.429609Z	
+2026-07-25T05:15:25.101474Z	⚠ No build cache found. Please configure build caching for faster rebuilds. Read more: https://nextjs.org/docs/messages/no-cache
+2026-07-25T05:15:25.109263Z	Attention: Next.js now collects completely anonymous telemetry regarding usage.
+2026-07-25T05:15:25.109603Z	This information is used to shape Next.js' roadmap and prioritize features.
+2026-07-25T05:15:25.109715Z	You can learn more, including how to opt-out if you'd not like to participate in this anonymous program, by visiting the following URL:
+2026-07-25T05:15:25.109794Z	https://nextjs.org/telemetry
+2026-07-25T05:15:25.109871Z	
+2026-07-25T05:15:25.143524Z	▲ Next.js 16.2.10 (Turbopack)
+2026-07-25T05:15:25.143927Z	
+2026-07-25T05:15:25.154821Z	⚠ The "middleware" file convention is deprecated. Please use "proxy" instead. Learn more: https://nextjs.org/docs/messages/middleware-to-proxy
+2026-07-25T05:15:25.351083Z	  Creating an optimized production build ...
+2026-07-25T05:15:43.516919Z	Turbopack build encountered 2 warnings:
+2026-07-25T05:15:43.517439Z	./src/hooks/useBroadcastChannel.ts:26:25
+2026-07-25T05:15:43.517565Z	A Node.js API is used (BroadcastChannel at line: 26) which is not supported in the Edge Runtime.
+2026-07-25T05:15:43.517648Z	    Learn more: https://nextjs.org/docs/api-reference/edge-runtime
+2026-07-25T05:15:43.517712Z	  [90m24 |[0m     [36mif[0m ([36mtypeof[0m [33mBroadcastChannel[0m === [32m"undefined"[0m) [36mreturn[0m;
+2026-07-25T05:15:43.517834Z	  [90m25 |[0m
+2026-07-25T05:15:43.517904Z	[31m[1m>[0m [90m26 |[0m     [36mconst[0m channel = [36mnew[0m [33mBroadcastChannel[0m(channelName);
+2026-07-25T05:15:43.517954Z	  [90m   |[0m                         [31m[1m^^^^^^^^^^^^^^^^[0m
+2026-07-25T05:15:43.518009Z	  [90m27 |[0m     channel.onmessage = (event: [33mMessageEvent[0m<[33mT[0m>) => {
+2026-07-25T05:15:43.518127Z	  [90m28 |[0m       handlerRef.current(event.data);
+2026-07-25T05:15:43.518194Z	  [90m29 |[0m     };
+2026-07-25T05:15:43.518968Z	
+2026-07-25T05:15:43.519101Z	Ecmascript file had an error
+2026-07-25T05:15:43.519217Z	
+2026-07-25T05:15:43.519446Z	Import traces:
+2026-07-25T05:15:43.519534Z	  Client Component Browser:
+2026-07-25T05:15:43.519622Z	    ./src/hooks/useBroadcastChannel.ts [Client Component Browser]
+2026-07-25T05:15:43.520157Z	    ./src/components/profile/ProfileView.tsx [Client Component Browser]
+2026-07-25T05:15:43.520382Z	    ./src/components/profile/ProfileView.tsx [Edge Server Component]
+2026-07-25T05:15:43.520575Z	    ./src/app/[username]/page.tsx [Edge Server Component]
+2026-07-25T05:15:43.520857Z	
+2026-07-25T05:15:43.521152Z	  Client Component SSR - Edge:
+2026-07-25T05:15:43.521346Z	    ./src/hooks/useBroadcastChannel.ts [Client Component SSR - Edge]
+2026-07-25T05:15:43.521492Z	    ./src/components/profile/ProfileView.tsx [Client Component SSR - Edge]
+2026-07-25T05:15:43.521969Z	    ./src/components/profile/ProfileView.tsx [Edge Server Component]
+2026-07-25T05:15:43.522132Z	    ./src/app/[username]/page.tsx [Edge Server Component]
+2026-07-25T05:15:43.522207Z	
+2026-07-25T05:15:43.522276Z	
+2026-07-25T05:15:43.522356Z	./src/hooks/useBroadcastChannel.ts:40:29
+2026-07-25T05:15:43.522442Z	A Node.js API is used (BroadcastChannel at line: 40) which is not supported in the Edge Runtime.
+2026-07-25T05:15:43.522518Z	    Learn more: https://nextjs.org/docs/api-reference/edge-runtime
+2026-07-25T05:15:43.522589Z	  [90m38 |[0m       [36mif[0m ([36mtypeof[0m [33mBroadcastChannel[0m === [32m"undefined"[0m) [36mreturn[0m;
+2026-07-25T05:15:43.522647Z	  [90m39 |[0m       [36mtry[0m {
+2026-07-25T05:15:43.522699Z	[31m[1m>[0m [90m40 |[0m         [36mconst[0m channel = [36mnew[0m [33mBroadcastChannel[0m(channelName);
+2026-07-25T05:15:43.522769Z	  [90m   |[0m                             [31m[1m^^^^^^^^^^^^^^^^[0m
+2026-07-25T05:15:43.522881Z	  [90m41 |[0m         channel.postMessage(data);
+2026-07-25T05:15:43.522965Z	  [90m42 |[0m         channel.close();
+2026-07-25T05:15:43.523051Z	  [90m43 |[0m       } [36mcatch[0m {
+2026-07-25T05:15:43.52312Z	
+2026-07-25T05:15:43.52345Z	Ecmascript file had an error
+2026-07-25T05:15:43.523669Z	
+2026-07-25T05:15:43.523741Z	Import traces:
+2026-07-25T05:15:43.523825Z	  Client Component Browser:
+2026-07-25T05:15:43.523918Z	    ./src/hooks/useBroadcastChannel.ts [Client Component Browser]
+2026-07-25T05:15:43.524023Z	    ./src/components/profile/ProfileView.tsx [Client Component Browser]
+2026-07-25T05:15:43.524101Z	    ./src/components/profile/ProfileView.tsx [Edge Server Component]
+2026-07-25T05:15:43.52416Z	    ./src/app/[username]/page.tsx [Edge Server Component]
+2026-07-25T05:15:43.52422Z	
+2026-07-25T05:15:43.524274Z	  Client Component SSR - Edge:
+2026-07-25T05:15:43.524341Z	    ./src/hooks/useBroadcastChannel.ts [Client Component SSR - Edge]
+2026-07-25T05:15:43.524399Z	    ./src/components/profile/ProfileView.tsx [Client Component SSR - Edge]
+2026-07-25T05:15:43.524472Z	    ./src/components/profile/ProfileView.tsx [Edge Server Component]
+2026-07-25T05:15:43.524534Z	    ./src/app/[username]/page.tsx [Edge Server Component]
+2026-07-25T05:15:43.524612Z	
+2026-07-25T05:15:43.524664Z	
+2026-07-25T05:15:43.535222Z	✓ Compiled successfully in 17.7s
+2026-07-25T05:15:43.549021Z	  Running TypeScript ...
+2026-07-25T05:15:55.022262Z	  Finished TypeScript in 11.5s ...
+2026-07-25T05:15:55.029284Z	  Collecting page data using 3 workers ...
+2026-07-25T05:15:55.559977Z	⚠ Using edge runtime on a page currently disables static generation for that page
+2026-07-25T05:15:55.993426Z	  Generating static pages using 3 workers (0/13) ...
+2026-07-25T05:15:56.196768Z	  Generating static pages using 3 workers (3/13) 
+2026-07-25T05:15:56.270943Z	  Generating static pages using 3 workers (6/13) 
+2026-07-25T05:15:56.347427Z	  Generating static pages using 3 workers (9/13) 
+2026-07-25T05:15:56.367063Z	✓ Generating static pages using 3 workers (13/13) in 373ms
+2026-07-25T05:15:56.375285Z	  Finalizing page optimization ...
+2026-07-25T05:15:56.695108Z	
+2026-07-25T05:15:56.699015Z	Route (app)
+2026-07-25T05:15:56.699297Z	┌ ƒ /
+2026-07-25T05:15:56.699619Z	├ ƒ /_not-found
+2026-07-25T05:15:56.700146Z	├ ƒ /[username]
+2026-07-25T05:15:56.700224Z	├ ƒ /-/opengraph-image
+2026-07-25T05:15:56.700292Z	├ ƒ /[username]/rss.xml
+2026-07-25T05:15:56.700364Z	├ ƒ /-/twitter-image
+2026-07-25T05:15:56.700449Z	├ ƒ /api/[username]/contributions
+2026-07-25T05:15:56.700519Z	├ ƒ /api/[username]/refresh
+2026-07-25T05:15:56.700574Z	├ ƒ /api/auth/[...nextauth]
+2026-07-25T05:15:56.70061Z	├ ƒ /api/discover
+2026-07-25T05:15:56.70065Z	├ ƒ /api/profile/sync
+2026-07-25T05:15:56.700696Z	├ ƒ /api/settings
+2026-07-25T05:15:56.700738Z	├ ƒ /api/v1/users/[username]
+2026-07-25T05:15:56.700795Z	├ ƒ /api/webhooks/github
+2026-07-25T05:15:56.700855Z	├ ƒ /auth/callback
+2026-07-25T05:15:56.700907Z	├ ƒ /compare
+2026-07-25T05:15:56.700943Z	├ ƒ /discover
+2026-07-25T05:15:56.700976Z	├ ƒ /explore
+2026-07-25T05:15:56.701012Z	├ ƒ /offline
+2026-07-25T05:15:56.701067Z	├ ƒ /privacy
+2026-07-25T05:15:56.701117Z	├ ○ /robots.txt
+2026-07-25T05:15:56.701152Z	├ ƒ /score-explained
+2026-07-25T05:15:56.701191Z	├ ƒ /settings
+2026-07-25T05:15:56.701243Z	├ ○ /sitemap.xml
+2026-07-25T05:15:56.701303Z	└ ƒ /terms
+2026-07-25T05:15:56.701376Z	
+2026-07-25T05:15:56.701444Z	
+2026-07-25T05:15:56.701499Z	ƒ Proxy (Middleware)
+2026-07-25T05:15:56.701559Z	
+2026-07-25T05:15:56.701609Z	○  (Static)   prerendered as static content
+2026-07-25T05:15:56.701647Z	ƒ  (Dynamic)  server-rendered on demand
+2026-07-25T05:15:56.701679Z	
+2026-07-25T05:15:56.826136Z	
+2026-07-25T05:15:56.826417Z	┌──────────────────────────────┐
+2026-07-25T05:15:56.826486Z	│ OpenNext — Generating bundle │
+2026-07-25T05:15:56.826529Z	└──────────────────────────────┘
+2026-07-25T05:15:56.826562Z	
+2026-07-25T05:15:56.90726Z	Bundling middleware function...
+2026-07-25T05:15:57.023462Z	Bundling static assets...
+2026-07-25T05:15:57.043707Z	Bundling cache assets...
+2026-07-25T05:15:57.067601Z	Building server function: default...
+2026-07-25T05:16:02.292053Z	Applying code patches: 4.874s
+2026-07-25T05:16:02.627373Z	# copyPackageTemplateFiles
+2026-07-25T05:16:02.631436Z	[35m⚙️ Bundling the OpenNext server...
+2026-07-25T05:16:02.63308Z	[0m
+2026-07-25T05:16:05.431346Z	[35mWorker saved in `.open-next/worker.js` 🚀
+2026-07-25T05:16:05.431882Z	[0m
+2026-07-25T05:16:05.432004Z	OpenNext build complete.
+2026-07-25T05:16:05.606687Z	Renamed worker.js to _worker.js
+2026-07-25T05:16:05.607677Z	Moved BUILD_ID to .open-next/
+2026-07-25T05:16:05.607858Z	Moved _next to .open-next/
+2026-07-25T05:16:05.607958Z	Moved llms.txt to .open-next/
+2026-07-25T05:16:05.608021Z	Moved logo.png to .open-next/
+2026-07-25T05:16:05.608077Z	Moved manifest.json to .open-next/
+2026-07-25T05:16:05.608135Z	Moved og-image.png to .open-next/
+2026-07-25T05:16:05.608184Z	Moved sw.js to .open-next/
+2026-07-25T05:16:05.608256Z	Removed empty assets directory
+2026-07-25T05:16:05.608302Z	Successfully structured .open-next for Cloudflare Pages!
+2026-07-25T05:16:05.633613Z	Finished
+2026-07-25T05:16:06.335304Z	Checking for configuration in a Wrangler configuration file (BETA)
+2026-07-25T05:16:06.335707Z	
+2026-07-25T05:16:06.336467Z	Found wrangler.toml file. Reading build configuration...
+2026-07-25T05:16:06.343763Z	pages_build_output_dir: .open-next
+2026-07-25T05:16:06.34394Z	Build environment variables: (none found)
+2026-07-25T05:16:06.529423Z	Successfully read the Wrangler configuration file.
+2026-07-25T05:16:06.530511Z	Found _worker.js in output directory. Uploading.
+2026-07-25T05:16:06.538594Z	 ⛅️ wrangler 3.114.17
+2026-07-25T05:16:06.538793Z	-------------------
+2026-07-25T05:16:08.751889Z	✨ Compiled Worker successfully
+2026-07-25T05:16:08.961024Z	Validating asset output directory
+2026-07-25T05:16:11.034548Z	Deploying your site to Cloudflare's global network...
+2026-07-25T05:16:15.257857Z	Uploading... (192/224)
+2026-07-25T05:16:15.938519Z	Uploading... (202/224)
+2026-07-25T05:16:16.028018Z	Uploading... (213/224)
+2026-07-25T05:16:16.929621Z	Uploading... (224/224)
+2026-07-25T05:16:16.930056Z	✨ Success! Uploaded 32 files (192 already uploaded) (2.06 sec)
+2026-07-25T05:16:16.930165Z	
+2026-07-25T05:16:17.408935Z	✨ Upload complete!
+2026-07-25T05:16:19.531818Z	Success: Assets published!
+2026-07-25T05:16:23.112012Z	Success: Your site was deployed!
