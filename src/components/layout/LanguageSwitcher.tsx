@@ -1,16 +1,16 @@
-"use client";
+'use client';
 
-import { useTransition } from "react";
-import { useLocale, useTranslations } from "next-intl";
-import { useRouter } from "next/navigation";
-import { Languages } from "lucide-react";
-import { setLocale } from "@/i18n/locale";
-import { locales, type Locale } from "@/i18n/config";
+import { useTransition } from 'react';
+import { useLocale, useTranslations } from 'next-intl';
+import { useRouter } from 'next/navigation';
+import { Languages } from 'lucide-react';
+import { setLocale } from '@/i18n/locale';
+import { locales, type Locale } from '@/i18n/config';
 
-const SHORT_LABELS: Record<Locale, string> = { en: "EN", es: "ES" };
-const ARIA_KEYS: Record<Locale, "english" | "spanish"> = {
-  en: "english",
-  es: "spanish",
+const SHORT_LABELS: Record<Locale, string> = { en: 'EN', es: 'ES' };
+const ARIA_KEYS: Record<Locale, 'english' | 'spanish'> = {
+  en: 'english',
+  es: 'spanish',
 };
 
 /**
@@ -21,7 +21,7 @@ const ARIA_KEYS: Record<Locale, "english" | "spanish"> = {
  */
 export function LanguageSwitcher() {
   const active = useLocale() as Locale;
-  const t = useTranslations("LanguageSwitcher");
+  const t = useTranslations('LanguageSwitcher');
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
 
@@ -41,22 +41,22 @@ export function LanguageSwitcher() {
   return (
     <div
       role="group"
-      aria-label={t("label")}
+      aria-label={t('label')}
       style={{
-        display: "inline-flex",
-        alignItems: "center",
-        gap: "2px",
-        padding: "2px",
-        borderRadius: "9999px",
-        backgroundColor: "var(--color-canvas-soft)",
-        border: "1px solid var(--color-hairline-strong)",
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: '2px',
+        padding: '2px',
+        borderRadius: '9999px',
+        backgroundColor: 'var(--color-canvas-soft)',
+        border: '1px solid var(--color-hairline-strong)',
         opacity: isPending ? 0.6 : 1,
       }}
     >
       <Languages
         size={14}
         aria-hidden="true"
-        style={{ color: "var(--color-ink-mute)", margin: "0 2px 0 6px" }}
+        style={{ color: 'var(--color-ink-mute)', margin: '0 2px 0 6px' }}
       />
       {locales.map((loc) => {
         const isActive = loc === active;
@@ -69,20 +69,20 @@ export function LanguageSwitcher() {
             aria-label={t(ARIA_KEYS[loc])}
             disabled={isPending}
             style={{
-              fontSize: "12px",
+              fontSize: '12px',
               fontWeight: 600,
               lineHeight: 1,
-              padding: "5px 9px",
-              borderRadius: "9999px",
-              border: "none",
-              cursor: isActive ? "default" : "pointer",
+              padding: '5px 9px',
+              borderRadius: '9999px',
+              border: 'none',
+              cursor: isActive ? 'default' : 'pointer',
               backgroundColor: isActive
-                ? "var(--color-primary)"
-                : "transparent",
+                ? 'var(--color-primary)'
+                : 'transparent',
               color: isActive
-                ? "var(--color-on-primary)"
-                : "var(--color-ink-mute)",
-              transition: "background-color 0.15s ease, color 0.15s ease",
+                ? 'var(--color-on-primary)'
+                : 'var(--color-ink-mute)',
+              transition: 'background-color 0.15s ease, color 0.15s ease',
             }}
           >
             {SHORT_LABELS[loc]}

@@ -1,22 +1,22 @@
-import { supabase } from "@/lib/supabase";
+import { supabase } from '@/lib/supabase';
 
 function isDomain(hostname: string, targetDomain: string): boolean {
-  return hostname === targetDomain || hostname.endsWith("." + targetDomain);
+  return hostname === targetDomain || hostname.endsWith('.' + targetDomain);
 }
 
 function isGoogleDomain(hostname: string): boolean {
   return (
-    isDomain(hostname, "google.com") ||
+    isDomain(hostname, 'google.com') ||
     /^([a-z0-9-]+\.)*google\.[a-z]{2,}(\.[a-z]{2})?$/.test(hostname)
   );
 }
 
 export function parseReferrer(referrerHeader?: string | null): string {
-  if (!referrerHeader || referrerHeader.trim() === "") {
-    return "Direct";
+  if (!referrerHeader || referrerHeader.trim() === '') {
+    return 'Direct';
   }
 
-  let hostname = "";
+  let hostname = '';
   try {
     const url = new URL(referrerHeader);
     hostname = url.hostname.toLowerCase();
@@ -25,58 +25,68 @@ export function parseReferrer(referrerHeader?: string | null): string {
       const url = new URL(`https://${referrerHeader.trim()}`);
       hostname = url.hostname.toLowerCase();
     } catch {
-      return "Other";
+      return 'Other';
     }
   }
 
-  if (!hostname) return "Other";
+  if (!hostname) return 'Other';
 
-  if (isDomain(hostname, "github.com")) return "GitHub";
+  if (isDomain(hostname, 'github.com')) return 'GitHub';
   if (
-    isDomain(hostname, "t.co") ||
-    isDomain(hostname, "twitter.com") ||
-    isDomain(hostname, "x.com")
+    isDomain(hostname, 't.co') ||
+    isDomain(hostname, 'twitter.com') ||
+    isDomain(hostname, 'x.com')
   ) {
-    return "Twitter / X";
+    return 'Twitter / X';
   }
-  if (isDomain(hostname, "linkedin.com") || isDomain(hostname, "lnkd.in")) {
-    return "LinkedIn";
+  if (isDomain(hostname, 'linkedin.com') || isDomain(hostname, 'lnkd.in')) {
+    return 'LinkedIn';
   }
   if (
     isGoogleDomain(hostname) ||
-    isDomain(hostname, "bing.com") ||
-    isDomain(hostname, "duckduckgo.com") ||
-    isDomain(hostname, "yahoo.com")
+    isDomain(hostname, 'bing.com') ||
+    isDomain(hostname, 'duckduckgo.com') ||
+    isDomain(hostname, 'yahoo.com')
   ) {
-    return "Search Engine";
+    return 'Search Engine';
   }
-  if (isDomain(hostname, "reddit.com")) return "Reddit";
-  if (isDomain(hostname, "ycombinator.com")) return "Hacker News";
+  if (isDomain(hostname, 'reddit.com')) return 'Reddit';
+  if (isDomain(hostname, 'ycombinator.com')) return 'Hacker News';
   if (
-    isDomain(hostname, "dev.to") ||
-    isDomain(hostname, "hashnode.com") ||
-    isDomain(hostname, "medium.com")
+    isDomain(hostname, 'dev.to') ||
+    isDomain(hostname, 'hashnode.com') ||
+    isDomain(hostname, 'medium.com')
   ) {
-    return "Tech Blogs";
+    return 'Tech Blogs';
   }
 
-  return hostname.replace(/^www\./, "");
+  return hostname.replace(/^www\./, '');
 }
 
-export function parseDeviceType(userAgent?: string | null): "desktop" | "mobile" | "tablet" {
-  if (!userAgent) return "desktop";
+export function parseDeviceType(
+  userAgent?: string | null,
+): 'desktop' | 'mobile' | 'tablet' {
+  if (!userAgent) return 'desktop';
   const lower = userAgent.toLowerCase();
-  if (lower.includes("ipad") || lower.includes("tablet") || (lower.includes("android") && !lower.includes("mobile"))) {
-    return "tablet";
+  if (
+    lower.includes('ipad') ||
+    lower.includes('tablet') ||
+    (lower.includes('android') && !lower.includes('mobile'))
+  ) {
+    return 'tablet';
   }
-  if (lower.includes("mobile") || lower.includes("iphone") || lower.includes("android")) {
-    return "mobile";
+  if (
+    lower.includes('mobile') ||
+    lower.includes('iphone') ||
+    lower.includes('android')
+  ) {
+    return 'mobile';
   }
-  return "desktop";
+  return 'desktop';
 }
 
 export function hashVisitorIp(ip: string): string {
-  if (!ip) return "anon";
+  if (!ip) return 'anon';
   let hash = 0;
   for (let i = 0; i < ip.length; i++) {
     const char = ip.charCodeAt(i);
@@ -103,24 +113,26 @@ export async function recordProfileView({
   cityHeader,
   userAgent,
 }: TrackViewParams): Promise<boolean> {
-  if (!username || username.trim() === "") return false;
+  if (!username || username.trim() === '') return false;
 
   const cleanUsername = username.toLowerCase();
   const referrer = parseReferrer(referrerHeader);
-  const country = (countryHeader && countryHeader !== "XX" ? countryHeader : "Unknown").toUpperCase();
-  const city = cityHeader || "Unknown";
+  const country = (
+    countryHeader && countryHeader !== 'XX' ? countryHeader : 'Unknown'
+  ).toUpperCase();
+  const city = cityHeader || 'Unknown';
   const device_type = parseDeviceType(userAgent);
-  const ip_hash = hashVisitorIp(visitorIp || "127.0.0.1");
+  const ip_hash = hashVisitorIp(visitorIp || '127.0.0.1');
 
   try {
     // Deduplicate / rate-limit: Check if same ip_hash viewed this username within 10 minutes (600s)
     const tenMinutesAgo = new Date(Date.now() - 10 * 60 * 1000).toISOString();
     const { data: recentView } = await supabase
-      .from("profile_views")
-      .select("id")
-      .eq("username", cleanUsername)
-      .eq("ip_hash", ip_hash)
-      .gte("viewed_at", tenMinutesAgo)
+      .from('profile_views')
+      .select('id')
+      .eq('username', cleanUsername)
+      .eq('ip_hash', ip_hash)
+      .gte('viewed_at', tenMinutesAgo)
       .limit(1)
       .maybeSingle();
 
@@ -130,7 +142,7 @@ export async function recordProfileView({
     }
 
     // Insert new view log entry
-    const { error } = await supabase.from("profile_views").insert({
+    const { error } = await supabase.from('profile_views').insert({
       username: cleanUsername,
       referrer,
       country,
@@ -141,13 +153,13 @@ export async function recordProfileView({
     });
 
     if (error) {
-      console.error("Failed to insert profile view:", error.message);
+      console.error('Failed to insert profile view:', error.message);
       return false;
     }
 
     return true;
   } catch (err) {
-    console.error("Analytics view tracking bypassed:", err);
+    console.error('Analytics view tracking bypassed:', err);
     return false;
   }
 }

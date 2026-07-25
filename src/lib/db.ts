@@ -17,8 +17,8 @@
 // failed queries as `{ data: null, error }` rather than throwing, so callers must inspect `error` —
 // these functions do not swallow it.
 
-import { supabase } from "@/lib/supabase";
-import type { PostgrestError } from "@supabase/supabase-js";
+import { supabase } from '@/lib/supabase';
+import type { PostgrestError } from '@supabase/supabase-js';
 
 /** A row read from `profiles`, keyed by whatever columns the caller selected. */
 export type ProfileRow = Record<string, unknown>;
@@ -44,9 +44,9 @@ export async function getProfileByUsername(
   columns: string,
 ): Promise<QueryResult<ProfileRow>> {
   const { data, error } = await supabase
-    .from("profiles")
+    .from('profiles')
     .select(columns)
-    .eq("username", username)
+    .eq('username', username)
     .maybeSingle();
   return { data: (data as unknown as ProfileRow) ?? null, error };
 }
@@ -62,10 +62,10 @@ export async function getPublicProfileByUsername(
   columns: string,
 ): Promise<QueryResult<ProfileRow>> {
   const { data, error } = await supabase
-    .from("profiles")
+    .from('profiles')
     .select(columns)
-    .eq("username", username)
-    .eq("visibility", "public")
+    .eq('username', username)
+    .eq('visibility', 'public')
     .maybeSingle();
   return { data: (data as unknown as ProfileRow) ?? null, error };
 }
@@ -82,7 +82,7 @@ export async function updateProfileBadges(params: {
   username: string;
   badges: unknown;
 }): Promise<{ error: PostgrestError | null }> {
-  const { error } = await supabase.from("profiles").upsert({
+  const { error } = await supabase.from('profiles').upsert({
     id: params.id,
     username: params.username,
     badges: params.badges,
@@ -111,7 +111,7 @@ export interface SearchProfilesParams {
 export async function searchProfiles(
   params: SearchProfilesParams,
 ): Promise<QueryResult<unknown[]>> {
-  const { data, error } = await supabase.rpc("search_profiles", {
+  const { data, error } = await supabase.rpc('search_profiles', {
     query: params.query,
     lang: params.lang,
     min_score: params.minScore,
@@ -124,7 +124,7 @@ export async function searchProfiles(
 
 /** Sort keys accepted by the Explore profile listing. */
 export type ExploreProfileSort =
-  "score" | "prs" | "commits" | "issues" | "improvement";
+  'score' | 'prs' | 'commits' | 'issues' | 'improvement';
 
 /**
  * Fetch a page of public profiles for the Explore listing.
@@ -141,13 +141,13 @@ export async function fetchExploreProfiles(opts: {
   to: number;
 }): Promise<QueryResult<unknown[]>> {
   let query = supabase
-    .from("profiles")
+    .from('profiles')
     .select(
-      "username, name, avatar_url, score, total_prs, total_issues, total_commits, score_delta_30_days",
+      'username, name, avatar_url, score, total_prs, total_issues, total_commits, score_delta_30_days',
     )
     // Explore is a listing, so only public profiles belong in it. `unlisted` and `private` have
     // both opted out of being found.
-    .eq("visibility", "public");
+    .eq('visibility', 'public');
 
   if (opts.searchQuery) {
     query = query.or(
@@ -155,16 +155,16 @@ export async function fetchExploreProfiles(opts: {
     );
   }
 
-  let orderColumn = "score";
-  if (opts.sortBy === "prs") orderColumn = "total_prs";
-  else if (opts.sortBy === "commits") orderColumn = "total_commits";
-  else if (opts.sortBy === "issues") orderColumn = "total_issues";
-  else if (opts.sortBy === "improvement") orderColumn = "score_delta_30_days";
+  let orderColumn = 'score';
+  if (opts.sortBy === 'prs') orderColumn = 'total_prs';
+  else if (opts.sortBy === 'commits') orderColumn = 'total_commits';
+  else if (opts.sortBy === 'issues') orderColumn = 'total_issues';
+  else if (opts.sortBy === 'improvement') orderColumn = 'score_delta_30_days';
 
   const { data, error } = await query
     .order(orderColumn, { ascending: false })
-    .order("updated_at", { ascending: false })
-    .order("username", { ascending: true })
+    .order('updated_at', { ascending: false })
+    .order('username', { ascending: true })
     .range(opts.from, opts.to);
 
   return { data: (data as unknown[]) ?? null, error };
@@ -182,16 +182,16 @@ export async function fetchExploreOrganizations(opts: {
   to: number;
 }): Promise<QueryResult<unknown[]>> {
   let query = supabase
-    .from("organizations")
-    .select("name, slug, avatar_url, score");
+    .from('organizations')
+    .select('name, slug, avatar_url, score');
 
   if (opts.searchQuery) {
-    query = query.ilike("name", `%${opts.searchQuery}%`);
+    query = query.ilike('name', `%${opts.searchQuery}%`);
   }
 
   const { data, error } = await query
-    .order("score", { ascending: false })
-    .order("slug", { ascending: true })
+    .order('score', { ascending: false })
+    .order('slug', { ascending: true })
     .range(opts.from, opts.to);
 
   return { data: (data as unknown[]) ?? null, error };

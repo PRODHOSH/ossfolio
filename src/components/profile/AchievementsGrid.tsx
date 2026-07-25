@@ -1,4 +1,4 @@
-import type { Achievement } from "@/lib/achievements";
+import type { Achievement } from '@/lib/achievements';
 
 /**
  * The achievements grid.
@@ -39,38 +39,38 @@ function AchievementCard({ achievement }: { achievement: Achievement }) {
   return (
     <li
       style={{
-        listStyle: "none",
-        padding: "16px",
-        borderRadius: "var(--radius-sm)",
-        border: `1px solid ${unlocked ? "var(--color-primary)" : "var(--color-hairline)"}`,
+        listStyle: 'none',
+        padding: '16px',
+        borderRadius: 'var(--radius-sm)',
+        border: `1px solid ${unlocked ? 'var(--color-primary)' : 'var(--color-hairline)'}`,
         backgroundColor: unlocked
-          ? "var(--color-canvas-soft)"
-          : "var(--color-canvas)",
-        transition: "background-color 0.2s ease, border-color 0.2s ease",
+          ? 'var(--color-canvas-soft)'
+          : 'var(--color-canvas)',
+        transition: 'background-color 0.2s ease, border-color 0.2s ease',
       }}
     >
       <div
         style={{
-          display: "flex",
-          alignItems: "center",
-          gap: "8px",
-          marginBottom: "6px",
+          display: 'flex',
+          alignItems: 'center',
+          gap: '8px',
+          marginBottom: '6px',
         }}
       >
         <span
           aria-hidden="true"
           style={{
-            display: "inline-flex",
-            alignItems: "center",
-            justifyContent: "center",
-            width: "20px",
-            height: "20px",
+            display: 'inline-flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            width: '20px',
+            height: '20px',
             flexShrink: 0,
-            borderRadius: "var(--radius-full)",
-            backgroundColor: unlocked ? "var(--color-primary)" : "transparent",
+            borderRadius: 'var(--radius-full)',
+            backgroundColor: unlocked ? 'var(--color-primary)' : 'transparent',
             border: unlocked
-              ? "none"
-              : "1px dashed var(--color-hairline-strong)",
+              ? 'none'
+              : '1px dashed var(--color-hairline-strong)',
           }}
         >
           {unlocked && <CheckIcon />}
@@ -78,11 +78,11 @@ function AchievementCard({ achievement }: { achievement: Achievement }) {
 
         <h3
           style={{
-            fontSize: "14px",
+            fontSize: '14px',
             fontWeight: 600,
             margin: 0,
-            letterSpacing: "-0.1px",
-            color: unlocked ? "var(--color-ink)" : "var(--color-ink-mute)",
+            letterSpacing: '-0.1px',
+            color: unlocked ? 'var(--color-ink)' : 'var(--color-ink-mute)',
           }}
         >
           {name}
@@ -91,9 +91,9 @@ function AchievementCard({ achievement }: { achievement: Achievement }) {
 
       <p
         style={{
-          fontSize: "13px",
-          margin: "0 0 12px 0",
-          color: "var(--color-ink-mute)",
+          fontSize: '13px',
+          margin: '0 0 12px 0',
+          color: 'var(--color-ink-mute)',
           lineHeight: 1.4,
         }}
       >
@@ -105,38 +105,38 @@ function AchievementCard({ achievement }: { achievement: Achievement }) {
       <div
         aria-hidden="true"
         style={{
-          height: "4px",
-          width: "100%",
-          borderRadius: "var(--radius-full)",
-          backgroundColor: "var(--color-hairline)",
-          overflow: "hidden",
+          height: '4px',
+          width: '100%',
+          borderRadius: 'var(--radius-full)',
+          backgroundColor: 'var(--color-hairline)',
+          overflow: 'hidden',
         }}
       >
         <div
           style={{
-            height: "100%",
+            height: '100%',
             width: `${pct}%`,
-            borderRadius: "var(--radius-full)",
+            borderRadius: 'var(--radius-full)',
             backgroundColor: unlocked
-              ? "var(--color-primary)"
-              : "var(--color-ink-mute-2)",
-            transition: "width 0.3s ease",
+              ? 'var(--color-primary)'
+              : 'var(--color-ink-mute-2)',
+            transition: 'width 0.3s ease',
           }}
         />
       </div>
 
       <div
         style={{
-          marginTop: "8px",
-          fontSize: "12px",
+          marginTop: '8px',
+          fontSize: '12px',
           fontWeight: 500,
           color: unlocked
-            ? "var(--color-primary-deep)"
-            : "var(--color-ink-mute)",
+            ? 'var(--color-primary-deep)'
+            : 'var(--color-ink-mute)',
         }}
       >
         <span aria-hidden="true">
-          {unlocked ? "Earned" : `${current} / ${target}`}
+          {unlocked ? 'Earned' : `${current} / ${target}`}
         </span>
         <span className="sr-only">
           {unlocked
@@ -160,40 +160,40 @@ export function AchievementsGrid({
   return (
     <div
       style={{
-        marginTop: "32px",
-        borderBottom: "1px solid var(--color-hairline)",
-        paddingBottom: "32px",
+        marginTop: '32px',
+        borderBottom: '1px solid var(--color-hairline)',
+        paddingBottom: '32px',
       }}
     >
       <div
         style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          marginBottom: "16px",
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          marginBottom: '16px',
         }}
       >
         <h2
           style={{
-            fontSize: "16px",
+            fontSize: '16px',
             fontWeight: 600,
-            color: "var(--color-ink)",
+            color: 'var(--color-ink)',
             margin: 0,
-            letterSpacing: "-0.2px",
+            letterSpacing: '-0.2px',
           }}
         >
           Achievements
         </h2>
-        <span style={{ fontSize: "13px", color: "var(--color-ink-mute)" }}>
+        <span style={{ fontSize: '13px', color: 'var(--color-ink-mute)' }}>
           {unlockedCount} of {achievements.length} earned
         </span>
       </div>
 
       <ul
         style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
-          gap: "12px",
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+          gap: '12px',
           margin: 0,
           padding: 0,
         }}

@@ -1,7 +1,7 @@
-"use client";
+'use client';
 
-import Link from "next/link";
-import { motion } from "framer-motion";
+import Link from 'next/link';
+import { motion } from 'framer-motion';
 
 interface DiscoverPaginationProps {
   currentPage: number;
@@ -20,54 +20,54 @@ export function DiscoverPagination({
 }: DiscoverPaginationProps) {
   const buildUrl = (page: number) => {
     const params = new URLSearchParams(searchParams);
-    params.set("page", String(page));
+    params.set('page', String(page));
     return `${baseUrl}?${params.toString()}`;
   };
 
   const btnStyle: React.CSSProperties = {
-    fontSize: "14px",
+    fontSize: '14px',
     fontWeight: 500,
-    color: "var(--color-ink)",
-    backgroundColor: "var(--color-canvas)",
-    border: "1px solid var(--color-hairline-strong)",
-    borderRadius: "var(--radius-sm)",
-    padding: "8px 16px",
-    textDecoration: "none",
-    display: "inline-flex",
-    alignItems: "center",
-    gap: "6px",
-    transition: "border-color 0.15s, background-color 0.15s",
+    color: 'var(--color-ink)',
+    backgroundColor: 'var(--color-canvas)',
+    border: '1px solid var(--color-hairline-strong)',
+    borderRadius: 'var(--radius-sm)',
+    padding: '8px 16px',
+    textDecoration: 'none',
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '6px',
+    transition: 'border-color 0.15s, background-color 0.15s',
   };
 
   const disabledStyle: React.CSSProperties = {
     ...btnStyle,
-    color: "var(--color-ink-faint)",
-    borderColor: "var(--color-hairline)",
-    pointerEvents: "none",
+    color: 'var(--color-ink-faint)',
+    borderColor: 'var(--color-hairline)',
+    pointerEvents: 'none',
     opacity: 0.6,
   };
 
-  const pageNumbers: (number | "...")[] = [];
+  const pageNumbers: (number | '...')[] = [];
   const total = hasNext ? currentPage + 2 : currentPage;
   const start = Math.max(1, currentPage - 2);
   const end = Math.min(total, currentPage + 2);
 
   if (start > 1) pageNumbers.push(1);
-  if (start > 2) pageNumbers.push("...");
+  if (start > 2) pageNumbers.push('...');
   for (let i = start; i <= end; i++) pageNumbers.push(i);
-  if (end < total - 1) pageNumbers.push("...");
+  if (end < total - 1) pageNumbers.push('...');
   if (end < total) pageNumbers.push(total);
 
   return (
     <nav
       aria-label="Pagination"
       style={{
-        marginTop: "32px",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "space-between",
-        gap: "12px",
-        flexWrap: "wrap",
+        marginTop: '32px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        gap: '12px',
+        flexWrap: 'wrap',
       }}
     >
       <div>
@@ -104,15 +104,15 @@ export function DiscoverPagination({
         )}
       </div>
 
-      <div style={{ display: "flex", gap: "6px", alignItems: "center" }}>
+      <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
         {pageNumbers.map((page, i) =>
-          page === "..." ? (
+          page === '...' ? (
             <span
               key={`ellipsis-${i}`}
               style={{
-                fontSize: "13px",
-                color: "var(--color-ink-mute-2)",
-                padding: "0 4px",
+                fontSize: '13px',
+                color: 'var(--color-ink-mute-2)',
+                padding: '0 4px',
               }}
             >
               ...
@@ -122,34 +122,34 @@ export function DiscoverPagination({
               key={page}
               href={buildUrl(page)}
               style={{
-                minWidth: "36px",
-                height: "36px",
-                display: "inline-flex",
-                alignItems: "center",
-                justifyContent: "center",
-                fontSize: "13px",
+                minWidth: '36px',
+                height: '36px',
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '13px',
                 fontWeight: page === currentPage ? 600 : 400,
                 color:
                   page === currentPage
-                    ? "var(--color-on-primary)"
-                    : "var(--color-ink)",
+                    ? 'var(--color-on-primary)'
+                    : 'var(--color-ink)',
                 backgroundColor:
-                  page === currentPage ? "var(--color-primary)" : "transparent",
+                  page === currentPage ? 'var(--color-primary)' : 'transparent',
                 border:
                   page === currentPage
-                    ? "none"
-                    : "1px solid var(--color-hairline)",
-                borderRadius: "var(--radius-sm)",
-                textDecoration: "none",
-                position: "relative",
+                    ? 'none'
+                    : '1px solid var(--color-hairline)',
+                borderRadius: 'var(--radius-sm)',
+                textDecoration: 'none',
+                position: 'relative',
               }}
-              aria-current={page === currentPage ? "page" : undefined}
+              aria-current={page === currentPage ? 'page' : undefined}
             >
               {page === currentPage && (
                 <motion.div
                   layoutId="active-page"
                   className="absolute inset-0 bg-primary rounded-sm z-[-1]"
-                  transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                  transition={{ type: 'spring', stiffness: 300, damping: 30 }}
                 />
               )}
               {page}

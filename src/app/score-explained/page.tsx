@@ -1,17 +1,17 @@
-import Link from "next/link";
-import type { Metadata } from "next";
-import { Navbar } from "@/components/layout/Navbar";
-import { Footer } from "@/components/layout/Footer";
-import { ScoreSimulator } from "@/components/profile/ScoreSimulator";
+import Link from 'next/link';
+import type { Metadata } from 'next';
+import { Navbar } from '@/components/layout/Navbar';
+import { Footer } from '@/components/layout/Footer';
+import { ScoreSimulator } from '@/components/profile/ScoreSimulator';
 
 export const metadata: Metadata = {
-  title: "How Your Score Is Calculated",
+  title: 'How Your Score Is Calculated',
   description:
-    "A plain-language breakdown of the OSSfolio contributor score: the activities it counts, the points each one is worth, what it measures, and what it does not. Use the interactive calculator to estimate your score.",
+    'A plain-language breakdown of the OSSfolio contributor score: the activities it counts, the points each one is worth, what it measures, and what it does not. Use the interactive calculator to estimate your score.',
   openGraph: {
-    title: "How Your Score Is Calculated - OSSfolio",
+    title: 'How Your Score Is Calculated - OSSfolio',
     description:
-      "A plain-language breakdown of the OSSfolio contributor score: the activities it counts, the points each one is worth, what it measures, and what it does not. Use the interactive calculator to estimate your score.",
+      'A plain-language breakdown of the OSSfolio contributor score: the activities it counts, the points each one is worth, what it measures, and what it does not. Use the interactive calculator to estimate your score.',
   },
 };
 
@@ -19,34 +19,34 @@ export const metadata: Metadata = {
 // of truth that the leaderboard and profile cards use. If the formula in
 // score.ts ever changes, update this table to match.
 const SCORE_ROWS: { activity: string; points: string; note: string }[] = [
-  { activity: "Commit", points: "1 pt", note: "Each commit you author" },
-  { activity: "Pull Request", points: "3 pts", note: "Each PR you open" },
-  { activity: "Issue", points: "2 pts", note: "Each issue you open" },
-  { activity: "Code Review", points: "2 pts", note: "Each review you leave" },
+  { activity: 'Commit', points: '1 pt', note: 'Each commit you author' },
+  { activity: 'Pull Request', points: '3 pts', note: 'Each PR you open' },
+  { activity: 'Issue', points: '2 pts', note: 'Each issue you open' },
+  { activity: 'Code Review', points: '2 pts', note: 'Each review you leave' },
   {
-    activity: "Star earned",
-    points: "0.1 pt",
-    note: "Per star on your repos, capped at 1,000 stars",
+    activity: 'Star earned',
+    points: '0.1 pt',
+    note: 'Per star on your repos, capped at 1,000 stars',
   },
 ];
 
 export default function ScoreExplainedPage() {
   const sectionTitleStyle = {
-    fontSize: "18px",
+    fontSize: '18px',
     fontWeight: 500,
-    color: "var(--color-ink)",
-    margin: "0 0 8px 0",
+    color: 'var(--color-ink)',
+    margin: '0 0 8px 0',
   };
   const paragraphStyle = {
-    fontSize: "15px",
+    fontSize: '15px',
     lineHeight: 1.55,
-    color: "var(--color-ink-mute)",
-    margin: "0 0 12px 0",
+    color: 'var(--color-ink-mute)',
+    margin: '0 0 12px 0',
   };
   const cellBase = {
-    padding: "12px 16px",
-    borderBottom: "1px solid var(--color-hairline)",
-    textAlign: "left" as const,
+    padding: '12px 16px',
+    borderBottom: '1px solid var(--color-hairline)',
+    textAlign: 'left' as const,
   };
 
   return (
@@ -54,23 +54,23 @@ export default function ScoreExplainedPage() {
       <Navbar />
       <main
         style={{
-          backgroundColor: "var(--color-canvas)",
-          color: "var(--color-ink)",
-          minHeight: "100vh",
-          transition: "background-color 0.2s ease, color 0.2s ease",
+          backgroundColor: 'var(--color-canvas)',
+          color: 'var(--color-ink)',
+          minHeight: '100vh',
+          transition: 'background-color 0.2s ease, color 0.2s ease',
         }}
       >
         <div
-          style={{ maxWidth: "44rem", margin: "0 auto", padding: "56px 20px" }}
+          style={{ maxWidth: '44rem', margin: '0 auto', padding: '56px 20px' }}
         >
           {/* Header */}
-          <header style={{ marginBottom: "32px" }}>
+          <header style={{ marginBottom: '32px' }}>
             <h1
               style={{
-                fontSize: "28px",
+                fontSize: '28px',
                 fontWeight: 600,
-                color: "var(--color-ink)",
-                letterSpacing: "-0.42px",
+                color: 'var(--color-ink)',
+                letterSpacing: '-0.42px',
                 margin: 0,
               }}
             >
@@ -78,9 +78,9 @@ export default function ScoreExplainedPage() {
             </h1>
             <p
               style={{
-                fontSize: "15px",
-                color: "var(--color-ink-mute)",
-                margin: "8px 0 0 0",
+                fontSize: '15px',
+                color: 'var(--color-ink-mute)',
+                margin: '8px 0 0 0',
                 lineHeight: 1.55,
               }}
             >
@@ -92,7 +92,7 @@ export default function ScoreExplainedPage() {
           </header>
 
           {/* Formula table */}
-          <section style={{ marginBottom: "40px" }}>
+          <section style={{ marginBottom: '40px' }}>
             <h2 style={sectionTitleStyle}>The formula</h2>
             <p style={paragraphStyle}>
               Every activity is worth a fixed number of points. Your total is
@@ -100,17 +100,17 @@ export default function ScoreExplainedPage() {
             </p>
             <div
               style={{
-                border: "1px solid var(--color-hairline)",
-                borderRadius: "12px",
-                overflow: "hidden",
-                backgroundColor: "var(--color-canvas-soft)",
+                border: '1px solid var(--color-hairline)',
+                borderRadius: '12px',
+                overflow: 'hidden',
+                backgroundColor: 'var(--color-canvas-soft)',
               }}
             >
               <table
                 style={{
-                  width: "100%",
-                  borderCollapse: "collapse",
-                  fontSize: "14px",
+                  width: '100%',
+                  borderCollapse: 'collapse',
+                  fontSize: '14px',
                 }}
               >
                 <thead>
@@ -118,7 +118,7 @@ export default function ScoreExplainedPage() {
                     <th
                       style={{
                         ...cellBase,
-                        color: "var(--color-ink-mute-2)",
+                        color: 'var(--color-ink-mute-2)',
                         fontWeight: 500,
                       }}
                     >
@@ -127,10 +127,10 @@ export default function ScoreExplainedPage() {
                     <th
                       style={{
                         ...cellBase,
-                        color: "var(--color-ink-mute-2)",
+                        color: 'var(--color-ink-mute-2)',
                         fontWeight: 500,
-                        width: "90px",
-                        whiteSpace: "nowrap",
+                        width: '90px',
+                        whiteSpace: 'nowrap',
                       }}
                     >
                       Points
@@ -138,7 +138,7 @@ export default function ScoreExplainedPage() {
                     <th
                       style={{
                         ...cellBase,
-                        color: "var(--color-ink-mute-2)",
+                        color: 'var(--color-ink-mute-2)',
                         fontWeight: 500,
                       }}
                     >
@@ -150,14 +150,14 @@ export default function ScoreExplainedPage() {
                   {SCORE_ROWS.map((row, i) => {
                     const isLast = i === SCORE_ROWS.length - 1;
                     const rowCell = isLast
-                      ? { ...cellBase, borderBottom: "none" }
+                      ? { ...cellBase, borderBottom: 'none' }
                       : cellBase;
                     return (
                       <tr key={row.activity}>
                         <td
                           style={{
                             ...rowCell,
-                            color: "var(--color-ink)",
+                            color: 'var(--color-ink)',
                             fontWeight: 500,
                           }}
                         >
@@ -166,15 +166,15 @@ export default function ScoreExplainedPage() {
                         <td
                           style={{
                             ...rowCell,
-                            color: "var(--color-primary)",
+                            color: 'var(--color-primary)',
                             fontWeight: 600,
-                            whiteSpace: "nowrap",
+                            whiteSpace: 'nowrap',
                           }}
                         >
                           {row.points}
                         </td>
                         <td
-                          style={{ ...rowCell, color: "var(--color-ink-mute)" }}
+                          style={{ ...rowCell, color: 'var(--color-ink-mute)' }}
                         >
                           {row.note}
                         </td>
@@ -186,9 +186,9 @@ export default function ScoreExplainedPage() {
             </div>
             <p
               style={{
-                fontSize: "13px",
-                color: "var(--color-ink-mute-2)",
-                margin: "12px 0 0 0",
+                fontSize: '13px',
+                color: 'var(--color-ink-mute-2)',
+                margin: '12px 0 0 0',
               }}
             >
               Example: 40 commits, 10 PRs, 6 issues, 4 reviews, and 300 stars
@@ -200,7 +200,7 @@ export default function ScoreExplainedPage() {
           </section>
 
           {/* What it measures */}
-          <section style={{ marginBottom: "32px" }}>
+          <section style={{ marginBottom: '32px' }}>
             <h2 style={sectionTitleStyle}>What the score measures</h2>
             <p style={paragraphStyle}>
               The score rewards consistent, varied participation. Opening pull
@@ -214,7 +214,7 @@ export default function ScoreExplainedPage() {
           </section>
 
           {/* What it does not measure */}
-          <section style={{ marginBottom: "32px" }}>
+          <section style={{ marginBottom: '32px' }}>
             <h2 style={sectionTitleStyle}>What it does not measure</h2>
             <p style={paragraphStyle}>
               It is not a measure of code quality, seniority, or how important
@@ -227,7 +227,7 @@ export default function ScoreExplainedPage() {
           </section>
 
           {/* How it will evolve */}
-          <section style={{ marginBottom: "40px" }}>
+          <section style={{ marginBottom: '40px' }}>
             <h2 style={sectionTitleStyle}>How it will evolve</h2>
             <p style={paragraphStyle}>
               This formula is intentionally simple while OSSfolio is early. As
@@ -243,10 +243,10 @@ export default function ScoreExplainedPage() {
             <Link
               href="/explore"
               style={{
-                fontSize: "14px",
+                fontSize: '14px',
                 fontWeight: 500,
-                color: "var(--color-ink)",
-                textDecoration: "underline",
+                color: 'var(--color-ink)',
+                textDecoration: 'underline',
               }}
             >
               View the leaderboard

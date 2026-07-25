@@ -1,44 +1,44 @@
-"use client";
+'use client';
 
-import { useCallback, useEffect, useRef, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
-import { useDebounce } from "@/hooks/useDebounce";
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { useDebounce } from '@/hooks/useDebounce';
 
 const SORT_OPTIONS = [
-  { value: "score", label: "Score" },
-  { value: "improvement", label: "Most Improved" },
-  { value: "contributions", label: "Contributions" },
-  { value: "followers", label: "Followers" },
+  { value: 'score', label: 'Score' },
+  { value: 'improvement', label: 'Most Improved' },
+  { value: 'contributions', label: 'Contributions' },
+  { value: 'followers', label: 'Followers' },
 ] as const;
 
 const POPULAR_LANGUAGES = [
-  "TypeScript",
-  "JavaScript",
-  "Python",
-  "Go",
-  "Rust",
-  "Java",
-  "C++",
-  "Ruby",
-  "PHP",
-  "Swift",
+  'TypeScript',
+  'JavaScript',
+  'Python',
+  'Go',
+  'Rust',
+  'Java',
+  'C++',
+  'Ruby',
+  'PHP',
+  'Swift',
 ];
 
 export function SearchFilters() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  const [query, setQuery] = useState(searchParams.get("q") || "");
+  const [query, setQuery] = useState(searchParams.get('q') || '');
   const [minScoreInput, setMinScoreInput] = useState(
-    searchParams.get("min_score") || "",
+    searchParams.get('min_score') || '',
   );
   const debouncedQuery = useDebounce(query, 300);
   const debouncedMinScore = useDebounce(minScoreInput, 500);
   const initialRender = useRef(true);
 
-  const lang = searchParams.get("lang") || "";
-  const sort = searchParams.get("sort") || "score";
-  const minScore = searchParams.get("min_score") || "";
+  const lang = searchParams.get('lang') || '';
+  const sort = searchParams.get('sort') || 'score';
+  const minScore = searchParams.get('min_score') || '';
 
   const pushParams = useCallback(
     (overrides: Record<string, string>) => {
@@ -63,33 +63,33 @@ export function SearchFilters() {
       initialRender.current = false;
       return;
     }
-    pushParams({ q: debouncedQuery, page: "" });
+    pushParams({ q: debouncedQuery, page: '' });
   }, [debouncedQuery, pushParams]);
 
   useEffect(() => {
     if (initialRender.current) return;
-    pushParams({ min_score: debouncedMinScore, page: "" });
+    pushParams({ min_score: debouncedMinScore, page: '' });
   }, [debouncedMinScore, pushParams]);
 
   const inputStyle: React.CSSProperties = {
-    width: "100%",
-    fontSize: "15px",
-    padding: "12px 16px",
-    border: "1px solid var(--color-hairline)",
-    borderRadius: "6px",
-    outline: "none",
-    backgroundColor: "var(--color-canvas-soft)",
-    color: "var(--color-ink)",
+    width: '100%',
+    fontSize: '15px',
+    padding: '12px 16px',
+    border: '1px solid var(--color-hairline)',
+    borderRadius: '6px',
+    outline: 'none',
+    backgroundColor: 'var(--color-canvas-soft)',
+    color: 'var(--color-ink)',
   };
 
   const selectStyle: React.CSSProperties = {
-    fontSize: "14px",
-    padding: "8px 12px",
-    border: "1px solid var(--color-hairline)",
-    borderRadius: "6px",
-    backgroundColor: "var(--color-canvas)",
-    color: "var(--color-ink)",
-    cursor: "pointer",
+    fontSize: '14px',
+    padding: '8px 12px',
+    border: '1px solid var(--color-hairline)',
+    borderRadius: '6px',
+    backgroundColor: 'var(--color-canvas)',
+    color: 'var(--color-ink)',
+    cursor: 'pointer',
   };
 
   return (
@@ -97,13 +97,13 @@ export function SearchFilters() {
       role="search"
       onSubmit={(e) => e.preventDefault()}
       style={{
-        display: "flex",
-        flexDirection: "column",
-        gap: "16px",
-        marginBottom: "24px",
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '16px',
+        marginBottom: '24px',
       }}
     >
-      <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+      <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
         <input
           type="text"
           placeholder="Search by username, name, organization, or language..."
@@ -116,15 +116,15 @@ export function SearchFilters() {
           <a
             href={`/org/${encodeURIComponent(query.trim())}`}
             style={{
-              whiteSpace: "nowrap",
-              fontSize: "13px",
+              whiteSpace: 'nowrap',
+              fontSize: '13px',
               fontWeight: 600,
-              padding: "10px 14px",
-              borderRadius: "6px",
-              backgroundColor: "rgba(99, 102, 241, 0.15)",
-              color: "#818cf8",
-              border: "1px solid rgba(99, 102, 241, 0.3)",
-              textDecoration: "none",
+              padding: '10px 14px',
+              borderRadius: '6px',
+              backgroundColor: 'rgba(99, 102, 241, 0.15)',
+              color: '#818cf8',
+              border: '1px solid rgba(99, 102, 241, 0.3)',
+              textDecoration: 'none',
             }}
           >
             Org Dashboard →
@@ -134,18 +134,18 @@ export function SearchFilters() {
 
       <div
         style={{
-          display: "flex",
-          flexWrap: "wrap",
-          gap: "12px",
-          alignItems: "center",
+          display: 'flex',
+          flexWrap: 'wrap',
+          gap: '12px',
+          alignItems: 'center',
         }}
       >
         <select
           value={lang}
           onChange={(e) => {
             const params = new URLSearchParams(searchParams.toString());
-            params.set("lang", e.target.value);
-            params.delete("page");
+            params.set('lang', e.target.value);
+            params.delete('page');
             router.replace(`/discover?${params.toString()}`);
           }}
           style={selectStyle}
@@ -163,8 +163,8 @@ export function SearchFilters() {
           value={sort}
           onChange={(e) => {
             const params = new URLSearchParams(searchParams.toString());
-            params.set("sort", e.target.value);
-            params.delete("page");
+            params.set('sort', e.target.value);
+            params.delete('page');
             router.replace(`/discover?${params.toString()}`);
           }}
           style={selectStyle}
@@ -183,25 +183,25 @@ export function SearchFilters() {
           value={minScoreInput}
           onChange={(e) => setMinScoreInput(e.target.value)}
           min={0}
-          style={{ ...selectStyle, width: "100px" }}
+          style={{ ...selectStyle, width: '100px' }}
           aria-label="Minimum score filter"
         />
 
         {(query || lang || minScore) && (
           <button
             onClick={() => {
-              setQuery("");
-              setMinScoreInput("");
-              router.replace("/discover");
+              setQuery('');
+              setMinScoreInput('');
+              router.replace('/discover');
             }}
             style={{
-              fontSize: "13px",
+              fontSize: '13px',
               fontWeight: 500,
-              color: "var(--color-ink-mute)",
-              background: "none",
-              border: "none",
-              cursor: "pointer",
-              textDecoration: "underline",
+              color: 'var(--color-ink-mute)',
+              background: 'none',
+              border: 'none',
+              cursor: 'pointer',
+              textDecoration: 'underline',
             }}
           >
             Clear filters

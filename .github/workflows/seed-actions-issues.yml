@@ -34,7 +34,7 @@ jobs:
       # SECTION 1: CI/CD, AUTOMATION & WORKFLOW FIXES
       # -------------------------------------------------------------------------
 
-      - name: "Issue 1 - Fix PR Issue Linking check on forks"
+      - name: 'Issue 1 - Fix PR Issue Linking check on forks'
         continue-on-error: true
         run: |
           cat > /tmp/body.md << 'ENDBODY'
@@ -61,7 +61,7 @@ jobs:
           ENDBODY
           gh issue create --repo "$REPO" --title "[BUG] Fix PR Issue Linking validation workflow failing on forked repositories" --label "ADVENTURER,ELUSOC,bug,github-actions" --body-file /tmp/body.md
 
-      - name: "Issue 2 - Fix Auto-Merge failures on maintainer approval"
+      - name: 'Issue 2 - Fix Auto-Merge failures on maintainer approval'
         continue-on-error: true
         run: |
           cat > /tmp/body.md << 'ENDBODY'
@@ -88,7 +88,7 @@ jobs:
           ENDBODY
           gh issue create --repo "$REPO" --title "[BUG] Resolve Auto-Merge workflow failures when branch protection checks are pending or on fork reviews" --label "VETERAN,ELUSOC,bug,github-actions" --body-file /tmp/body.md
 
-      - name: "Issue 3 - Fix Playwright E2E suite build timeout in CI"
+      - name: 'Issue 3 - Fix Playwright E2E suite build timeout in CI'
         continue-on-error: true
         run: |
           cat > /tmp/body.md << 'ENDBODY'
@@ -114,7 +114,7 @@ jobs:
           ENDBODY
           gh issue create --repo "$REPO" --title "[BUG] Diagnose and resolve Playwright E2E test suite timeout and mock-supabase webServer binding failures in CI" --label "VETERAN,ELUSOC,bug,github-actions,testing" --body-file /tmp/body.md
 
-      - name: "Issue 4 - Implement automated bundle size analysis in CI"
+      - name: 'Issue 4 - Implement automated bundle size analysis in CI'
         continue-on-error: true
         run: |
           cat > /tmp/body.md << 'ENDBODY'
@@ -132,7 +132,7 @@ jobs:
           ENDBODY
           gh issue create --repo "$REPO" --title "[FEAT] Implement automated bundle size analysis and comment diffs on Pull Requests" --label "VETERAN,ELUSOC,enhancement,github-actions,performance" --body-file /tmp/body.md
 
-      - name: "Issue 5 - Add database migration linting in CI"
+      - name: 'Issue 5 - Add database migration linting in CI'
         continue-on-error: true
         run: |
           cat > /tmp/body.md << 'ENDBODY'
@@ -150,7 +150,7 @@ jobs:
           ENDBODY
           gh issue create --repo "$REPO" --title "[FEAT] Add automated database migration linting and RLS verification checks in CI" --label "ADVENTURER,ELUSOC,enhancement,github-actions,backend" --body-file /tmp/body.md
 
-      - name: "Issue 6 - Automated Stale PR and Issue maintenance"
+      - name: 'Issue 6 - Automated Stale PR and Issue maintenance'
         continue-on-error: true
         run: |
           cat > /tmp/body.md << 'ENDBODY'
@@ -172,7 +172,7 @@ jobs:
       # SECTION 2: BACKEND, EDGE RUNTIME & CLOUDFLARE ARCHITECTURE
       # -------------------------------------------------------------------------
 
-      - name: "Issue 7 - Prevent Cloudflare Worker 500 crashes"
+      - name: 'Issue 7 - Prevent Cloudflare Worker 500 crashes'
         continue-on-error: true
         run: |
           cat > /tmp/body.md << 'ENDBODY'
@@ -199,7 +199,7 @@ jobs:
           ENDBODY
           gh issue create --repo "$REPO" --title "[BUG] Prevent Cloudflare Workers startup crashes by enforcing lazy Supabase client initialization and resolving runtime directives" --label "VETERAN,ELUSOC,bug,backend" --body-file /tmp/body.md
 
-      - name: "Issue 8 - Redis rate-limit failover alerting"
+      - name: 'Issue 8 - Redis rate-limit failover alerting'
         continue-on-error: true
         run: |
           cat > /tmp/body.md << 'ENDBODY'
@@ -217,7 +217,7 @@ jobs:
           ENDBODY
           gh issue create --repo "$REPO" --title "[FEAT] Add Redis rate-limit failover telemetry and resilient memory buffering for GitHub profile syncing" --label "VETERAN,ELUSOC,enhancement,backend" --body-file /tmp/body.md
 
-      - name: "Issue 9 - Transactional Postgres advisory locks for sync"
+      - name: 'Issue 9 - Transactional Postgres advisory locks for sync'
         continue-on-error: true
         run: |
           cat > /tmp/body.md << 'ENDBODY'
@@ -235,7 +235,7 @@ jobs:
           ENDBODY
           gh issue create --repo "$REPO" --title "[REFACTOR] Implement PostgreSQL transactional advisory locking for concurrent profile snapshot synchronization" --label "VETERAN,ELUSOC,refactor,backend" --body-file /tmp/body.md
 
-      - name: "Issue 10 - GitHub Webhook signature verification and retries"
+      - name: 'Issue 10 - GitHub Webhook signature verification and retries'
         continue-on-error: true
         run: |
           cat > /tmp/body.md << 'ENDBODY'
@@ -254,7 +254,7 @@ jobs:
           ENDBODY
           gh issue create --repo "$REPO" --title "[FEAT] Implement constant-time HMAC-SHA256 webhook verification and dead-letter retry persistence for GitHub events" --label "VETERAN,ELUSOC,enhancement,backend" --body-file /tmp/body.md
 
-      - name: "Issue 11 - ETags and RFC 7232 caching on public REST APIs"
+      - name: 'Issue 11 - ETags and RFC 7232 caching on public REST APIs'
         continue-on-error: true
         run: |
           cat > /tmp/body.md << 'ENDBODY'
@@ -272,7 +272,7 @@ jobs:
           ENDBODY
           gh issue create --repo "$REPO" --title "[FEAT] Implement ETag validation and RFC 7232 conditional caching responses on public REST endpoints" --label "ADVENTURER,ELUSOC,enhancement,backend" --body-file /tmp/body.md
 
-      - name: "Issue 12 - Standardize API route Result patterns"
+      - name: 'Issue 12 - Standardize API route Result patterns'
         continue-on-error: true
         run: |
           cat > /tmp/body.md << 'ENDBODY'
@@ -292,7 +292,7 @@ jobs:
           ENDBODY
           gh issue create --repo "$REPO" --title "[REFACTOR] Standardize API route response generation using type-safe Result pattern constructs" --label "ADVENTURER,ELUSOC,refactor,backend" --body-file /tmp/body.md
 
-      - name: "Issue 13 - Automated background cleanup for orphan snapshots"
+      - name: 'Issue 13 - Automated background cleanup for orphan snapshots'
         continue-on-error: true
         run: |
           cat > /tmp/body.md << 'ENDBODY'
@@ -314,7 +314,7 @@ jobs:
       # SECTION 3: FRONTEND UI, NEXT.JS COMPONENTS & DESIGN SYSTEM
       # -------------------------------------------------------------------------
 
-      - name: "Issue 14 - Redesign Profile Hero section with glassmorphism"
+      - name: 'Issue 14 - Redesign Profile Hero section with glassmorphism'
         continue-on-error: true
         run: |
           cat > /tmp/body.md << 'ENDBODY'
@@ -332,7 +332,7 @@ jobs:
           ENDBODY
           gh issue create --repo "$REPO" --title "[FEAT] Redesign Profile Hero header section using established Design System surface tokens" --label "ADVENTURER,ELUSOC,enhancement,frontend,UI" --body-file /tmp/body.md
 
-      - name: "Issue 15 - Responsive radar comparison chart on /compare"
+      - name: 'Issue 15 - Responsive radar comparison chart on /compare'
         continue-on-error: true
         run: |
           cat > /tmp/body.md << 'ENDBODY'
@@ -350,7 +350,7 @@ jobs:
           ENDBODY
           gh issue create --repo "$REPO" --title "[FEAT] Implement interactive comparative multi-axis radar chart on contributor comparison dashboard" --label "VETERAN,ELUSOC,enhancement,frontend,UI" --body-file /tmp/body.md
 
-      - name: "Issue 16 - Keyboard Command Palette (Ctrl+K) for navigation"
+      - name: 'Issue 16 - Keyboard Command Palette (Ctrl+K) for navigation'
         continue-on-error: true
         run: |
           cat > /tmp/body.md << 'ENDBODY'
@@ -368,7 +368,7 @@ jobs:
           ENDBODY
           gh issue create --repo "$REPO" --title "[FEAT] Build interactive keyboard command palette (Ctrl+K) for instantaneous navigation and actions" --label "ADVENTURER,ELUSOC,enhancement,frontend,UI" --body-file /tmp/body.md
 
-      - name: "Issue 17 - Live filtering on /explore Leaderboard"
+      - name: 'Issue 17 - Live filtering on /explore Leaderboard'
         continue-on-error: true
         run: |
           cat > /tmp/body.md << 'ENDBODY'
@@ -386,7 +386,7 @@ jobs:
           ENDBODY
           gh issue create --repo "$REPO" --title "[FEAT] Add dynamic programming language filtering and URL search persistence to /explore leaderboard" --label "VETERAN,ELUSOC,enhancement,frontend,UI" --body-file /tmp/body.md
 
-      - name: "Issue 18 - WCAG AAA Contrast verification and High-Contrast mode"
+      - name: 'Issue 18 - WCAG AAA Contrast verification and High-Contrast mode'
         continue-on-error: true
         run: |
           cat > /tmp/body.md << 'ENDBODY'
@@ -405,7 +405,7 @@ jobs:
           ENDBODY
           gh issue create --repo "$REPO" --title "[FEAT] Implement high-contrast accessible theme mode and certify WCAG AAA readability standards" --label "ADVENTURER,ELUSOC,enhancement,frontend,UI,accessibility" --body-file /tmp/body.md
 
-      - name: "Issue 19 - Standardize component variants with CVA recipes"
+      - name: 'Issue 19 - Standardize component variants with CVA recipes'
         continue-on-error: true
         run: |
           cat > /tmp/body.md << 'ENDBODY'
@@ -423,7 +423,7 @@ jobs:
           ENDBODY
           gh issue create --repo "$REPO" --title "[REFACTOR] Replace ad-hoc inline styling strings with standardized CVA component recipe schemas" --label "ADVENTURER,ELUSOC,refactor,frontend,UI" --body-file /tmp/body.md
 
-      - name: "Issue 20 - Interactive Profile Score Breakdown Dialog"
+      - name: 'Issue 20 - Interactive Profile Score Breakdown Dialog'
         continue-on-error: true
         run: |
           cat > /tmp/body.md << 'ENDBODY'
@@ -441,7 +441,7 @@ jobs:
           ENDBODY
           gh issue create --repo "$REPO" --title "[FEAT] Build interactive Profile Score calculation breakdown dialog with anti-gaming transparency" --label "ADVENTURER,ELUSOC,enhancement,frontend,UI" --body-file /tmp/body.md
 
-      - name: "Issue 21 - Framer Motion animations for Repo Grid"
+      - name: 'Issue 21 - Framer Motion animations for Repo Grid'
         continue-on-error: true
         run: |
           cat > /tmp/body.md << 'ENDBODY'
@@ -459,7 +459,7 @@ jobs:
           ENDBODY
           gh issue create --repo "$REPO" --title "[FEAT] Add smooth Framer Motion layout sorting animations to developer repository grids" --label "ADVENTURER,ELUSOC,enhancement,frontend,UI" --body-file /tmp/body.md
 
-      - name: "Issue 22 - Enhanced touch gesture Mobile Navigation Drawer"
+      - name: 'Issue 22 - Enhanced touch gesture Mobile Navigation Drawer'
         continue-on-error: true
         run: |
           cat > /tmp/body.md << 'ENDBODY'
@@ -481,7 +481,7 @@ jobs:
       # SECTION 4: INTERNATIONALIZATION (I18N) & ACCESSIBILITY
       # -------------------------------------------------------------------------
 
-      - name: "Issue 23 - Strict TypeScript schema validation for i18n messages"
+      - name: 'Issue 23 - Strict TypeScript schema validation for i18n messages'
         continue-on-error: true
         run: |
           cat > /tmp/body.md << 'ENDBODY'
@@ -505,7 +505,7 @@ jobs:
           ENDBODY
           gh issue create --repo "$REPO" --title "[BUG] Enforce strict TypeScript schema validation to prevent missing internationalization translation keys" --label "ADVENTURER,ELUSOC,bug,frontend" --body-file /tmp/body.md
 
-      - name: "Issue 24 - Persistent local storage language switcher"
+      - name: 'Issue 24 - Persistent local storage language switcher'
         continue-on-error: true
         run: |
           cat > /tmp/body.md << 'ENDBODY'
@@ -523,7 +523,7 @@ jobs:
           ENDBODY
           gh issue create --repo "$REPO" --title "[FEAT] Build interactive header language switcher with cookie persistence for bilingual navigation" --label "ADVENTURER,ELUSOC,enhancement,frontend,UI" --body-file /tmp/body.md
 
-      - name: "Issue 25 - ARIA live-region updates for profile sync"
+      - name: 'Issue 25 - ARIA live-region updates for profile sync'
         continue-on-error: true
         run: |
           cat > /tmp/body.md << 'ENDBODY'
@@ -545,7 +545,7 @@ jobs:
       # SECTION 5: PERFORMANCE, OPTIMIZATION & TESTING
       # -------------------------------------------------------------------------
 
-      - name: "Issue 26 - Optimize OpenGraph Wasm and Font parsing"
+      - name: 'Issue 26 - Optimize OpenGraph Wasm and Font parsing'
         continue-on-error: true
         run: |
           cat > /tmp/body.md << 'ENDBODY'
@@ -563,7 +563,7 @@ jobs:
           ENDBODY
           gh issue create --repo "$REPO" --title "[PERF] Optimize OpenGraph font array buffer caching and Wasm evaluation overhead on Cloudflare Pages" --label "VETERAN,ELUSOC,enhancement,performance" --body-file /tmp/body.md
 
-      - name: "Issue 27 - Dynamic code-splitting for graphing components"
+      - name: 'Issue 27 - Dynamic code-splitting for graphing components'
         continue-on-error: true
         run: |
           cat > /tmp/body.md << 'ENDBODY'
@@ -581,7 +581,7 @@ jobs:
           ENDBODY
           gh issue create --repo "$REPO" --title "[PERF] Implement dynamic code-splitting and Suspense loading boundaries for visualization graphing libraries" --label "ADVENTURER,ELUSOC,enhancement,frontend,performance" --body-file /tmp/body.md
 
-      - name: "Issue 28 - Vitest unit tests for anomaly heuristics"
+      - name: 'Issue 28 - Vitest unit tests for anomaly heuristics'
         continue-on-error: true
         run: |
           cat > /tmp/body.md << 'ENDBODY'
@@ -599,7 +599,7 @@ jobs:
           ENDBODY
           gh issue create --repo "$REPO" --title "[FEAT] Build comprehensive Vitest unit test suite validating anti-gaming anomaly heuristic algorithms" --label "ADVENTURER,ELUSOC,enhancement,testing,backend" --body-file /tmp/body.md
 
-      - name: "Issue 29 - E2E tests for user setting mutations under edge network dropouts"
+      - name: 'Issue 29 - E2E tests for user setting mutations under edge network dropouts'
         continue-on-error: true
         run: |
           cat > /tmp/body.md << 'ENDBODY'
@@ -617,7 +617,7 @@ jobs:
           ENDBODY
           gh issue create --repo "$REPO" --title "[FEAT] Add Playwright network interception tests verifying resilient form recovery under edge service failures" --label "VETERAN,ELUSOC,enhancement,testing" --body-file /tmp/body.md
 
-      - name: "Issue 30 - Interactive OpenAPI 3.1 schema route at /api-docs"
+      - name: 'Issue 30 - Interactive OpenAPI 3.1 schema route at /api-docs'
         continue-on-error: true
         run: |
           cat > /tmp/body.md << 'ENDBODY'

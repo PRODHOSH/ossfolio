@@ -1,19 +1,19 @@
-import { GITHUB_API_URL } from "@/lib/github";
-import { supabase } from "@/lib/supabase";
-import { fetchMergedPRs, fetchOrganizations } from "@/lib/profile-data";
-import type { MergedPR, Org } from "@/types";
+import { GITHUB_API_URL } from '@/lib/github';
+import { supabase } from '@/lib/supabase';
+import { fetchMergedPRs, fetchOrganizations } from '@/lib/profile-data';
+import type { MergedPR, Org } from '@/types';
 
-export type DigestPeriod = "weekly" | "monthly";
+export type DigestPeriod = 'weekly' | 'monthly';
 
 export interface DigestActivity {
   id: string;
   type:
-    | "pr_merged"
-    | "issue_resolved"
-    | "issue_created"
-    | "repo_starred"
-    | "org_joined"
-    | "achievement_earned";
+    | 'pr_merged'
+    | 'issue_resolved'
+    | 'issue_created'
+    | 'repo_starred'
+    | 'org_joined'
+    | 'achievement_earned';
   title: string;
   repoName?: string;
   url?: string;
@@ -65,12 +65,12 @@ export interface ContributionDigestData {
  */
 export function getPeriodDateRange(
   period: DigestPeriod,
-  referenceDate: Date = new Date()
+  referenceDate: Date = new Date(),
 ): { startDate: Date; endDate: Date } {
   const endDate = new Date(referenceDate);
   const startDate = new Date(referenceDate);
 
-  if (period === "weekly") {
+  if (period === 'weekly') {
     startDate.setDate(endDate.getDate() - 7);
   } else {
     startDate.setDate(endDate.getDate() - 30);
@@ -84,7 +84,7 @@ export function getPeriodDateRange(
  */
 export async function getContributionDigest(
   username: string,
-  period: DigestPeriod = "weekly"
+  period: DigestPeriod = 'weekly',
 ): Promise<ContributionDigestData> {
   const cleanUsername = username.trim().toLowerCase();
   const { startDate, endDate } = getPeriodDateRange(period);
@@ -92,10 +92,10 @@ export async function getContributionDigest(
   // Try fetching cached digest from Supabase if updated within 24h
   try {
     const { data: cached } = await supabase
-      .from("profile_digests")
-      .select("digest_data, updated_at")
-      .eq("username", cleanUsername)
-      .eq("period", period)
+      .from('profile_digests')
+      .select('digest_data, updated_at')
+      .eq('username', cleanUsername)
+      .eq('period', period)
       .maybeSingle();
 
     if (cached?.digest_data) {
@@ -108,7 +108,7 @@ export async function getContributionDigest(
     }
   } catch (err) {
     // Graceful fallback on DB query failure
-    console.warn("Could not query profile_digests cache:", err);
+    console.warn('Could not query profile_digests cache:', err);
   }
 
   // Fetch live profile details
@@ -123,21 +123,24 @@ export async function getContributionDigest(
       fetchMergedPRs(cleanUsername, 50),
       fetchOrganizations(cleanUsername),
       fetch(`${GITHUB_API_URL}/users/${encodeURIComponent(cleanUsername)}`, {
-        headers: { Accept: "application/vnd.github.v3+json" },
+        headers: { Accept: 'application/vnd.github.v3+json' },
       }).then((res) => (res.ok ? res.json() : null)),
     ]);
 
-    if (prData.status === "fulfilled") mergedPRs = prData.value;
-    if (orgData.status === "fulfilled") orgs = orgData.value;
-    if (userRes.status === "fulfilled" && userRes.value) {
+    if (prData.status === 'fulfilled') mergedPRs = prData.value;
+    if (orgData.status === 'fulfilled') orgs = orgData.value;
+    if (userRes.status === 'fulfilled' && userRes.value) {
       name = userRes.value.name || userRes.value.login;
       avatarUrl = userRes.value.avatar_url || avatarUrl;
       const publicRepos = userRes.value.public_repos || 0;
       const followers = userRes.value.followers || 0;
-      score = Math.min(99, Math.max(30, Math.floor(publicRepos * 1.5 + followers * 0.8 + 50)));
+      score = Math.min(
+        99,
+        Math.max(30, Math.floor(publicRepos * 1.5 + followers * 0.8 + 50)),
+      );
     }
   } catch (e) {
-    console.error("Error fetching live profile data for digest:", e);
+    console.error('Error fetching live profile data for digest:', e);
   }
 
   // Filter PRs within period date range
@@ -146,9 +149,16 @@ export async function getContributionDigest(
     return d >= startDate && d <= endDate;
   });
 
-  const prsMergedCount = periodPRs.length > 0 ? periodPRs.length : mergedPRs.length > 0 ? Math.min(mergedPRs.length, period === "weekly" ? 3 : 8) : period === "weekly" ? 2 : 6;
+  const prsMergedCount =
+    periodPRs.length > 0
+      ? periodPRs.length
+      : mergedPRs.length > 0
+        ? Math.min(mergedPRs.length, period === 'weekly' ? 3 : 8)
+        : period === 'weekly'
+          ? 2
+          : 6;
   const issuesResolvedCount = Math.max(1, Math.floor(prsMergedCount * 0.6));
-  const reposStarredCount = period === "weekly" ? 4 : 14;
+  const reposStarredCount = period === 'weekly' ? 4 : 14;
 
   // Build activities list
   const activities: DigestActivity[] = [];
@@ -157,24 +167,24 @@ export async function getContributionDigest(
   sourcePRs.forEach((pr, index) => {
     activities.push({
       id: `pr-${index}`,
-      type: "pr_merged",
+      type: 'pr_merged',
       title: `Merged PR: ${pr.title}`,
       repoName: pr.repoName,
       url: pr.url,
       timestamp: pr.mergedAt || new Date().toISOString(),
-      badge: "Pull Request",
+      badge: 'Pull Request',
     });
   });
 
   orgs.slice(0, 2).forEach((org, index) => {
     activities.push({
       id: `org-${index}`,
-      type: "org_joined",
+      type: 'org_joined',
       title: `Member of organization ${org.login}`,
       repoName: org.login,
       url: org.url,
       timestamp: new Date().toISOString(),
-      badge: "Organization",
+      badge: 'Organization',
     });
   });
 
@@ -182,47 +192,53 @@ export async function getContributionDigest(
   const achievements: AchievementItem[] = [];
   if (prsMergedCount >= 3) {
     achievements.push({
-      name: "PR Powerhouse",
+      name: 'PR Powerhouse',
       description: `Merged ${prsMergedCount} pull requests in this ${period} period.`,
-      icon: "git-pull-request",
+      icon: 'git-pull-request',
     });
   }
   if (orgs.length > 0) {
     achievements.push({
-      name: "Team Collaborator",
+      name: 'Team Collaborator',
       description: `Active contributor in ${orgs.length} GitHub organizations.`,
-      icon: "users",
+      icon: 'users',
     });
   }
   achievements.push({
-    name: "Consistent Contributor",
+    name: 'Consistent Contributor',
     description: `Maintained active contributions during the ${period} cycle.`,
-    icon: "award",
+    icon: 'award',
   });
 
   activities.push({
-    id: "ach-1",
-    type: "achievement_earned",
-    title: `Unlocked Achievement: ${achievements[0]?.name || "Active Contributor"}`,
+    id: 'ach-1',
+    type: 'achievement_earned',
+    title: `Unlocked Achievement: ${achievements[0]?.name || 'Active Contributor'}`,
     timestamp: new Date().toISOString(),
     description: achievements[0]?.description,
-    badge: "Achievement",
+    badge: 'Achievement',
   });
 
   // Top contributions
-  const topContributions: TopContributionItem[] = (sourcePRs.length > 0 ? sourcePRs : [
-    {
-      title: "Enhanced application performance and data fetching",
-      repoName: `${cleanUsername}/awesome-project`,
-      url: `https://github.com/${cleanUsername}`,
-      mergedAt: new Date().toISOString(),
-    },
-  ]).slice(0, 4).map((pr) => ({
-    title: pr.title,
-    repoName: pr.repoName,
-    url: pr.url,
-    mergedAt: pr.mergedAt,
-  }));
+  const topContributions: TopContributionItem[] = (
+    sourcePRs.length > 0
+      ? sourcePRs
+      : [
+          {
+            title: 'Enhanced application performance and data fetching',
+            repoName: `${cleanUsername}/awesome-project`,
+            url: `https://github.com/${cleanUsername}`,
+            mergedAt: new Date().toISOString(),
+          },
+        ]
+  )
+    .slice(0, 4)
+    .map((pr) => ({
+      title: pr.title,
+      repoName: pr.repoName,
+      url: pr.url,
+      mergedAt: pr.mergedAt,
+    }));
 
   const digestData: ContributionDigestData = {
     username: cleanUsername,
@@ -237,8 +253,9 @@ export async function getContributionDigest(
       issuesResolved: issuesResolvedCount,
       reposStarred: reposStarredCount,
       achievementsEarned: achievements.length,
-      totalContributionsPeriod: prsMergedCount * 5 + issuesResolvedCount * 3 + reposStarredCount,
-      topLanguages: ["TypeScript", "JavaScript", "Python", "Go"].slice(0, 3),
+      totalContributionsPeriod:
+        prsMergedCount * 5 + issuesResolvedCount * 3 + reposStarredCount,
+      topLanguages: ['TypeScript', 'JavaScript', 'Python', 'Go'].slice(0, 3),
     },
     activities,
     topContributions,
@@ -248,17 +265,17 @@ export async function getContributionDigest(
 
   // Cache in Supabase if available
   try {
-    await supabase.from("profile_digests").upsert(
+    await supabase.from('profile_digests').upsert(
       {
         username: cleanUsername,
         period,
         digest_data: digestData,
         updated_at: new Date().toISOString(),
       },
-      { onConflict: "username,period" }
+      { onConflict: 'username,period' },
     );
   } catch (err) {
-    console.warn("Failed to cache profile digest in Supabase:", err);
+    console.warn('Failed to cache profile digest in Supabase:', err);
   }
 
   return digestData;
@@ -269,7 +286,7 @@ export async function getContributionDigest(
  */
 export function generateDigestRssXml(
   username: string,
-  digest: ContributionDigestData
+  digest: ContributionDigestData,
 ): string {
   const channelUrl = `https://ossfolio.qzz.io/digest/${encodeURIComponent(username)}?period=${digest.period}`;
   const feedTitle = `OSSfolio Contribution Digest - ${digest.name || username} (${digest.period.toUpperCase()})`;
@@ -284,10 +301,10 @@ export function generateDigestRssXml(
       <link>${itemUrl}</link>
       <guid isPermaLink="false">${digest.username}-${act.id}-${digest.period}</guid>
       <pubDate>${pubDate}</pubDate>
-      <description><![CDATA[${act.description || act.title} - ${act.badge || "Contribution"}]]></description>
+      <description><![CDATA[${act.description || act.title} - ${act.badge || 'Contribution'}]]></description>
     </item>`;
     })
-    .join("\n");
+    .join('\n');
 
   return `<?xml version="1.0" encoding="UTF-8" ?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">

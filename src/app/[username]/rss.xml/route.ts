@@ -1,16 +1,16 @@
-import { after } from "next/server";
-import { getProfileByUsername } from "@/lib/db";
-import { sanitizeUsername } from "@/lib/validators/api";
+import { after } from 'next/server';
+import { getProfileByUsername } from '@/lib/db';
+import { sanitizeUsername } from '@/lib/validators/api';
 import {
   getProfileSnapshot,
   syncProfileSnapshot,
-} from "@/lib/profile-snapshot";
-import type { MergedPR } from "@/types";
+} from '@/lib/profile-snapshot';
+import type { MergedPR } from '@/types';
 
 // Runtime managed by @opennextjs/cloudflare
 
 /** Matches sitemap.ts, which is the only other place that needs an absolute URL. */
-const SITE_URL = "https://ossfolio.qzz.io";
+const SITE_URL = 'https://ossfolio.qzz.io';
 
 /** Feed readers show a handful of recent items; there's no value in syndicating the whole history. */
 const MAX_ITEMS = 20;
@@ -32,13 +32,13 @@ function escapeXml(value: string): string {
   return (
     value
       // Illegal in XML 1.0 regardless of escaping — tab, LF and CR are the only ones permitted.
-      .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g, "")
+      .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g, '')
       // `&` first, or it re-escapes the ampersands introduced by the replacements below.
-      .replace(/&/g, "&amp;")
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;")
-      .replace(/"/g, "&quot;")
-      .replace(/'/g, "&apos;")
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&apos;')
   );
 }
 
@@ -66,18 +66,18 @@ function buildItem(pr: MergedPR): string {
   // dereferenceable. Readers use it to decide what they've already shown, so it has to be stable
   // across rebuilds — which the PR URL is and a generated id would not be.
   return [
-    "    <item>",
+    '    <item>',
     `      <title>${title}</title>`,
     `      <link>${link}</link>`,
     `      <guid isPermaLink="true">${link}</guid>`,
     pubDate ? `      <pubDate>${escapeXml(pubDate)}</pubDate>` : null,
     `      <description>${escapeXml(
-      `Merged pull request in ${pr.repoName || "a repository"}: ${pr.title}`,
+      `Merged pull request in ${pr.repoName || 'a repository'}: ${pr.title}`,
     )}</description>`,
-    "    </item>",
+    '    </item>',
   ]
     .filter(Boolean)
-    .join("\n");
+    .join('\n');
 }
 
 export async function GET(
@@ -88,7 +88,7 @@ export async function GET(
   const username = sanitizeUsername(rawUsername);
 
   if (!username) {
-    return new Response("Not found", { status: 404 });
+    return new Response('Not found', { status: 404 });
   }
 
   // A private profile has no page, so it must not have a syndicated feed either — a feed is simply
@@ -98,7 +98,7 @@ export async function GET(
   // profile page itself still renders for anyone holding the link, and the feed follows the page
   // rather than inventing a stricter rule of its own.
   const { data: profileRow, error: visibilityError } =
-    await getProfileByUsername(username, "visibility");
+    await getProfileByUsername(username, 'visibility');
 
   // Fail closed. The Supabase client resolves with `{ data: null, error }` rather than throwing, so
   // discarding the error would leave `profileRow` null on any database failure — the private check
@@ -108,17 +108,17 @@ export async function GET(
   // 503 rather than 404, for the same reason as the cold-profile branch: a 404 tells a reader the
   // feed is dead and it should unsubscribe. A transient database blip is not that.
   if (visibilityError) {
-    return new Response("Temporarily unavailable", {
+    return new Response('Temporarily unavailable', {
       status: 503,
       headers: {
-        "Retry-After": "60",
-        "Cache-Control": "no-store",
+        'Retry-After': '60',
+        'Cache-Control': 'no-store',
       },
     });
   }
 
-  if (profileRow?.visibility === "private") {
-    return new Response("Not found", { status: 404 });
+  if (profileRow?.visibility === 'private') {
+    return new Response('Not found', { status: 404 });
   }
 
   // The same snapshot the profile page renders from, so the feed can never disagree with the page,
@@ -138,11 +138,11 @@ export async function GET(
   if (!stored?.snapshot) {
     after(() => syncProfileSnapshot(username));
 
-    return new Response("Profile has not been synced yet. Try again shortly.", {
+    return new Response('Profile has not been synced yet. Try again shortly.', {
       status: 503,
       headers: {
-        "Retry-After": "60",
-        "Cache-Control": "no-store",
+        'Retry-After': '60',
+        'Cache-Control': 'no-store',
       },
     });
   }
@@ -154,16 +154,16 @@ export async function GET(
   // account does not exist. That genuinely is a 404, and the page agrees (`if (!user && !rateLimited)
   // return notFound()`).
   if (!user) {
-    return new Response("Not found", { status: 404 });
+    return new Response('Not found', { status: 404 });
   }
 
   const mergedPRs: MergedPR[] = (snapshot.mergedPRs ?? [])
     .filter(
       (pr) =>
         pr &&
-        typeof pr.url === "string" &&
-        typeof pr.title === "string" &&
-        (!pr.state || pr.state === "merged"),
+        typeof pr.url === 'string' &&
+        typeof pr.title === 'string' &&
+        (!pr.state || pr.state === 'merged'),
     )
     .slice(0, MAX_ITEMS);
 
@@ -181,7 +181,7 @@ export async function GET(
   const xml = [
     '<?xml version="1.0" encoding="UTF-8"?>',
     '<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">',
-    "  <channel>",
+    '  <channel>',
     `    <title>${escapeXml(`${displayName} — merged pull requests`)}</title>`,
     `    <link>${escapeXml(profileUrl)}</link>`,
     // Required by the RSS Advisory Board's validator, and by several readers, to identify the feed's
@@ -193,25 +193,25 @@ export async function GET(
     `    <description>${escapeXml(
       `Recent open-source pull requests merged by ${displayName}, via OSSfolio.`,
     )}</description>`,
-    "    <language>en</language>",
+    '    <language>en</language>',
     `    <lastBuildDate>${escapeXml(lastBuildDate)}</lastBuildDate>`,
     `    <generator>OSSfolio</generator>`,
     ...mergedPRs.map(buildItem),
-    "  </channel>",
-    "</rss>",
-  ].join("\n");
+    '  </channel>',
+    '</rss>',
+  ].join('\n');
 
   return new Response(xml, {
     status: 200,
     headers: {
       // The charset is not optional: without it some readers guess, and a PR title containing an
       // em-dash or a non-Latin script comes out mangled.
-      "Content-Type": "application/rss+xml; charset=utf-8",
+      'Content-Type': 'application/rss+xml; charset=utf-8',
       // The underlying snapshot has a one-hour TTL (SNAPSHOT_TTL_MS), so there is nothing to gain
       // from letting readers poll harder than that. `stale-while-revalidate` keeps the feed served
       // from cache while a fresher copy is fetched, rather than making a reader wait.
-      "Cache-Control":
-        "public, max-age=1800, s-maxage=3600, stale-while-revalidate=86400",
+      'Cache-Control':
+        'public, max-age=1800, s-maxage=3600, stale-while-revalidate=86400',
     },
   });
 }

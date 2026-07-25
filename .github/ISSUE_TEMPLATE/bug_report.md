@@ -1,9 +1,9 @@
 ---
 name: Bug Report
 about: Report a bug to help us improve OSSfolio
-title: "[BUG] "
+title: '[BUG] '
 labels: bug
-assignees: ""
+assignees: ''
 ---
 
 ## Describe the Bug

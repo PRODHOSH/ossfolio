@@ -6,6 +6,6 @@
 //   options), which would fail on almost every commit. The function form below returns a single
 //   project-wide command and ignores the staged filenames lint-staged would otherwise append.
 export default {
-  "*.{js,jsx,ts,tsx}": "eslint --fix",
-  "*.{ts,tsx}": () => "tsc --noEmit",
+  '*.{js,jsx,ts,tsx}': 'eslint --fix',
+  '*.{ts,tsx}': () => 'tsc --noEmit',
 };

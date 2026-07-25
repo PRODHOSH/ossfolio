@@ -1,6 +1,6 @@
-"use client";
+'use client';
 
-import { useState, useEffect } from "react";
+import { useState, useEffect } from 'react';
 import {
   AreaChart,
   Area,
@@ -9,8 +9,8 @@ import {
   CartesianGrid,
   Tooltip as RechartsTooltip,
   ResponsiveContainer,
-} from "recharts";
-import { supabase } from "@/lib/supabase";
+} from 'recharts';
+import { supabase } from '@/lib/supabase';
 
 interface ProfileAnalyticsModalProps {
   username: string;
@@ -63,7 +63,7 @@ export function ProfileAnalyticsModal({
         }
       } catch (err: any) {
         if (isMounted) {
-          setErrorMsg(err.message || "Failed to load analytics");
+          setErrorMsg(err.message || 'Failed to load analytics');
         }
       } finally {
         if (isMounted) {
@@ -85,63 +85,65 @@ export function ProfileAnalyticsModal({
     ? Math.max(...data.viewsTrend.map((t) => t.views), 0)
     : 0;
 
-  const topReferrer = data?.referrers?.length ? data.referrers[0].source : "None";
+  const topReferrer = data?.referrers?.length
+    ? data.referrers[0].source
+    : 'None';
 
   return (
     <div
       style={{
-        position: "fixed",
+        position: 'fixed',
         inset: 0,
-        backgroundColor: "rgba(0, 0, 0, 0.75)",
-        backdropFilter: "blur(6px)",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
+        backgroundColor: 'rgba(0, 0, 0, 0.75)',
+        backdropFilter: 'blur(6px)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
         zIndex: 100,
-        padding: "16px",
+        padding: '16px',
       }}
       onClick={onClose}
     >
       <div
         style={{
-          width: "100%",
-          maxWidth: "760px",
-          maxHeight: "90vh",
-          overflowY: "auto",
-          backgroundColor: "var(--color-canvas, #121212)",
-          border: "1px solid var(--color-hairline-strong, #2a2a2a)",
-          borderRadius: "16px",
-          padding: "28px",
-          boxShadow: "0 20px 50px rgba(0, 0, 0, 0.5)",
-          color: "var(--color-ink, #ffffff)",
-          display: "flex",
-          flexDirection: "column",
-          gap: "24px",
+          width: '100%',
+          maxWidth: '760px',
+          maxHeight: '90vh',
+          overflowY: 'auto',
+          backgroundColor: 'var(--color-canvas, #121212)',
+          border: '1px solid var(--color-hairline-strong, #2a2a2a)',
+          borderRadius: '16px',
+          padding: '28px',
+          boxShadow: '0 20px 50px rgba(0, 0, 0, 0.5)',
+          color: 'var(--color-ink, #ffffff)',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '24px',
         }}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
         <div
           style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            flexWrap: "wrap",
-            gap: "12px",
-            borderBottom: "1px solid var(--color-hairline, #222)",
-            paddingBottom: "16px",
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            flexWrap: 'wrap',
+            gap: '12px',
+            borderBottom: '1px solid var(--color-hairline, #222)',
+            paddingBottom: '16px',
           }}
         >
           <div>
             <h2
               style={{
-                fontSize: "20px",
+                fontSize: '20px',
                 fontWeight: 600,
-                color: "var(--color-ink, #ffffff)",
+                color: 'var(--color-ink, #ffffff)',
                 margin: 0,
-                display: "flex",
-                alignItems: "center",
-                gap: "8px",
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
               }}
             >
               <svg
@@ -160,29 +162,46 @@ export function ProfileAnalyticsModal({
               </svg>
               Profile Analytics
             </h2>
-            <p style={{ fontSize: "13px", color: "var(--color-ink-mute, #94a3b8)", margin: "4px 0 0 0" }}>
+            <p
+              style={{
+                fontSize: '13px',
+                color: 'var(--color-ink-mute, #94a3b8)',
+                margin: '4px 0 0 0',
+              }}
+            >
               Private visitor metrics for @{username}
             </p>
           </div>
 
-          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             {/* Time period filter */}
-            <div style={{ display: "flex", gap: "4px", backgroundColor: "var(--color-canvas-soft, #1e1e1e)", padding: "3px", borderRadius: "8px" }}>
+            <div
+              style={{
+                display: 'flex',
+                gap: '4px',
+                backgroundColor: 'var(--color-canvas-soft, #1e1e1e)',
+                padding: '3px',
+                borderRadius: '8px',
+              }}
+            >
               {[7, 30, 90].map((num) => (
                 <button
                   key={num}
                   type="button"
                   onClick={() => setDays(num)}
                   style={{
-                    fontSize: "12px",
+                    fontSize: '12px',
                     fontWeight: days === num ? 600 : 400,
-                    padding: "4px 10px",
-                    borderRadius: "6px",
-                    border: "none",
-                    backgroundColor: days === num ? "#3ecf8e" : "transparent",
-                    color: days === num ? "#121212" : "var(--color-ink-mute, #94a3b8)",
-                    cursor: "pointer",
-                    transition: "all 0.15s ease",
+                    padding: '4px 10px',
+                    borderRadius: '6px',
+                    border: 'none',
+                    backgroundColor: days === num ? '#3ecf8e' : 'transparent',
+                    color:
+                      days === num
+                        ? '#121212'
+                        : 'var(--color-ink-mute, #94a3b8)',
+                    cursor: 'pointer',
+                    transition: 'all 0.15s ease',
                   }}
                 >
                   {num}d
@@ -194,12 +213,12 @@ export function ProfileAnalyticsModal({
               type="button"
               onClick={onClose}
               style={{
-                background: "none",
-                border: "none",
-                color: "var(--color-ink-mute, #94a3b8)",
-                fontSize: "20px",
-                cursor: "pointer",
-                padding: "4px 8px",
+                background: 'none',
+                border: 'none',
+                color: 'var(--color-ink-mute, #94a3b8)',
+                fontSize: '20px',
+                cursor: 'pointer',
+                padding: '4px 8px',
                 lineHeight: 1,
               }}
               aria-label="Close analytics modal"
@@ -210,7 +229,13 @@ export function ProfileAnalyticsModal({
         </div>
 
         {loading ? (
-          <div style={{ padding: "40px 0", textAlign: "center", color: "var(--color-ink-mute)" }}>
+          <div
+            style={{
+              padding: '40px 0',
+              textAlign: 'center',
+              color: 'var(--color-ink-mute)',
+            }}
+          >
             <svg
               className="animate-spin"
               width="28"
@@ -219,15 +244,24 @@ export function ProfileAnalyticsModal({
               fill="none"
               stroke="#3ecf8e"
               strokeWidth="3"
-              style={{ margin: "0 auto 12px" }}
+              style={{ margin: '0 auto 12px' }}
             >
               <circle cx="12" cy="12" r="10" stroke="rgba(62, 207, 142, 0.2)" />
-              <path fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+              <path
+                fill="currentColor"
+                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+              />
             </svg>
             Loading profile traffic metrics...
           </div>
         ) : errorMsg ? (
-          <div style={{ padding: "24px", textAlign: "center", color: "var(--color-error, #ef4444)" }}>
+          <div
+            style={{
+              padding: '24px',
+              textAlign: 'center',
+              color: 'var(--color-error, #ef4444)',
+            }}
+          >
             {errorMsg}
           </div>
         ) : data ? (
@@ -235,71 +269,130 @@ export function ProfileAnalyticsModal({
             {/* Metric Summary Cards */}
             <div
               style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))",
-                gap: "12px",
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
+                gap: '12px',
               }}
             >
               <div
                 style={{
-                  padding: "14px 16px",
-                  borderRadius: "10px",
-                  backgroundColor: "var(--color-canvas-soft, #1a1a1a)",
-                  border: "1px solid var(--color-hairline, #282828)",
+                  padding: '14px 16px',
+                  borderRadius: '10px',
+                  backgroundColor: 'var(--color-canvas-soft, #1a1a1a)',
+                  border: '1px solid var(--color-hairline, #282828)',
                 }}
               >
-                <div style={{ fontSize: "11px", color: "var(--color-ink-mute)", textTransform: "uppercase", letterSpacing: "0.5px" }}>
+                <div
+                  style={{
+                    fontSize: '11px',
+                    color: 'var(--color-ink-mute)',
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.5px',
+                  }}
+                >
                   Total Views
                 </div>
-                <div style={{ fontSize: "24px", fontWeight: 700, color: "#3ecf8e", marginTop: "4px" }}>
+                <div
+                  style={{
+                    fontSize: '24px',
+                    fontWeight: 700,
+                    color: '#3ecf8e',
+                    marginTop: '4px',
+                  }}
+                >
                   {data.totalViews.toLocaleString()}
                 </div>
               </div>
 
               <div
                 style={{
-                  padding: "14px 16px",
-                  borderRadius: "10px",
-                  backgroundColor: "var(--color-canvas-soft, #1a1a1a)",
-                  border: "1px solid var(--color-hairline, #282828)",
+                  padding: '14px 16px',
+                  borderRadius: '10px',
+                  backgroundColor: 'var(--color-canvas-soft, #1a1a1a)',
+                  border: '1px solid var(--color-hairline, #282828)',
                 }}
               >
-                <div style={{ fontSize: "11px", color: "var(--color-ink-mute)", textTransform: "uppercase", letterSpacing: "0.5px" }}>
+                <div
+                  style={{
+                    fontSize: '11px',
+                    color: 'var(--color-ink-mute)',
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.5px',
+                  }}
+                >
                   Unique Visitors
                 </div>
-                <div style={{ fontSize: "24px", fontWeight: 700, color: "#60a5fa", marginTop: "4px" }}>
+                <div
+                  style={{
+                    fontSize: '24px',
+                    fontWeight: 700,
+                    color: '#60a5fa',
+                    marginTop: '4px',
+                  }}
+                >
                   {data.uniqueVisitors.toLocaleString()}
                 </div>
               </div>
 
               <div
                 style={{
-                  padding: "14px 16px",
-                  borderRadius: "10px",
-                  backgroundColor: "var(--color-canvas-soft, #1a1a1a)",
-                  border: "1px solid var(--color-hairline, #282828)",
+                  padding: '14px 16px',
+                  borderRadius: '10px',
+                  backgroundColor: 'var(--color-canvas-soft, #1a1a1a)',
+                  border: '1px solid var(--color-hairline, #282828)',
                 }}
               >
-                <div style={{ fontSize: "11px", color: "var(--color-ink-mute)", textTransform: "uppercase", letterSpacing: "0.5px" }}>
+                <div
+                  style={{
+                    fontSize: '11px',
+                    color: 'var(--color-ink-mute)',
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.5px',
+                  }}
+                >
                   Top Referral
                 </div>
-                <div style={{ fontSize: "18px", fontWeight: 600, color: "#c084fc", marginTop: "4px", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                <div
+                  style={{
+                    fontSize: '18px',
+                    fontWeight: 600,
+                    color: '#c084fc',
+                    marginTop: '4px',
+                    whiteSpace: 'nowrap',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                  }}
+                >
                   {topReferrer}
                 </div>
               </div>
 
               <div
                 style={{
-                  padding: "14px 16px",
-                  borderRadius: "10px",
-                  backgroundColor: "var(--color-canvas-soft, #1a1a1a)",
-                  border: "1px solid var(--color-hairline, #282828)",
+                  padding: '14px 16px',
+                  borderRadius: '10px',
+                  backgroundColor: 'var(--color-canvas-soft, #1a1a1a)',
+                  border: '1px solid var(--color-hairline, #282828)',
                 }}
               >
-                <div style={{ fontSize: "11px", color: "var(--color-ink-mute)", textTransform: "uppercase", letterSpacing: "0.5px" }}>
+                <div
+                  style={{
+                    fontSize: '11px',
+                    color: 'var(--color-ink-mute)',
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.5px',
+                  }}
+                >
                   Peak Day
                 </div>
-                <div style={{ fontSize: "24px", fontWeight: 700, color: "#fbbf24", marginTop: "4px" }}>
+                <div
+                  style={{
+                    fontSize: '24px',
+                    fontWeight: 700,
+                    color: '#fbbf24',
+                    marginTop: '4px',
+                  }}
+                >
                   {peakDayViews.toLocaleString()}
                 </div>
               </div>
@@ -308,74 +401,149 @@ export function ProfileAnalyticsModal({
             {/* Daily Traffic Recharts Chart */}
             <div
               style={{
-                padding: "18px",
-                borderRadius: "12px",
-                backgroundColor: "var(--color-canvas-soft, #1a1a1a)",
-                border: "1px solid var(--color-hairline, #282828)",
+                padding: '18px',
+                borderRadius: '12px',
+                backgroundColor: 'var(--color-canvas-soft, #1a1a1a)',
+                border: '1px solid var(--color-hairline, #282828)',
               }}
             >
-              <h3 style={{ fontSize: "14px", fontWeight: 600, margin: "0 0 16px 0", color: "var(--color-ink)" }}>
+              <h3
+                style={{
+                  fontSize: '14px',
+                  fontWeight: 600,
+                  margin: '0 0 16px 0',
+                  color: 'var(--color-ink)',
+                }}
+              >
                 Views Over Time ({days} Days)
               </h3>
-              <div style={{ width: "100%", height: "220px" }}>
+              <div style={{ width: '100%', height: '220px' }}>
                 <ResponsiveContainer width="100%" height="100%">
                   <AreaChart data={data.viewsTrend}>
                     <defs>
-                      <linearGradient id="colorViews" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#3ecf8e" stopOpacity={0.4} />
-                        <stop offset="95%" stopColor="#3ecf8e" stopOpacity={0} />
+                      <linearGradient
+                        id="colorViews"
+                        x1="0"
+                        y1="0"
+                        x2="0"
+                        y2="1"
+                      >
+                        <stop
+                          offset="5%"
+                          stopColor="#3ecf8e"
+                          stopOpacity={0.4}
+                        />
+                        <stop
+                          offset="95%"
+                          stopColor="#3ecf8e"
+                          stopOpacity={0}
+                        />
                       </linearGradient>
                     </defs>
                     <CartesianGrid strokeDasharray="3 3" stroke="#2a2a2a" />
-                    <XAxis dataKey="date" stroke="#64748b" fontSize={11} tickFormatter={(str) => str.slice(5)} />
-                    <YAxis stroke="#64748b" fontSize={11} allowDecimals={false} />
+                    <XAxis
+                      dataKey="date"
+                      stroke="#64748b"
+                      fontSize={11}
+                      tickFormatter={(str) => str.slice(5)}
+                    />
+                    <YAxis
+                      stroke="#64748b"
+                      fontSize={11}
+                      allowDecimals={false}
+                    />
                     <RechartsTooltip
                       contentStyle={{
-                        backgroundColor: "#18181b",
-                        borderColor: "#3ecf8e",
-                        borderRadius: "8px",
-                        fontSize: "12px",
+                        backgroundColor: '#18181b',
+                        borderColor: '#3ecf8e',
+                        borderRadius: '8px',
+                        fontSize: '12px',
                       }}
                     />
-                    <Area type="monotone" dataKey="views" name="Page Views" stroke="#3ecf8e" strokeWidth={2} fillOpacity={1} fill="url(#colorViews)" />
+                    <Area
+                      type="monotone"
+                      dataKey="views"
+                      name="Page Views"
+                      stroke="#3ecf8e"
+                      strokeWidth={2}
+                      fillOpacity={1}
+                      fill="url(#colorViews)"
+                    />
                   </AreaChart>
                 </ResponsiveContainer>
               </div>
             </div>
 
             {/* Breakdowns: Referrers & Top Countries */}
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: "16px" }}>
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+                gap: '16px',
+              }}
+            >
               {/* Referral Sources */}
               <div
                 style={{
-                  padding: "16px",
-                  borderRadius: "12px",
-                  backgroundColor: "var(--color-canvas-soft, #1a1a1a)",
-                  border: "1px solid var(--color-hairline, #282828)",
+                  padding: '16px',
+                  borderRadius: '12px',
+                  backgroundColor: 'var(--color-canvas-soft, #1a1a1a)',
+                  border: '1px solid var(--color-hairline, #282828)',
                 }}
               >
-                <h3 style={{ fontSize: "14px", fontWeight: 600, margin: "0 0 12px 0" }}>
+                <h3
+                  style={{
+                    fontSize: '14px',
+                    fontWeight: 600,
+                    margin: '0 0 12px 0',
+                  }}
+                >
                   Referral Sources
                 </h3>
                 {data.referrers.length === 0 ? (
-                  <p style={{ fontSize: "12px", color: "var(--color-ink-mute)" }}>No referrer data recorded yet.</p>
+                  <p
+                    style={{ fontSize: '12px', color: 'var(--color-ink-mute)' }}
+                  >
+                    No referrer data recorded yet.
+                  </p>
                 ) : (
-                  <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                  <div
+                    style={{
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: '10px',
+                    }}
+                  >
                     {data.referrers.map((ref) => (
                       <div key={ref.source}>
-                        <div style={{ display: "flex", justifyContent: "space-between", fontSize: "12px", marginBottom: "4px" }}>
+                        <div
+                          style={{
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            fontSize: '12px',
+                            marginBottom: '4px',
+                          }}
+                        >
                           <span>{ref.source}</span>
-                          <span style={{ color: "var(--color-ink-mute)" }}>
+                          <span style={{ color: 'var(--color-ink-mute)' }}>
                             {ref.count} ({ref.percentage}%)
                           </span>
                         </div>
-                        <div style={{ width: "100%", height: "6px", backgroundColor: "#262626", borderRadius: "3px", overflow: "hidden" }}>
+                        <div
+                          style={{
+                            width: '100%',
+                            height: '6px',
+                            backgroundColor: '#262626',
+                            borderRadius: '3px',
+                            overflow: 'hidden',
+                          }}
+                        >
                           <div
                             style={{
                               width: `${ref.percentage}%`,
-                              height: "100%",
-                              backgroundColor: "#60a5fa",
-                              borderRadius: "3px",
+                              height: '100%',
+                              backgroundColor: '#60a5fa',
+                              borderRadius: '3px',
                             }}
                           />
                         </div>
@@ -388,33 +556,51 @@ export function ProfileAnalyticsModal({
               {/* Geographic Top Countries */}
               <div
                 style={{
-                  padding: "16px",
-                  borderRadius: "12px",
-                  backgroundColor: "var(--color-canvas-soft, #1a1a1a)",
-                  border: "1px solid var(--color-hairline, #282828)",
+                  padding: '16px',
+                  borderRadius: '12px',
+                  backgroundColor: 'var(--color-canvas-soft, #1a1a1a)',
+                  border: '1px solid var(--color-hairline, #282828)',
                 }}
               >
-                <h3 style={{ fontSize: "14px", fontWeight: 600, margin: "0 0 12px 0" }}>
+                <h3
+                  style={{
+                    fontSize: '14px',
+                    fontWeight: 600,
+                    margin: '0 0 12px 0',
+                  }}
+                >
                   Top Visitor Locations
                 </h3>
                 {data.topCountries.length === 0 ? (
-                  <p style={{ fontSize: "12px", color: "var(--color-ink-mute)" }}>No location data recorded yet.</p>
+                  <p
+                    style={{ fontSize: '12px', color: 'var(--color-ink-mute)' }}
+                  >
+                    No location data recorded yet.
+                  </p>
                 ) : (
-                  <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                  <div
+                    style={{
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: '8px',
+                    }}
+                  >
                     {data.topCountries.map((c) => (
                       <div
                         key={c.country}
                         style={{
-                          display: "flex",
-                          justifyContent: "space-between",
-                          fontSize: "12px",
-                          padding: "6px 10px",
-                          borderRadius: "6px",
-                          backgroundColor: "var(--color-canvas, #121212)",
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          fontSize: '12px',
+                          padding: '6px 10px',
+                          borderRadius: '6px',
+                          backgroundColor: 'var(--color-canvas, #121212)',
                         }}
                       >
                         <span style={{ fontWeight: 500 }}>📍 {c.country}</span>
-                        <span style={{ color: "#3ecf8e", fontWeight: 600 }}>{c.count} views</span>
+                        <span style={{ color: '#3ecf8e', fontWeight: 600 }}>
+                          {c.count} views
+                        </span>
                       </div>
                     ))}
                   </div>

@@ -1,5 +1,5 @@
-import { redis } from "@/lib/redis";
-import type { NextRequest } from "next/server";
+import { redis } from '@/lib/redis';
+import type { NextRequest } from 'next/server';
 
 /**
  * Per-IP rate limiting for the manual refresh endpoint.
@@ -63,17 +63,17 @@ export interface RateLimitResult {
  */
 function clientIp(request: NextRequest): string | null {
   // Cloudflare (this app deploys via @opennextjs/cloudflare) — set by the edge, not forgeable.
-  const cf = request.headers.get("cf-connecting-ip");
+  const cf = request.headers.get('cf-connecting-ip');
   if (cf) return cf.trim();
 
   // Vercel and most reverse proxies — also set by the edge.
-  const real = request.headers.get("x-real-ip");
+  const real = request.headers.get('x-real-ip');
   if (real) return real.trim();
 
-  const forwarded = request.headers.get("x-forwarded-for");
+  const forwarded = request.headers.get('x-forwarded-for');
   if (forwarded) {
     const hops = forwarded
-      .split(",")
+      .split(',')
       .map((hop) => hop.trim())
       .filter(Boolean);
     return hops.length > 0 ? hops[hops.length - 1] : null;
@@ -91,12 +91,12 @@ function clientIp(request: NextRequest): string | null {
  */
 async function keyFor(identifier: string): Promise<string> {
   const digest = await crypto.subtle.digest(
-    "SHA-256",
+    'SHA-256',
     new TextEncoder().encode(identifier),
   );
   const hex = Array.from(new Uint8Array(digest))
-    .map((b) => b.toString(16).padStart(2, "0"))
-    .join("");
+    .map((b) => b.toString(16).padStart(2, '0'))
+    .join('');
   // 16 bytes is far beyond enough to avoid collisions here, and keeps the key short.
   return `ratelimit:refresh:${hex.slice(0, 32)}`;
 }
@@ -115,7 +115,7 @@ export async function checkRefreshRateLimit(
   // No usable address (local dev, an odd proxy) — everything unidentifiable shares one
   // bucket rather than being waved through, so the absence of a header can't become a way
   // around the limit.
-  const identifier = clientIp(request) ?? "unidentified";
+  const identifier = clientIp(request) ?? 'unidentified';
 
   try {
     const key = await keyFor(identifier);
@@ -128,7 +128,7 @@ export async function checkRefreshRateLimit(
       ex: WINDOW_SECONDS,
     });
 
-    if (acquired === "OK") {
+    if (acquired === 'OK') {
       return { allowed: true, retryAfterSeconds: 0 };
     }
 
@@ -136,7 +136,7 @@ export async function checkRefreshRateLimit(
     // number rather than a guess.
     const storedResetAt = await redis.get<number>(key);
     const remainingMs =
-      typeof storedResetAt === "number"
+      typeof storedResetAt === 'number'
         ? storedResetAt - now
         : WINDOW_SECONDS * 1000;
 
@@ -148,7 +148,7 @@ export async function checkRefreshRateLimit(
     };
   } catch (error) {
     console.error(
-      "[rate-limit] refresh limiter unavailable, allowing request:",
+      '[rate-limit] refresh limiter unavailable, allowing request:',
       error instanceof Error ? error.message : error,
     );
     return { allowed: true, retryAfterSeconds: 0 };
