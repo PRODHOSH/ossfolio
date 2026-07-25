@@ -10,7 +10,7 @@ import {
 } from "@/lib/db";
 import { DiscoverPagination } from "@/components/discover/DiscoverPagination";
 
-export const runtime = "edge";
+// Runtime managed by @opennextjs/cloudflare
 
 export const metadata: Metadata = {
   title: "Explore Contributors",

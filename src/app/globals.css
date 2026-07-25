@@ -1,4 +1,4 @@
-@import "tailwindcss";
+@import 'tailwindcss';
 
 /* ─────────────────────────────────────────────────────────────────────────────
    Design tokens — Tailwind v4 CSS-first configuration.
@@ -56,9 +56,9 @@
   --radius-full: 9999px;
 
   /* Structural Typography Font Configurations */
-  --font-sans: "Inter", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --font-sans: 'Inter', 'Helvetica Neue', Helvetica, Arial, sans-serif;
   --font-mono:
-    ui-monospace, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+    ui-monospace, Menlo, Monaco, Consolas, 'Liberation Mono', monospace;
 
   /* Nav/segmented-control muted text (e.g. Heatmap year buttons) */
   --color-nav-mute: var(--color-ink-mute);
@@ -143,6 +143,25 @@ dialog::backdrop {
   outline: 2px solid var(--color-primary);
   outline-offset: 2px;
   box-shadow: 0 0 0 3px var(--color-primary);
+}
+.footer-social-link {
+  transition: color 0.2s ease;
+}
+
+.footer-social-link:hover {
+  color: var(--color-primary);
+}
+
+.footer-author-link {
+  transition: color 0.2s ease;
+}
+
+.footer-author-name {
+  transition: color 0.2s ease;
+}
+
+.footer-author-link:hover .footer-author-name {
+  color: var(--color-primary);
 }
 
 @media (prefers-reduced-motion: reduce) {

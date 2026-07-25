@@ -7,7 +7,7 @@ import {
   createErrorResponse,
 } from "@/lib/validators/api";
 
-export const runtime = "edge";
+// Runtime managed by @opennextjs/cloudflare
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? "";

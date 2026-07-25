@@ -15,116 +15,622 @@ jobs:
     steps:
       - name: Ensure labels exist
         run: |
-          gh label create "ADVENTURER"  --color "fb8f44" --force --repo "$REPO" || true
-          gh label create "VETERAN"     --color "d73a4a" --force --repo "$REPO" || true
-          gh label create "ELUSOC"      --color "7B2FBE" --force --repo "$REPO" || true
-          gh label create "enhancement" --color "a2eeef" --force --repo "$REPO" || true
+          gh label create "ADVENTURER"     --color "fb8f44" --description "Intermediate — 25 pts" --force --repo "$REPO" || true
+          gh label create "VETERAN"        --color "d73a4a" --description "Advanced — 50 pts" --force --repo "$REPO" || true
+          gh label create "ELUSOC"         --color "7B2FBE" --description "ELUSOC project submission" --force --repo "$REPO" || true
+          gh label create "enhancement"    --color "a2eeef" --description "New feature or improvement" --force --repo "$REPO" || true
+          gh label create "bug"            --color "d73a4a" --description "Something isn't working" --force --repo "$REPO" || true
+          gh label create "refactor"       --color "3B7A57" --description "Code structure improvements without behavior changes" --force --repo "$REPO" || true
+          gh label create "frontend"       --color "1D76DB" --description "Related to UI / Next.js" --force --repo "$REPO" || true
+          gh label create "backend"        --color "5319E7" --description "API / Database / Server" --force --repo "$REPO" || true
+          gh label create "UI"             --color "E99695" --description "Visual / design changes" --force --repo "$REPO" || true
           gh label create "github-actions" --color "000000" --description "CI/CD & Workflows" --force --repo "$REPO" || true
+          gh label create "documentation"  --color "0075ca" --description "Additions to docs" --force --repo "$REPO" || true
+          gh label create "testing"        --color "0e8a16" --description "Unit, E2E, and integration tests" --force --repo "$REPO" || true
+          gh label create "performance"    --color "c2e0c6" --description "Speed, memory, and build optimizations" --force --repo "$REPO" || true
+          gh label create "accessibility"  --color "fef2c0" --description "Screen readers, contrast, and navigation" --force --repo "$REPO" || true
 
-      - name: "Issue 1 - Auto Label"
+      # -------------------------------------------------------------------------
+      # SECTION 1: CI/CD, AUTOMATION & WORKFLOW FIXES
+      # -------------------------------------------------------------------------
+
+      - name: "Issue 1 - Fix PR Issue Linking check on forks"
+        continue-on-error: true
+        run: |
+          cat > /tmp/body.md << 'ENDBODY'
+          ## Describe the Bug
+          The automated check (`.github/workflows/check-issue-link.yml`) that validates whether a Pull Request links an existing issue currently fails when executed on PRs submitted from external fork repositories. 
+
+          Because GitHub Actions restricts `GITHUB_TOKEN` permissions for external forks by default, attempting to call `github.rest.issues.createComment` results in an HTTP 403 Forbidden error. Furthermore, when contributors synchronize new commits to an open PR, the current script repeatedly posts duplicate warning comments instead of updating a single notice.
+
+          ## Steps to Reproduce
+          1. Fork the OSSfolio repository from an external account.
+          2. Open a Pull Request against `main` without containing `Closes #` or `Fixes #` in the description.
+          3. Inspect the CI check execution logs for `Verify PR Issue Link`.
+          4. Observe the unhandled 403 Forbidden exception terminating the check prematurely.
+
+          ## Expected Behavior
+          - The workflow should cleanly validate the description string without failing due to API comment token permissions.
+          - If permissions allow commenting (or when running via a safer triggered pattern), the action should first check if an automated warning comment already exists before posting a new one.
+
+          ## Actual Behavior
+          The script crashes with a 403 authorization error on fork submissions, creating false-negative build failures and cluttering active review threads.
+
+          ## Additional Context
+          Refer to GitHub's documentation on `pull_request` vs `pull_request_target` token scope limitations. Review `CONTRIBUTING.md` before implementing fix.
+          ENDBODY
+          gh issue create --repo "$REPO" --title "[BUG] Fix PR Issue Linking validation workflow failing on forked repositories" --label "ADVENTURER,ELUSOC,bug,github-actions" --body-file /tmp/body.md
+
+      - name: "Issue 2 - Fix Auto-Merge failures on maintainer approval"
+        continue-on-error: true
+        run: |
+          cat > /tmp/body.md << 'ENDBODY'
+          ## Describe the Bug
+          The auto-merge workflow (`.github/workflows/auto-merge.yml`) intended to queue PRs for merge immediately upon maintainer approval currently fails to trigger cleanly on community pull requests.
+
+          When a review is submitted on a forked pull request, calling `gh pr merge --auto` directly via `GITHUB_TOKEN` frequently fails if branch protection status rules are pending or if auto-merge requires elevated repository scope. Additionally, the workflow currently relies on a hardcoded reviewer username check (`PRODHOSH`), which causes maintenance overhead as code reviewer roles evolve.
+
+          ## Steps to Reproduce
+          1. Submit an external PR and wait for CI build jobs to queue.
+          2. Have a maintainer submit an `approved` review while build checks are still running.
+          3. Inspect the execution logs for `Auto-Merge Maintainer Approved PRs`.
+          4. Observe the CLI command exit failure due to missing repository administration scopes or unmergable draft states.
+
+          ## Expected Behavior
+          - The workflow should verify repository auto-merge state safely and handle missing authorization gracefully without failing the workflow status tag.
+          - Reviewer authorization should validate against team maintainer permission tiers or a structured configuration file rather than a single hardcoded string.
+
+          ## Actual Behavior
+          The CLI call aborts with error code 1, leaving the maintainer to manually re-check and merge the pull request after builds complete.
+
+          ## Additional Context
+          See GitHub CLI documentation for `gh pr merge` and review branch protection inheritance rules.
+          ENDBODY
+          gh issue create --repo "$REPO" --title "[BUG] Resolve Auto-Merge workflow failures when branch protection checks are pending or on fork reviews" --label "VETERAN,ELUSOC,bug,github-actions" --body-file /tmp/body.md
+
+      - name: "Issue 3 - Fix Playwright E2E suite build timeout in CI"
+        continue-on-error: true
+        run: |
+          cat > /tmp/body.md << 'ENDBODY'
+          ## Describe the Bug
+          The Playwright end-to-end testing workflow (`.github/workflows/e2e.yml`) experiences occasional boot timeouts during CI test execution. 
+
+          In `playwright.config.ts`, the `webServer` block runs `npm run build && npm run start` concurrently with `node e2e/mock-supabase.mjs`. On standard shared GitHub Linux runners, a cold Next.js compilation can occasionally exceed standard binding expectations or conflict with port allocation when Turbopack caching behaviors differ from production Webpack bundles.
+
+          ## Steps to Reproduce
+          1. Push a multi-file UI modification to a branch running the full CI check suite.
+          2. Monitor the `Playwright` job step in GitHub Actions.
+          3. Notice occasional build stall timeouts before the Chromium test engine begins executing test assertions.
+
+          ## Expected Behavior
+          - The test server initialization should compile reliably using predictable bundle caching.
+          - Playwright should connect to the locally simulated PostgREST server (`mock-supabase.mjs`) without racing initial Next.js static route pre-generation.
+
+          ## Actual Behavior
+          The job times out after prolonged waiting for port 3000, causing CI pipeline failure on otherwise clean Pull Requests.
+
+          ## Additional Context
+          Review `playwright.config.ts`, `e2e/mock-supabase.mjs`, and Node task queue memory limitations on standard runners.
+          ENDBODY
+          gh issue create --repo "$REPO" --title "[BUG] Diagnose and resolve Playwright E2E test suite timeout and mock-supabase webServer binding failures in CI" --label "VETERAN,ELUSOC,bug,github-actions,testing" --body-file /tmp/body.md
+
+      - name: "Issue 4 - Implement automated bundle size analysis in CI"
         continue-on-error: true
         run: |
           cat > /tmp/body.md << 'ENDBODY'
           ## Problem Statement
-          Currently, maintainers have to manually attach the `ELUSOC` label to every single issue and Pull Request that comes in. This is tedious and easily forgotten.
+          As new visual features and charting libraries are introduced into OSSfolio, Next.js client component JavaScript payloads can silently balloon. Unchecked bundle growth increases parsing time and degrades core web vitals on mobile devices.
 
           ## Proposed Solution
-          Create a new GitHub Action workflow (`.github/workflows/auto-label-elusoc.yml`) that listens to the `issues.opened` and `pull_request.opened` events. It should use `actions/github-script` or the GitHub CLI to automatically append the `ELUSOC` label as soon as the item is created.
+          Integrate `@next/bundle-analyzer` or an automated bundle size calculation tool into our CI pipeline. Create a GitHub Action workflow that runs on Pull Requests against `main`, computes the JavaScript bundle size difference compared to the base branch, and posts a formatted summary table directly to the PR comments.
 
           ## Alternatives Considered
-          Manually labeling them, which is not scalable.
+          Manually generating bundle reports during local development, which is rarely performed by third-party contributors.
 
           ## Additional Context
-          Refer to GitHub Actions documentation for `actions/github-script`.
+          Ensure the comment step overwrites previous reports on subsequent commit pushes to keep PR conversation threads tidy.
           ENDBODY
-          gh issue create --repo "$REPO" --title "[FEAT] Auto-Label all new issues and PRs with ELUSOC" --label "ADVENTURER,ELUSOC,enhancement,github-actions" --body-file /tmp/body.md
+          gh issue create --repo "$REPO" --title "[FEAT] Implement automated bundle size analysis and comment diffs on Pull Requests" --label "VETERAN,ELUSOC,enhancement,github-actions,performance" --body-file /tmp/body.md
 
-      - name: "Issue 2 - Auto Merge"
+      - name: "Issue 5 - Add database migration linting in CI"
         continue-on-error: true
         run: |
           cat > /tmp/body.md << 'ENDBODY'
           ## Problem Statement
-          When `@PRODHOSH` approves a pull request, they still have to wait for the Vercel deployment/CI checks to finish before they can click merge, which slows down the workflow.
+          When contributors introduce new Supabase migration SQL files under `supabase/migrations/`, syntax errors, missing Row Level Security (RLS) policies, or unsafe table alterations can break production data access without failing early compile checks.
 
           ## Proposed Solution
-          Enable GitHub's "Auto-merge" feature in the repository settings. Then, create a workflow listening to `pull_request_review.submitted`. If the review state is `approved` and the reviewer is `@PRODHOSH`, the workflow should automatically enable the auto-merge flag for that PR so it merges the exact second CI passes.
+          Create a GitHub Action workflow (`.github/workflows/sql-lint.yml`) that inspects changes in `supabase/migrations/`. Use a standard SQL linter (such as `sqlfluff` or Supabase CLI migration verification) to ensure clean SQL syntax and verify that every new table explicitly defines RLS policies.
 
           ## Alternatives Considered
-          Using an external bot like Mergify.
+          Relieved entirely on maintainer manual inspection during code review.
 
           ## Additional Context
-          We want to keep this natively inside GitHub Actions to reduce third-party dependencies.
+          Please refer to the "Database — Making Schema Changes" section in `CONTRIBUTING.md` before designing rules.
           ENDBODY
-          gh issue create --repo "$REPO" --title "[FEAT] Auto-merge PRs immediately upon maintainer approval" --label "VETERAN,ELUSOC,enhancement,github-actions" --body-file /tmp/body.md
+          gh issue create --repo "$REPO" --title "[FEAT] Add automated database migration linting and RLS verification checks in CI" --label "ADVENTURER,ELUSOC,enhancement,github-actions,backend" --body-file /tmp/body.md
 
-      - name: "Issue 3 - Thank You Message"
+      - name: "Issue 6 - Automated Stale PR and Issue maintenance"
         continue-on-error: true
         run: |
           cat > /tmp/body.md << 'ENDBODY'
           ## Problem Statement
-          Contributors take time to report bugs or request features. When an issue is closed, it's nice to give them a warm send-off automatically.
+          In active open-source repositories, contributor pull requests sometimes become inactive after initial review requests or failing test builds, cluttering the triage queue.
 
           ## Proposed Solution
-          Create a workflow listening to the `issues.closed` event. If the issue is closed with the reason `completed` (meaning it wasn't closed as `not planned` or spam), the GitHub Action should drop a comment: *"This issue has been successfully resolved! Thank you for your contribution to OSSfolio 🚀."*
+          Configure a dedicated `.github/workflows/stale.yml` action using `actions/stale`. If an open issue or pull request sees no activity for 30 days, append a `stale` label and post a friendly courtesy reminder. If another 7 days elapse without response, close the item automatically while keeping the branch intact.
 
           ## Alternatives Considered
-          Typing it out manually every time.
+          Manual monthly cleanup passes by repository administrators.
 
           ## Additional Context
-          Use `actions/github-script` to post the comment.
+          Ensure issues tagged with `good first issue` or `pinned` are explicitly exempt from automated expiration.
           ENDBODY
-          gh issue create --repo "$REPO" --title "[FEAT] Automated Thank You message when an issue is resolved" --label "ADVENTURER,ELUSOC,enhancement,github-actions" --body-file /tmp/body.md
+          gh issue create --repo "$REPO" --title "[FEAT] Configure automated Stale notification and triage workflow for inactive pull requests" --label "ADVENTURER,ELUSOC,enhancement,github-actions" --body-file /tmp/body.md
 
-      - name: "Issue 4 - Auto Assign"
+      # -------------------------------------------------------------------------
+      # SECTION 2: BACKEND, EDGE RUNTIME & CLOUDFLARE ARCHITECTURE
+      # -------------------------------------------------------------------------
+
+      - name: "Issue 7 - Prevent Cloudflare Worker 500 crashes"
+        continue-on-error: true
+        run: |
+          cat > /tmp/body.md << 'ENDBODY'
+          ## Describe the Bug
+          When running OSSfolio on Cloudflare Pages using `@opennextjs/cloudflare` with Node compatibility (`nodejs_compat`), initializing Supabase client instances globally at module load time causes immediate startup crashes in the `workerd` engine, returning a plain text `500 Internal Server Error` without any HTML rendering. 
+
+          Additionally, combining Next.js 16 Turbopack builds with explicit `export const runtime = "edge";` declarations across API and page routes prevents OpenNext from correctly tracing and bundling SSR component chunks.
+
+          ## Steps to Reproduce
+          1. Declare a top-level global client execution (`createClient(...)`) in a library shared across edge route handlers.
+          2. Compile the bundle targeting Cloudflare Pages via `opennextjs-cloudflare build`.
+          3. Hit any production page route and inspect the response headers.
+          4. Observe immediate 500 plain-text failure prior to route processing.
+
+          ## Expected Behavior
+          - Database clients must initialize lazily upon first request invocation to prevent `workerd` boot interruptions.
+          - Route files should rely on OpenNext's standard Node compatibility conversion instead of explicit edge constraint strings under Next 16 builds.
+
+          ## Actual Behavior
+          The Cloudflare Worker module fails initialization instantly, causing total deployment downtime.
+
+          ## Additional Context
+          Review `src/lib/supabase.ts` proxy pattern and OpenNext Cloudflare configuration documentation. Write regression verification tests to guard against eager instantiation.
+          ENDBODY
+          gh issue create --repo "$REPO" --title "[BUG] Prevent Cloudflare Workers startup crashes by enforcing lazy Supabase client initialization and resolving runtime directives" --label "VETERAN,ELUSOC,bug,backend" --body-file /tmp/body.md
+
+      - name: "Issue 8 - Redis rate-limit failover alerting"
         continue-on-error: true
         run: |
           cat > /tmp/body.md << 'ENDBODY'
           ## Problem Statement
-          Maintainers spend a lot of time manually clicking through the GitHub UI to assign issues to users who want to work on them.
+          In `src/lib/rate-limit.ts`, our per-IP rate limiting utilizes Upstash Redis to prevent manual refresh scraping on GitHub profile endpoints. When Redis is unreachable or unconfigured, the limiter intentionally fails open (`allowed: true`) to avoid bringing down the primary synchronization service. However, this silent fallback produces zero structured telemetry or administrator alerting when upstream caching breaks down in production.
 
           ## Proposed Solution
-          Create a workflow that triggers on `issue_comment.created`. If a user comments exactly "assign me", the action checks if the issue currently has 0 assignees. If it's empty, it automatically assigns the commenter to the issue and replies with *"Assigned! You can start working on this."*
+          Implement structured failover diagnostic logging and an intelligent localized sliding memory buffer fallback for temporary connection dropouts. Ensure that recurrent Redis connection attempts execute with exponential backoff rather than stalling concurrent Edge invocations.
 
           ## Alternatives Considered
-          Third-party GitHub Apps.
+          Failing closed (rejecting all refreshes during cache network interruptions), which harms legitimate users.
 
           ## Additional Context
-          We only want it to trigger if the issue is currently unassigned to prevent stealing issues.
+          Review `src/lib/rate-limit.ts` atomic `SET NX EX` implementation and verify edge runtime Web Crypto hashing constraints.
           ENDBODY
-          gh issue create --repo "$REPO" --title "[FEAT] Auto-Assign issues when a user comments 'assign me'" --label "VETERAN,ELUSOC,enhancement,github-actions" --body-file /tmp/body.md
+          gh issue create --repo "$REPO" --title "[FEAT] Add Redis rate-limit failover telemetry and resilient memory buffering for GitHub profile syncing" --label "VETERAN,ELUSOC,enhancement,backend" --body-file /tmp/body.md
 
-      - name: "Issue 5 - PR Issue Linking Check"
+      - name: "Issue 9 - Transactional Postgres advisory locks for sync"
         continue-on-error: true
         run: |
           cat > /tmp/body.md << 'ENDBODY'
           ## Problem Statement
-          Contributors often open Pull Requests without linking the issue they are solving, which breaks the tracking flow and makes code review confusing.
+          When multiple anonymous visitors request a profile refresh simultaneously, our current synchronization guard relies on optimistic updates against `profiles.last_refreshed_at` in Postgres. While this mitigates most races, rapid bursts of parallel requests can occasionally pass initial read verification before database updates commit, triggering concurrent GitHub GraphQL API queries that deplete our token allowance.
 
           ## Proposed Solution
-          Create a workflow running on `pull_request.opened` and `pull_request.edited`. It should parse the PR description using regex to look for keywords like `Fixes #` or `Closes #`. If it doesn't find one, it fails the status check and leaves a comment: *"Please update your PR description to link the issue you are solving."*
+          Implement PostgreSQL transaction advisory locking (`pg_try_advisory_xact_lock`) keyed against the SHA-256 integer hash of the requested target username during sync processing. If a lock is already acquired by an ongoing worker, subsequent incoming requests should immediately terminate with an informative status code without firing redundant outbound API calls.
 
           ## Alternatives Considered
-          Manual review, which is error-prone.
+          Using distributed Redis distributed locks exclusively, which requires additional round-trip hops outside our core database layer.
 
           ## Additional Context
-          This should be a required status check before a PR can be merged.
+          Read `src/lib/profile-snapshot.ts` and verify how Supabase RPC procedures can expose advisory locking functions cleanly to service-role background writes.
           ENDBODY
-          gh issue create --repo "$REPO" --title "[FEAT] Block PRs if they don't link an issue" --label "VETERAN,ELUSOC,enhancement,github-actions" --body-file /tmp/body.md
+          gh issue create --repo "$REPO" --title "[REFACTOR] Implement PostgreSQL transactional advisory locking for concurrent profile snapshot synchronization" --label "VETERAN,ELUSOC,refactor,backend" --body-file /tmp/body.md
 
-      - name: "Issue 6 - Stale Issues"
+      - name: "Issue 10 - GitHub Webhook signature verification and retries"
         continue-on-error: true
         run: |
           cat > /tmp/body.md << 'ENDBODY'
           ## Problem Statement
-          The repository can get cluttered with PRs where the contributor vanished after receiving review feedback.
+          Our GitHub webhook endpoint (`/api/webhooks/github`) receives repository event notifications to update contributor records. To ensure absolute data integrity and defend against spoofed payload injection, incoming HTTP transmissions require constant-time signature evaluation and deterministic retry processing when backend writes encounter transient locks.
 
           ## Proposed Solution
-          Implement the official `actions/stale` workflow. Configure it to run once a day. If a PR has seen zero activity (comments or commits) for 30 days, it adds a `stale` label and comments a warning. If 7 more days pass with no response, it automatically closes the PR.
+          1. Implement standard HMAC-SHA256 evaluation against `X-Hub-Signature-256` headers using edge-safe Web Crypto APIs, utilizing constant-time buffer comparison (`crypto.subtle.timingSafeEqual`) to eliminate timing attack vectors.
+          2. Create a dead-letter retry queue recording unhandled payload timestamps in Postgres for scheduled background retry execution.
 
           ## Alternatives Considered
-          N/A. `actions/stale` is the industry standard.
+          Direct string equality comparison on signature digests, which exposes vulnerable timing deltas.
 
           ## Additional Context
-          The configuration should go in `.github/workflows/stale.yml`.
+          Verify performance constraints inside OpenNext Cloudflare worker execution bounds.
           ENDBODY
-          gh issue create --repo "$REPO" --title "[FEAT] Automatically mark abandoned issues and PRs as Stale" --label "ADVENTURER,ELUSOC,enhancement,github-actions" --body-file /tmp/body.md
+          gh issue create --repo "$REPO" --title "[FEAT] Implement constant-time HMAC-SHA256 webhook verification and dead-letter retry persistence for GitHub events" --label "VETERAN,ELUSOC,enhancement,backend" --body-file /tmp/body.md
+
+      - name: "Issue 11 - ETags and RFC 7232 caching on public REST APIs"
+        continue-on-error: true
+        run: |
+          cat > /tmp/body.md << 'ENDBODY'
+          ## Problem Statement
+          The open REST endpoint `/api/v1/users/[username]` is queried by third-party developer integrations and profile badges. Every request currently incurs a Supabase read query even when the contributor's commit statistics have remained static for hours, consuming database IOPS unnecessarily.
+
+          ## Proposed Solution
+          Generate deterministic `ETag` headers derived from the record's `updated_at` timestamp and computed score hash. Inspect incoming `If-None-Match` request headers; if the digest matches the active snapshot, terminate immediately with an empty `304 Not Modified` HTTP response to eliminate data transmission overhead.
+
+          ## Alternatives Considered
+          Enforcing long-lived client `Cache-Control: max-age` timers exclusively, which prevents instantaneous UI reflection after deliberate user resyncs.
+
+          ## Additional Context
+          See `src/app/api/v1/users/[username]/route.ts` and standard HTTP caching RFC definitions.
+          ENDBODY
+          gh issue create --repo "$REPO" --title "[FEAT] Implement ETag validation and RFC 7232 conditional caching responses on public REST endpoints" --label "ADVENTURER,ELUSOC,enhancement,backend" --body-file /tmp/body.md
+
+      - name: "Issue 12 - Standardize API route Result patterns"
+        continue-on-error: true
+        run: |
+          cat > /tmp/body.md << 'ENDBODY'
+          ## Problem Statement
+          Across our API routes (`src/app/api/`), error handling frequently relies on variable try/catch strings and disparate JSON payload formatting. This makes debugging across external frontend consumers unpredictable when distinguishing between validation rejections, upstream GitHub timeouts, and database access exceptions.
+
+          ## Proposed Solution
+          Refactor route response generation using a standard discriminated union Result pattern:
+          `type ApiResponse<T> = { success: true; data: T } | { success: false; error: { code: ErrorCode; message: string; details?: unknown } }`.
+          Update helper utilities in `src/lib/validators/api.ts` to enforce strict return type safety across all GET and POST route handlers without altering public endpoint URLs.
+
+          ## Alternatives Considered
+          Retaining unchecked `NextResponse.json({ error: "string" })` invocations across individual files.
+
+          ## Additional Context
+          Verify that existing automated Playwright API assertion scripts (`e2e/error-handling.spec.ts`) continue passing without regressions.
+          ENDBODY
+          gh issue create --repo "$REPO" --title "[REFACTOR] Standardize API route response generation using type-safe Result pattern constructs" --label "ADVENTURER,ELUSOC,refactor,backend" --body-file /tmp/body.md
+
+      - name: "Issue 13 - Automated background cleanup for orphan snapshots"
+        continue-on-error: true
+        run: |
+          cat > /tmp/body.md << 'ENDBODY'
+          ## Problem Statement
+          Over time, exploratory API invocations or abandoned account synchronizations accumulate inactive profile snapshot entries in Postgres that have not been viewed or refreshed in months, occupying unnecessary table storage.
+
+          ## Proposed Solution
+          Design a Supabase scheduled cron procedure or automated admin cleaning script that targets unclaimed snapshot records inactive for over 90 days. Archive essential score metrics into a compact historical summary table and remove verbose JSON repository lists from primary working tables.
+
+          ## Alternatives Considered
+          Retaining full raw JSON payload data indefinitely regardless of account dormancy.
+
+          ## Additional Context
+          Review database table structures in `CONTRIBUTING.md` before scripting archive migrations.
+          ENDBODY
+          gh issue create --repo "$REPO" --title "[FEAT] Create automated background archival and cleanup routine for dormant profile snapshots" --label "ADVENTURER,ELUSOC,enhancement,backend" --body-file /tmp/body.md
+
+      # -------------------------------------------------------------------------
+      # SECTION 3: FRONTEND UI, NEXT.JS COMPONENTS & DESIGN SYSTEM
+      # -------------------------------------------------------------------------
+
+      - name: "Issue 14 - Redesign Profile Hero section with glassmorphism"
+        continue-on-error: true
+        run: |
+          cat > /tmp/body.md << 'ENDBODY'
+          ## Problem Statement
+          The primary Contributor Profile Hero section currently presents basic structural grouping without visual depth or clear chromatic alignment with our established brand identity.
+
+          ## Proposed Solution
+          Redesign the Profile Hero header element using clean glassmorphic surface treatment, incorporating subtle borders (`colors.hairline`), dark-mode canvas layering (`colors.canvas-night-soft`), and our signature emerald primary token (`#3ecf8e`) for primary action items. Ensure developer badges and score tier indicators scale smoothly across mobile and wide-desktop screen widths.
+
+          ## Alternatives Considered
+          Retaining plain flat background color blocks without border-radius refinement or elevation.
+
+          ## Additional Context
+          > If this is a UI feature, please read `DESIGN.md` before starting. It contains all color tokens, spacing, typography, and component specifications used across OSSfolio.
+          ENDBODY
+          gh issue create --repo "$REPO" --title "[FEAT] Redesign Profile Hero header section using established Design System surface tokens" --label "ADVENTURER,ELUSOC,enhancement,frontend,UI" --body-file /tmp/body.md
+
+      - name: "Issue 15 - Responsive radar comparison chart on /compare"
+        continue-on-error: true
+        run: |
+          cat > /tmp/body.md << 'ENDBODY'
+          ## Problem Statement
+          When visitors compare two developers on `/compare`, numeric tables alone fail to visually communicate distinct engineering archetypes (such as prolific PR reviewers vs architectural issue investigators vs sustained commit authors).
+
+          ## Proposed Solution
+          Integrate a custom interactive Recharts Radar chart into the compare dashboard. Display normalized contribution ratios (Commits, Pull Requests, Code Reviews, Issues Opened, and Repo Stars) side-by-side using our crisp brand palette (primary `#3ecf8e` vs neutral ink `#707070`). Include custom responsive tooltips that detail raw metrics upon pointer hover.
+
+          ## Alternatives Considered
+          Using standard horizontal bar charts, which fail to communicate multi-axis engineering versatility clearly.
+
+          ## Additional Context
+          > If this is a UI feature, please read `DESIGN.md` before starting. It contains all color tokens, spacing, typography, and component specifications used across OSSfolio.
+          ENDBODY
+          gh issue create --repo "$REPO" --title "[FEAT] Implement interactive comparative multi-axis radar chart on contributor comparison dashboard" --label "VETERAN,ELUSOC,enhancement,frontend,UI" --body-file /tmp/body.md
+
+      - name: "Issue 16 - Keyboard Command Palette (Ctrl+K) for navigation"
+        continue-on-error: true
+        run: |
+          cat > /tmp/body.md << 'ENDBODY'
+          ## Problem Statement
+          Power users and software engineers visiting OSSfolio expect instantaneous keyboard navigation to switch between developer exploration, account comparisons, and settings without clicking through multi-level menus.
+
+          ## Proposed Solution
+          Implement a centralized Command Palette dialog accessible via `Cmd+K` (macOS) or `Ctrl+K` (Windows/Linux) using Radix UI Dialog primitives. Users should be able to type a GitHub handle to immediately navigate to their profile, jump to the `/explore` leaderboard, or toggle theme mode. Style the overlay using our dark canvas colors and humanist typography tokens.
+
+          ## Alternatives Considered
+          Relying exclusively on standard top-navigation DOM links.
+
+          ## Additional Context
+          > If this is a UI feature, please read `DESIGN.md` before starting. It contains all color tokens, spacing, typography, and component specifications used across OSSfolio.
+          ENDBODY
+          gh issue create --repo "$REPO" --title "[FEAT] Build interactive keyboard command palette (Ctrl+K) for instantaneous navigation and actions" --label "ADVENTURER,ELUSOC,enhancement,frontend,UI" --body-file /tmp/body.md
+
+      - name: "Issue 17 - Live filtering on /explore Leaderboard"
+        continue-on-error: true
+        run: |
+          cat > /tmp/body.md << 'ENDBODY'
+          ## Problem Statement
+          The `/explore` leaderboard currently displays contributors ordered strictly by total overall score. Visitors seeking engineers specializing in specific ecosystems (e.g., Rust, TypeScript, Python) or specific contribution styles cannot filter results without manual scrolling.
+
+          ## Proposed Solution
+          Add dynamic filter pill toggles to the `/explore` view allowing immediate client-side and server-side filtering by primary programming languages and score tiers. Use URL search query parameters (e.g., `/explore?lang=typescript&page=1`) so filtered views remain cleanly bookmarkable and shareable across social channels.
+
+          ## Alternatives Considered
+          Requiring dedicated independent routes for each individual language ecosystem.
+
+          ## Additional Context
+          > If this is a UI feature, please read `DESIGN.md` before starting. It contains all color tokens, spacing, typography, and component specifications used across OSSfolio.
+          ENDBODY
+          gh issue create --repo "$REPO" --title "[FEAT] Add dynamic programming language filtering and URL search persistence to /explore leaderboard" --label "VETERAN,ELUSOC,enhancement,frontend,UI" --body-file /tmp/body.md
+
+      - name: "Issue 18 - WCAG AAA Contrast verification and High-Contrast mode"
+        continue-on-error: true
+        run: |
+          cat > /tmp/body.md << 'ENDBODY'
+          ## Problem Statement
+          Certain secondary ink tints (e.g., `ink-mute-2`, `ink-faint`) against light canvas backgrounds may fall below strict WCAG AAA color contrast ratios, causing readability difficulties for visually impaired software developers.
+
+          ## Proposed Solution
+          1. Conduct an exhaustive audit of our CSS token definitions in `src/index.css` against WCAG 2.1 Level AAA requirements.
+          2. Implement a selectable "High Contrast" theme setting in user configuration that raises foreground text contrast ratios above 7:1 while maintaining our green primary CTA identity.
+
+          ## Alternatives Considered
+          Adhering only to minimal Level AA thresholds without providing dedicated high-contrast accommodations.
+
+          ## Additional Context
+          > If this is a UI feature, please read `DESIGN.md` before starting. It contains all color tokens, spacing, typography, and component specifications used across OSSfolio.
+          ENDBODY
+          gh issue create --repo "$REPO" --title "[FEAT] Implement high-contrast accessible theme mode and certify WCAG AAA readability standards" --label "ADVENTURER,ELUSOC,enhancement,frontend,UI,accessibility" --body-file /tmp/body.md
+
+      - name: "Issue 19 - Standardize component variants with CVA recipes"
+        continue-on-error: true
+        run: |
+          cat > /tmp/body.md << 'ENDBODY'
+          ## Problem Statement
+          Several shared interface components across `src/components/` define styling variations using ad-hoc inline string concatenation and nested ternary expressions, making UI refactoring error-prone as Tailwind design specifications evolve.
+
+          ## Proposed Solution
+          Refactor structural layout buttons, status pills, and contributor badges to utilize strict Class Variance Authority (CVA) recipe schemas. Map token properties directly to variants defined in our foundational specifications without introducing arbitrary custom utility class combinations.
+
+          ## Alternatives Considered
+          Continuing manual string concatenation with basic helper functions.
+
+          ## Additional Context
+          > If this is a UI feature, please read `DESIGN.md` before starting. It contains all color tokens, spacing, typography, and component specifications used across OSSfolio.
+          ENDBODY
+          gh issue create --repo "$REPO" --title "[REFACTOR] Replace ad-hoc inline styling strings with standardized CVA component recipe schemas" --label "ADVENTURER,ELUSOC,refactor,frontend,UI" --body-file /tmp/body.md
+
+      - name: "Issue 20 - Interactive Profile Score Breakdown Dialog"
+        continue-on-error: true
+        run: |
+          cat > /tmp/body.md << 'ENDBODY'
+          ## Problem Statement
+          New users viewing their computed OSSfolio rating frequently ask how specific GitHub activities contribute to their final integer score, especially when anti-gaming algorithmic discounts have been applied to their account.
+
+          ## Proposed Solution
+          Create an interactive "Score Explained" modal triggered by clicking an information icon adjacent to the user's primary profile score rating. The dialog should present a clean mathematical breakdown showing raw counts multiplied by category weights, displaying explicit explanations if anomaly heuristics adjusted total values.
+
+          ## Alternatives Considered
+          Linking out to external static text documentation pages away from the active profile view.
+
+          ## Additional Context
+          > If this is a UI feature, please read `DESIGN.md` before starting. It contains all color tokens, spacing, typography, and component specifications used across OSSfolio.
+          ENDBODY
+          gh issue create --repo "$REPO" --title "[FEAT] Build interactive Profile Score calculation breakdown dialog with anti-gaming transparency" --label "ADVENTURER,ELUSOC,enhancement,frontend,UI" --body-file /tmp/body.md
+
+      - name: "Issue 21 - Framer Motion animations for Repo Grid"
+        continue-on-error: true
+        run: |
+          cat > /tmp/body.md << 'ENDBODY'
+          ## Problem Statement
+          When visitors change sorting parameters (stars, forks, commits) on a developer's repository list within `ProfileView.tsx`, the DOM elements swap instantaneously without visual continuity, causing abrupt interface jumping.
+
+          ## Proposed Solution
+          Incorporate lightweight Framer Motion layout transition properties (`layoutId` and smooth opacity scaling) across repo card containers. When filtering or sorting order shifts, existing cards should glide cleanly to their new spatial grid coordinates while entering/exiting items fade smoothly.
+
+          ## Alternatives Considered
+          Leaving unmanaged instant DOM replacements without transition animations.
+
+          ## Additional Context
+          > If this is a UI feature, please read `DESIGN.md` before starting. It contains all color tokens, spacing, typography, and component specifications used across OSSfolio.
+          ENDBODY
+          gh issue create --repo "$REPO" --title "[FEAT] Add smooth Framer Motion layout sorting animations to developer repository grids" --label "ADVENTURER,ELUSOC,enhancement,frontend,UI" --body-file /tmp/body.md
+
+      - name: "Issue 22 - Enhanced touch gesture Mobile Navigation Drawer"
+        continue-on-error: true
+        run: |
+          cat > /tmp/body.md << 'ENDBODY'
+          ## Problem Statement
+          On smaller smartphone display viewports, our navigation overlay currently toggles via simple DOM presence without gesture recognition, focus trapping, or smooth backdrop dismissal mechanics.
+
+          ## Proposed Solution
+          Refactor the mobile navigation interface into an edge-swipe accessible sheet utilizing Radix UI Dialog primitives. Implement automatic focus trapping when open, support escape key termination, and render a subtle background blur (`backdrop-blur-sm`) consistent with our modern dark-mode aesthetics.
+
+          ## Alternatives Considered
+          Retaining simple absolute dropdown menus that obscure content without focus boundaries.
+
+          ## Additional Context
+          > If this is a UI feature, please read `DESIGN.md` before starting. It contains all color tokens, spacing, typography, and component specifications used across OSSfolio.
+          ENDBODY
+          gh issue create --repo "$REPO" --title "[FEAT] Upgrade mobile navigation menu into an accessible touch-friendly slide drawer with focus trapping" --label "ADVENTURER,ELUSOC,enhancement,frontend,UI" --body-file /tmp/body.md
+
+      # -------------------------------------------------------------------------
+      # SECTION 4: INTERNATIONALIZATION (I18N) & ACCESSIBILITY
+      # -------------------------------------------------------------------------
+
+      - name: "Issue 23 - Strict TypeScript schema validation for i18n messages"
+        continue-on-error: true
+        run: |
+          cat > /tmp/body.md << 'ENDBODY'
+          ## Describe the Bug
+          During translation updates in `messages/en.json` and `messages/es.json`, missing namespace keys or typographical discrepancies in dictionary properties can silently pass TypeScript compilation, triggering runtime errors in console logs such as `MISSING_MESSAGE: Nav (es)`.
+
+          ## Steps to Reproduce
+          1. Add a new translation key into `en.json` under a component namespace without modifying `es.json`.
+          2. Navigate to a route using Spanish locale resolution.
+          3. Inspect the browser or server terminal logs.
+          4. Observe runtime warning exceptions during dictionary lookup evaluation.
+
+          ## Expected Behavior
+          - Our TypeScript configuration should statically verify that `es.json` matches the exact structural type shape and namespace key enumeration of `en.json` during pre-build validation checks.
+
+          ## Actual Behavior
+          Missing translation values go unnoticed until runtime rendering execution fails or logs errors.
+
+          ## Additional Context
+          Review `src/i18n/request.ts` and Next-Intl Type-safe global message configuration guidance.
+          ENDBODY
+          gh issue create --repo "$REPO" --title "[BUG] Enforce strict TypeScript schema validation to prevent missing internationalization translation keys" --label "ADVENTURER,ELUSOC,bug,frontend" --body-file /tmp/body.md
+
+      - name: "Issue 24 - Persistent local storage language switcher"
+        continue-on-error: true
+        run: |
+          cat > /tmp/body.md << 'ENDBODY'
+          ## Problem Statement
+          Our current localization architecture relies heavily on browser `Accept-Language` headers and cookie state. Visitors lacking explicit locale preference cookies cannot easily switch languages via an intuitive interactive interface element without modifying browser internal language configurations.
+
+          ## Proposed Solution
+          Design a clean, understated header dropdown language selector supporting instant switching between English (`en`) and Spanish (`es`). When selected, update the underlying `LOCALE_COOKIE` state via Next-Intl server actions and refresh current route content immediately while preserving active path parameters and query filtering.
+
+          ## Alternatives Considered
+          Requiring hardcoded url prefix routing (`/es/username`), which disrupts shared external portfolio links.
+
+          ## Additional Context
+          > If this is a UI feature, please read `DESIGN.md` before starting. It contains all color tokens, spacing, typography, and component specifications used across OSSfolio.
+          ENDBODY
+          gh issue create --repo "$REPO" --title "[FEAT] Build interactive header language switcher with cookie persistence for bilingual navigation" --label "ADVENTURER,ELUSOC,enhancement,frontend,UI" --body-file /tmp/body.md
+
+      - name: "Issue 25 - ARIA live-region updates for profile sync"
+        continue-on-error: true
+        run: |
+          cat > /tmp/body.md << 'ENDBODY'
+          ## Problem Statement
+          When a user initiates a background manual profile refresh in `ProfileView.tsx`, visual progress spins and statistical counts update asynchronously via state mutations. However, assistive screen reading software receives no auditory notification when data recalculations conclude or if rate limit countdown timers begin.
+
+          ## Proposed Solution
+          Integrate accessible ARIA live regions (`aria-live="polite"`) into our profile status containers. When synchronization finishes, dispatch clear text strings (e.g., *"Profile stats refreshed successfully. New score: 1450"*) so blind and visually impaired contributors understand state updates instantly.
+
+          ## Alternatives Considered
+          Leaving dynamic DOM modifications without semantic auditory announcements.
+
+          ## Additional Context
+          Refer to standard Web Content Accessibility Guidelines for dynamic region notifications.
+          ENDBODY
+          gh issue create --repo "$REPO" --title "[FEAT] Implement ARIA live-region auditory announcements for asynchronous profile refreshes and score updates" --label "ADVENTURER,ELUSOC,enhancement,frontend,accessibility" --body-file /tmp/body.md
+
+      # -------------------------------------------------------------------------
+      # SECTION 5: PERFORMANCE, OPTIMIZATION & TESTING
+      # -------------------------------------------------------------------------
+
+      - name: "Issue 26 - Optimize OpenGraph Wasm and Font parsing"
+        continue-on-error: true
+        run: |
+          cat > /tmp/body.md << 'ENDBODY'
+          ## Problem Statement
+          Our dynamic OpenGraph image generation endpoint (`/-/opengraph-image`) currently parses large TrueType font file binaries and Wasm rendering engines (`resvg`, `yoga`) on demand during edge invocations. On high-traffic social sharing events, this repeated binary decoding can elevate memory utilization and response latencies on Cloudflare Pages.
+
+          ## Proposed Solution
+          Implement in-memory font array buffer caching across reused edge worker invocations and verify minimal subset font trimming for required ASCII character sets. Ensure compiled OpenGraph image outputs carry appropriate immutable cache control propagation headers (`Cache-Control: public, immutable, max-age=31536000`).
+
+          ## Alternatives Considered
+          Pre-generating static PNG assets for every user at build time, which is impossible for millions of potential GitHub accounts.
+
+          ## Additional Context
+          Inspect `src/app/[username]/opengraph-image.tsx` and Cloudflare edge runtime resource limitations.
+          ENDBODY
+          gh issue create --repo "$REPO" --title "[PERF] Optimize OpenGraph font array buffer caching and Wasm evaluation overhead on Cloudflare Pages" --label "VETERAN,ELUSOC,enhancement,performance" --body-file /tmp/body.md
+
+      - name: "Issue 27 - Dynamic code-splitting for graphing components"
+        continue-on-error: true
+        run: |
+          cat > /tmp/body.md << 'ENDBODY'
+          ## Problem Statement
+          Heavy third-party visualization charting libraries (such as Recharts in our comparison and analytical views) are bundled into initial client runtime JavaScript chunks, increasing parsing duration and slightly degrading Lighthouse initial hydration scores on low-powered mobile devices.
+
+          ## Proposed Solution
+          Refactor heavy comparative charting UI modules using Next.js dynamic imports (`next/dynamic` with `ssr: false` or streaming suspense boundaries). Display lightweight skeleton structural loading placeholders during bundle chunk transmission to preserve layout stability (zero Cumulative Layout Shift).
+
+          ## Alternatives Considered
+          Retaining standard synchronous imports that execute eagerly during initial Document Object Model hydration.
+
+          ## Additional Context
+          Measure Lighthouse Total Blocking Time (TBT) reductions before and after modification.
+          ENDBODY
+          gh issue create --repo "$REPO" --title "[PERF] Implement dynamic code-splitting and Suspense loading boundaries for visualization graphing libraries" --label "ADVENTURER,ELUSOC,enhancement,frontend,performance" --body-file /tmp/body.md
+
+      - name: "Issue 28 - Vitest unit tests for anomaly heuristics"
+        continue-on-error: true
+        run: |
+          cat > /tmp/body.md << 'ENDBODY'
+          ## Problem Statement
+          Our anti-gaming algorithm in `src/lib/anomaly.ts` evaluates repository fork ratios and commit frequency spikes to flag manipulated GitHub accounts. While crucial for fair leaderboard integrity, this logic currently lacks isolated deterministic unit testing coverage to guard against accidental regressions or false positives during refactoring.
+
+          ## Proposed Solution
+          Create an exhaustive Vitest testing suite (`src/lib/anomaly.test.ts`). Write structured fixtures verifying behavior across standard open-source contributors, prolific review specialists, and artificially manipulated PR spam accounts, asserting accurate boolean flagging and discount deductions.
+
+          ## Alternatives Considered
+          Relying solely on slow end-to-end browser tests for mathematical algorithm verification.
+
+          ## Additional Context
+          See `vitest.config.ts` and read existing anti-gaming documentation in `src/lib/anomaly.ts`.
+          ENDBODY
+          gh issue create --repo "$REPO" --title "[FEAT] Build comprehensive Vitest unit test suite validating anti-gaming anomaly heuristic algorithms" --label "ADVENTURER,ELUSOC,enhancement,testing,backend" --body-file /tmp/body.md
+
+      - name: "Issue 29 - E2E tests for user setting mutations under edge network dropouts"
+        continue-on-error: true
+        run: |
+          cat > /tmp/body.md << 'ENDBODY'
+          ## Problem Statement
+          While our current Playwright integration tests verify clean profile rendering and standard 404/400 API error formats, we currently lack automated verification for authenticated account profile updates under simulated network failures or database write interruptions.
+
+          ## Proposed Solution
+          Expand our E2E testing directory to include simulated failure injections against `/api/settings`. Intersect browser network routing in Playwright (`page.route`) to intentionally return HTTP 503 or timeout states during profile form submission, verifying that the frontend interface renders appropriate user error alerts without losing entered state.
+
+          ## Alternatives Considered
+          Testing only ideal happy-path network scenarios during automated continuous integration checks.
+
+          ## Additional Context
+          Review `e2e/error-handling.spec.ts` and Playwright Network Interception configuration procedures.
+          ENDBODY
+          gh issue create --repo "$REPO" --title "[FEAT] Add Playwright network interception tests verifying resilient form recovery under edge service failures" --label "VETERAN,ELUSOC,enhancement,testing" --body-file /tmp/body.md
+
+      - name: "Issue 30 - Interactive OpenAPI 3.1 schema route at /api-docs"
+        continue-on-error: true
+        run: |
+          cat > /tmp/body.md << 'ENDBODY'
+          ## Problem Statement
+          External software developers desiring to consume OSSfolio contributor scores and badge metadata via our REST endpoints currently must read source TypeScript files to understand payload formatting and rate limit structures.
+
+          ## Proposed Solution
+          Implement an automated, type-safe OpenAPI 3.1 specification generation route at `/api/openapi.json` derived directly from our data models and validation schema definitions. Provide a clean interactive documentation viewing interface at `/api-docs` so integration engineers can experiment with live endpoint payloads cleanly.
+
+          ## Alternatives Considered
+          Maintaining static external markdown API reference documentation that quickly falls out of sync with actual codebase implementation.
+
+          ## Additional Context
+          Ensure public docs accurately explain rate limits (`Retry-After`) and ETag conditional headers.
+          ENDBODY
+          gh issue create --repo "$REPO" --title "[FEAT] Generate dynamic interactive OpenAPI 3.1 documentation endpoint at /api-docs for REST integration" --label "VETERAN,ELUSOC,enhancement,documentation,backend" --body-file /tmp/body.md

@@ -6,7 +6,7 @@ import {
   createErrorResponse,
 } from "@/lib/validators/api";
 
-export const runtime = "edge";
+// Runtime managed by @opennextjs/cloudflare
 
 // Public, cross-origin REST endpoint for third-party consumers of a profile's
 // aggregated score/stats. Reads are open because profiles are already publicly

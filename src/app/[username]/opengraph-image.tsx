@@ -1,7 +1,7 @@
 import { ImageResponse } from "next/og";
 import { getProfileByUsername } from "@/lib/db";
 
-export const runtime = "edge";
+// Runtime managed by @opennextjs/cloudflare
 
 export const alt = "OSSfolio Profile";
 export const size = { width: 1200, height: 630 };

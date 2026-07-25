@@ -8,7 +8,7 @@ import {
   createErrorResponse,
 } from "@/lib/validators/api";
 
-export const runtime = "edge";
+// Runtime managed by @opennextjs/cloudflare
 
 const PAGE_SIZE = 20;
 const MAX_PAGE = 50;

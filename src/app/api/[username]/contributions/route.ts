@@ -7,7 +7,7 @@ import {
   createErrorResponse,
 } from "@/lib/validators/api";
 
-export const runtime = "edge";
+// Runtime managed by @opennextjs/cloudflare
 
 export async function GET(
   request: NextRequest,

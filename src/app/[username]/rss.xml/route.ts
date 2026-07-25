@@ -7,7 +7,7 @@ import {
 } from "@/lib/profile-snapshot";
 import type { MergedPR } from "@/types";
 
-export const runtime = "edge";
+// Runtime managed by @opennextjs/cloudflare
 
 /** Matches sitemap.ts, which is the only other place that needs an absolute URL. */
 const SITE_URL = "https://ossfolio.qzz.io";
