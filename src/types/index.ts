@@ -72,3 +72,42 @@ export interface MergedPR {
   state?: "open" | "closed" | "merged";
   createdAt?: string;
 }
+
+export interface CoContributor {
+  login: string;
+  name?: string | null;
+  avatarUrl?: string;
+  repoName?: string;
+  contributionsCount?: number;
+}
+
+export interface NetworkNode {
+  id: string;
+  label: string;
+  type: "contributor" | "repo" | "org" | "collaborator";
+  avatarUrl?: string;
+  url?: string;
+  val: number;
+  color: string;
+  details?: string;
+  statsText?: string;
+  x?: number;
+  y?: number;
+  vx?: number;
+  vy?: number;
+  fx?: number | null;
+  fy?: number | null;
+}
+
+export interface NetworkEdge {
+  source: string | NetworkNode;
+  target: string | NetworkNode;
+  weight: number;
+  label?: string;
+}
+
+export interface ImpactNetworkData {
+  nodes: NetworkNode[];
+  edges: NetworkEdge[];
+}
+

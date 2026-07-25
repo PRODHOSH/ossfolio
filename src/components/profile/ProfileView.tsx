@@ -21,7 +21,9 @@ import type {
   HeatmapWeek,
   BadgeItem,
   MergedPR,
+  CoContributor,
 } from "@/types";
+import { ImpactNetworkSkeleton } from "@/components/profile/ImpactNetworkSkeleton";
 import { toPng } from "html-to-image";
 import { supabase } from "@/lib/supabase";
 import { updateProfileBadges } from "@/lib/db";
@@ -55,6 +57,17 @@ const HeatmapWithYearNav = dynamic(
         <SkeletonCard variant="card" lines={7} />
       </div>
     ),
+  },
+);
+
+const ImpactNetwork = dynamic(
+  () =>
+    import("@/components/profile/ImpactNetwork").then(
+      (mod) => mod.ImpactNetwork,
+    ),
+  {
+    ssr: false,
+    loading: () => <ImpactNetworkSkeleton />,
   },
 );
 
@@ -142,6 +155,7 @@ interface ProfileExtras {
   profileId: string | null;
   rateLimited?: boolean;
   mergedPRs: MergedPR[];
+  coContributors?: CoContributor[];
 }
 
 function formatCount(n: number): string {
@@ -662,6 +676,7 @@ export function ProfileView({
   profileId,
   rateLimited,
   mergedPRs,
+  coContributors = [],
   customLinks = [],
   pinnedRepos = [],
   customizationLoaded = false,
@@ -698,7 +713,7 @@ export function ProfileView({
   const [repoFilter, setRepoFilter] = useState("");
   const [activeLanguage, setActiveLanguage] = useState<string>("All");
   const [activeTab, setActiveTab] = useState<
-    "repos" | "stats" | "prs" | "timeline"
+    "repos" | "stats" | "prs" | "timeline" | "network"
   >("repos");
 
   const [pinnedList, setPinnedList] = useState<string[]>(pinnedRepos);
@@ -721,6 +736,7 @@ export function ProfileView({
     { key: "stats" as const, label: "Stats" },
     { key: "prs" as const, label: "PRs" },
     { key: "timeline" as const, label: "Timeline" },
+    { key: "network" as const, label: "Network" },
   ];
 
   const tabTransition = {
@@ -930,7 +946,7 @@ export function ProfileView({
   // multiple AnimatePresence transitions.
   const tabDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const setActiveTabDebounced = useCallback(
-    (key: "repos" | "stats" | "prs" | "timeline") => {
+    (key: "repos" | "stats" | "prs" | "timeline" | "network") => {
       if (tabDebounceRef.current) clearTimeout(tabDebounceRef.current);
       tabDebounceRef.current = setTimeout(() => {
         setActiveTab(key);
@@ -2311,6 +2327,27 @@ export function ProfileView({
           >
             {/* Contribution Timeline */}
             <ContributionTimeline mergedPRs={mergedPRs} badges={badgesList} />
+          </motion.div>
+        )}
+
+        {activeTab === "network" && (
+          <motion.div
+            key="network"
+            role="tabpanel"
+            id="profile-tabpanel-network"
+            aria-labelledby="profile-tab-network"
+            initial={tabInitial}
+            animate={tabAnimate}
+            exit={tabExit}
+          >
+            {/* Contribution Impact Network Graph */}
+            <ImpactNetwork
+              user={user}
+              repos={repos}
+              orgs={orgs}
+              mergedPRs={mergedPRs}
+              coContributors={coContributors}
+            />
           </motion.div>
         )}
       </AnimatePresence>

@@ -1,4 +1,4 @@
-import type { ContributorStats, Repo } from "@/types";
+import type { ContributorStats, Repo, CoContributor } from "@/types";
 import { redis } from "./redis";
 import { fetchWithTimeout, FetchTimeoutError } from "@/lib/fetch-with-timeout";
 import { GitHubRateLimitError } from "@/lib/errors";
@@ -410,3 +410,96 @@ export async function fetchContributionCalendar(
     return null;
   }
 }
+
+export const CO_CONTRIBUTORS_QUERY = `
+  query CoContributors($login: String!) {
+    user(login: $login) {
+      pullRequests(first: 20, states: MERGED, orderBy: {field: CREATED_AT, direction: DESC}) {
+        nodes {
+          repository {
+            nameWithOwner
+            name
+            collaborators(first: 5) {
+              nodes {
+                login
+                name
+                avatarUrl
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+`;
+
+/** Fetch co-contributors for a user from recent merged PRs and top repositories. */
+export async function fetchCoContributors(
+  login: string,
+  token: string,
+): Promise<CoContributor[]> {
+  const cacheKey = `github:cocontributors:${login.toLowerCase()}`;
+
+  try {
+    const cached = await redis.get<CoContributor[]>(cacheKey);
+    if (cached) return cached;
+  } catch (err) {
+    console.error("Redis co-contributors read bypassed:", err);
+  }
+
+  try {
+    const data = await githubGraphQL<{
+      user: {
+        pullRequests: {
+          nodes: Array<{
+            repository: {
+              nameWithOwner: string;
+              name: string;
+              collaborators?: {
+                nodes: Array<{
+                  login: string;
+                  name: string | null;
+                  avatarUrl: string;
+                }>;
+              };
+            };
+          }>;
+        };
+      };
+    }>(CO_CONTRIBUTORS_QUERY, { login }, token);
+
+    const prNodes = data?.user?.pullRequests?.nodes || [];
+    const coMap = new Map<string, CoContributor>();
+
+    for (const pr of prNodes) {
+      const repoName = pr.repository?.name;
+      const collabs = pr.repository?.collaborators?.nodes || [];
+      for (const col of collabs) {
+        if (col.login.toLowerCase() === login.toLowerCase()) continue;
+        const existing = coMap.get(col.login) || {
+          login: col.login,
+          name: col.name,
+          avatarUrl: col.avatarUrl,
+          repoName,
+          contributionsCount: 0,
+        };
+        existing.contributionsCount = (existing.contributionsCount || 0) + 1;
+        coMap.set(col.login, existing);
+      }
+    }
+
+    const result = Array.from(coMap.values()).slice(0, 12);
+
+    try {
+      await redis.set(cacheKey, result, { ex: 7200 });
+    } catch (err) {
+      console.error("Redis co-contributors write bypassed:", err);
+    }
+
+    return result;
+  } catch (err) {
+    console.error(`Failed to fetch co-contributors for ${login}:`, err);
+    return [];
+  }
+}
+
