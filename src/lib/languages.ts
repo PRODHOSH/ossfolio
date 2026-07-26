@@ -21,3 +21,27 @@ export const LANG_COLORS: Record<string, string> = {
   "Jupyter Notebook": "#DA5B0B",
   Dockerfile: "#384d54",
 };
+
+/**
+ * Languages offered as filter options in the UI.
+ *
+ * Kept here beside LANG_COLORS so Explore and Discover filter on the same set
+ * rather than maintaining separate lists that drift apart. Values are
+ * capitalised to match what GitHub reports and what `profiles.top_languages`
+ * stores — the filter is an exact array-containment match, so "typescript"
+ * would find nothing.
+ */
+export const POPULAR_LANGUAGES = [
+  "TypeScript",
+  "JavaScript",
+  "Python",
+  "Go",
+  "Rust",
+  "Java",
+  "C++",
+  "Ruby",
+  "PHP",
+  "Swift",
+] as const;
+
+export type PopularLanguage = (typeof POPULAR_LANGUAGES)[number];
