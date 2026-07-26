@@ -46,6 +46,121 @@ export interface RateLimitResult {
   retryAfterSeconds: number;
 }
 
+export interface RateLimitFailoverTelemetry {
+  timestamp: string;
+  event: "REDIS_FAILOVER";
+  reason: string;
+  key: string;
+  fallbackMode: "MEMORY_BUFFER";
+  consecutiveFailures: number;
+  nextRetryInMs: number;
+  inBackoffWindow: boolean;
+  allowed: boolean;
+  retryAfterSeconds: number;
+}
+
+export interface RateLimitFailoverState {
+  consecutiveFailures: number;
+  lastFailureTime: number;
+  memoryBufferEntriesCount: number;
+}
+
+// Exponential backoff configuration
+const BASE_BACKOFF_MS = 1000;
+const MAX_BACKOFF_MS = 60000;
+const BACKOFF_FACTOR = 2;
+
+// In-memory state tracking for Redis failover & circuit breaker
+let consecutiveFailures = 0;
+let lastFailureTime = 0;
+const memoryBuffer = new Map<string, number>();
+
+/**
+ * Calculate exponential backoff duration based on consecutive failure count.
+ */
+function calculateBackoffMs(failCount: number): number {
+  if (failCount <= 0) return 0;
+  const backoff = BASE_BACKOFF_MS * Math.pow(BACKOFF_FACTOR, failCount - 1);
+  return Math.min(MAX_BACKOFF_MS, backoff);
+}
+
+/**
+ * Perform localized sliding memory buffer rate limit check when Redis is unreachable or bypassed.
+ */
+function checkMemoryBuffer(key: string, now: number): RateLimitResult {
+  // Prune expired entries to prevent memory leaks
+  for (const [k, resetTime] of memoryBuffer.entries()) {
+    if (resetTime <= now) {
+      memoryBuffer.delete(k);
+    }
+  }
+
+  const storedResetAt = memoryBuffer.get(key);
+  if (storedResetAt !== undefined && storedResetAt > now) {
+    const remainingMs = storedResetAt - now;
+    return {
+      allowed: false,
+      retryAfterSeconds: Math.max(1, Math.ceil(remainingMs / 1000)),
+    };
+  }
+
+  const resetAt = now + WINDOW_SECONDS * 1000;
+  memoryBuffer.set(key, resetAt);
+  return {
+    allowed: true,
+    retryAfterSeconds: 0,
+  };
+}
+
+/**
+ * Emit structured JSON diagnostic logs for administrator alerting during Redis failover.
+ */
+function logFailoverTelemetry(
+  reason: string,
+  key: string,
+  result: RateLimitResult,
+  inBackoff: boolean,
+): RateLimitFailoverTelemetry {
+  const nextRetryInMs = calculateBackoffMs(consecutiveFailures);
+  const telemetry: RateLimitFailoverTelemetry = {
+    timestamp: new Date().toISOString(),
+    event: "REDIS_FAILOVER",
+    reason,
+    key,
+    fallbackMode: "MEMORY_BUFFER",
+    consecutiveFailures,
+    nextRetryInMs,
+    inBackoffWindow: inBackoff,
+    allowed: result.allowed,
+    retryAfterSeconds: result.retryAfterSeconds,
+  };
+  console.warn(
+    "[rate-limit-failover] Upstream Redis connection failure/bypass, failing over to sliding memory buffer:",
+    JSON.stringify(telemetry),
+  );
+  return telemetry;
+}
+
+/**
+ * Returns current failover diagnostic state for testing and system health telemetry.
+ */
+export function getRateLimitFailoverState(): RateLimitFailoverState {
+  return {
+    consecutiveFailures,
+    lastFailureTime,
+    memoryBufferEntriesCount: memoryBuffer.size,
+  };
+}
+
+/**
+ * Resets internal failover state (useful for test isolation).
+ */
+export function resetRateLimitFailoverState(): void {
+  consecutiveFailures = 0;
+  lastFailureTime = 0;
+  memoryBuffer.clear();
+}
+
 /**
  * Work out who is calling.
  *
@@ -105,9 +220,8 @@ async function keyFor(identifier: string): Promise<string> {
  * Consume one unit of the caller's allowance.
  *
  * Returns `allowed: false` with the seconds remaining when the caller is over the limit.
- * Never throws: if Redis is unreachable, the request is allowed through. A rate limiter
- * that takes the whole endpoint down when its backing store hiccups is a worse outage than
- * the one it was added to prevent, and the per-username limit is still underneath it.
+ * Uses exponential backoff and localized sliding memory buffer fallback when Redis is unavailable,
+ * preventing endpoint outage while generating structured telemetry alerts.
  */
 export async function checkRefreshRateLimit(
   request: NextRequest,
@@ -117,9 +231,26 @@ export async function checkRefreshRateLimit(
   // around the limit.
   const identifier = clientIp(request) ?? "unidentified";
 
+  const key = await keyFor(identifier);
+  const now = Date.now();
+
+  // Check if we are in an exponential backoff window due to prior Redis failures
+  const backoffMs = calculateBackoffMs(consecutiveFailures);
+  const inBackoffWindow =
+    consecutiveFailures > 0 && now < lastFailureTime + backoffMs;
+
+  if (inBackoffWindow) {
+    const memoryResult = checkMemoryBuffer(key, now);
+    logFailoverTelemetry(
+      "Redis call bypassed due to active exponential backoff window",
+      key,
+      memoryResult,
+      true,
+    );
+    return memoryResult;
+  }
+
   try {
-    const key = await keyFor(identifier);
-    const now = Date.now();
     const resetAt = now + WINDOW_SECONDS * 1000;
 
     // Atomic: takes the slot only if nobody holds it, and expires on its own.
@@ -127,6 +258,10 @@ export async function checkRefreshRateLimit(
       nx: true,
       ex: WINDOW_SECONDS,
     });
+
+    // Redis connection succeeded: reset backoff failure counters
+    consecutiveFailures = 0;
+    lastFailureTime = 0;
 
     if (acquired === "OK") {
       return { allowed: true, retryAfterSeconds: 0 };
@@ -147,10 +282,13 @@ export async function checkRefreshRateLimit(
       retryAfterSeconds: Math.max(1, Math.ceil(remainingMs / 1000)),
     };
   } catch (error) {
-    console.error(
-      "[rate-limit] refresh limiter unavailable, allowing request:",
-      error instanceof Error ? error.message : error,
-    );
-    return { allowed: true, retryAfterSeconds: 0 };
+    consecutiveFailures += 1;
+    lastFailureTime = now;
+
+    const reason = error instanceof Error ? error.message : String(error);
+    const memoryResult = checkMemoryBuffer(key, now);
+    logFailoverTelemetry(reason, key, memoryResult, false);
+    return memoryResult;
   }
 }
+
