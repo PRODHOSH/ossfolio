@@ -1,4 +1,4 @@
-import { readdir, readFile, stat } from "node:fs/promises";
+import { readdir, readFile, stat, writeFile } from "node:fs/promises";
 import { gzipSync } from "node:zlib";
 import path from "node:path";
 
@@ -32,7 +32,11 @@ export const stripContentHash = (file) =>
   file
     .replace(/[-.][a-f0-9]{8,}(?=\.[a-z]+$)/gi, "")
     .replace(/[-.][a-z0-9]{16,}(?=\.[a-z]+$)/gi, "")
-    .replace(/\/[a-zA-Z0-9_-]{21}\//g, "/[buildId]/");
+    // Build-id directories arrive without a leading slash, because paths are
+    // relative to .next/static. Anchoring at the start as well as after a
+    // slash is what makes _buildManifest.js match across builds instead of
+    // showing as removed-and-added on every PR.
+    .replace(/(^|\/)[a-zA-Z0-9_-]{21}\//g, "$1[buildId]/");
 
 /** Recursively lists every `.js` file beneath `root`. */
 const listJsFiles = async (root, prefix = "") => {
@@ -134,6 +138,9 @@ export const diffBundles = (before, after) => {
     totalGzipBefore,
     totalGzipAfter,
     totalGzipDelta: totalGzipAfter - totalGzipBefore,
+    totalBytesBefore: before.totalBytes,
+    totalBytesAfter: after.totalBytes,
+    totalBytesDelta: after.totalBytes - before.totalBytes,
     // No baseline means no meaningful percentage; reporting Infinity or 100%
     // would both be misleading.
     percentChange:
@@ -158,6 +165,16 @@ export const formatDelta = (bytes) => {
   const sign = bytes > 0 ? "+" : "";
   return `${sign}${formatBytes(bytes)}`;
 };
+
+/**
+ * Makes a filename safe inside a Markdown table cell and code span.
+ *
+ * Chunk names originate from files in the pull request branch, so they are
+ * untrusted input: a pipe would end the table cell early and a backtick would
+ * close the code span, either of which corrupts the rendered comment.
+ */
+const escapeTableCell = (value) =>
+  String(value).replace(/\|/g, "\\|").replace(/`/g, "'");
 
 /** Marker used to find and replace this workflow's previous comment. */
 export const COMMENT_MARKER = "<!-- ossfolio-bundle-size-report -->";
@@ -202,6 +219,7 @@ export const renderMarkdownReport = (diff, options = {}) => {
     "| | Base | This PR | Change |",
     "| --- | ---: | ---: | ---: |",
     `| **Total (gzipped)** | ${formatBytes(diff.totalGzipBefore)} | ${formatBytes(diff.totalGzipAfter)} | ${formatDelta(diff.totalGzipDelta)} (${percent}) |`,
+    `| Total (raw) | ${formatBytes(diff.totalBytesBefore)} | ${formatBytes(diff.totalBytesAfter)} | ${formatDelta(diff.totalBytesDelta)} |`,
     "",
   );
 
@@ -226,14 +244,17 @@ export const renderMarkdownReport = (diff, options = {}) => {
   );
 
   for (const change of shown) {
-    const label =
+    // The suffix sits outside the code span: Markdown does not interpret
+    // underscores inside backticks, so "_(new)_" would render literally.
+    const suffix =
       change.status === "added"
-        ? `${change.file} _(new)_`
+        ? " _(new)_"
         : change.status === "removed"
-          ? `${change.file} _(removed)_`
-          : change.file;
+          ? " _(removed)_"
+          : "";
     lines.push(
-      `| \`${label}\` | ${formatBytes(change.beforeGzip)} | ${formatBytes(change.afterGzip)} | ${formatDelta(change.deltaGzip)} |`,
+      `| \`${escapeTableCell(change.file)}\`${suffix} | ${formatBytes(change.beforeGzip)} | ` +
+        `${formatBytes(change.afterGzip)} | ${formatDelta(change.deltaGzip)} |`,
     );
   }
 
@@ -263,17 +284,16 @@ export const renderMarkdownReport = (diff, options = {}) => {
 // text it was handed.
 // ---------------------------------------------------------------------------
 
-import { writeFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 import process from "node:process";
 
 const isDirectRun =
-  process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url);
+  process.argv[1] &&
+  path.resolve(process.argv[1]) === fileURLToPath(import.meta.url);
 
 const readJson = async (file) => {
-  const { readFile: read } = await import("node:fs/promises");
   try {
-    return JSON.parse(await read(file, "utf-8"));
+    return JSON.parse(await readFile(file, "utf-8"));
   } catch {
     // A missing or unreadable baseline is normal — the base branch may have
     // failed to build. Treat it as "no bundle" rather than crashing.

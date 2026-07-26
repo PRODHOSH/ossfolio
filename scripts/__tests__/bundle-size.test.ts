@@ -101,12 +101,13 @@ describe("measureBundle", () => {
     expect(result.totalGzipBytes).toBe(0);
   });
 
-  it("returns files in a stable order", async () => {
-    const a = await measureBundle(staticDir);
-    const b = await measureBundle(staticDir);
-    expect(a.files.map((f: { file: string }) => f.file)).toEqual(
-      b.files.map((f: { file: string }) => f.file),
-    );
+  it("returns files sorted, so two builds line up", async () => {
+    // Comparing two invocations would pass even without the sort, since readdir
+    // is consistent on a static directory. Comparing against an explicitly
+    // sorted copy actually pins the behaviour.
+    const result = await measureBundle(staticDir);
+    const names = result.files.map((f: { file: string }) => f.file);
+    expect(names).toEqual([...names].sort());
   });
 });
 
@@ -129,9 +130,18 @@ describe("stripContentHash", () => {
     expect(stripContentHash("chunks/page-1.js")).toBe("chunks/page-1.js");
   });
 
-  it("normalises the build id directory", () => {
+  it("normalises a build id directory at the start of a relative path", () => {
+    // measureBundle emits paths relative to .next/static, so build ids have no
+    // leading slash. Without this, _buildManifest.js shows as removed-and-added
+    // on every single PR.
     expect(stripContentHash("abcdefghij0123456789X/_buildManifest.js")).toBe(
-      "abcdefghij0123456789X/_buildManifest.js",
+      "[buildId]/_buildManifest.js",
+    );
+  });
+
+  it("normalises a build id directory nested deeper in a path", () => {
+    expect(stripContentHash("chunks/abcdefghij0123456789X/page.js")).toBe(
+      "chunks/[buildId]/page.js",
     );
   });
 
@@ -188,6 +198,45 @@ describe("diffBundles", () => {
     );
     // b shrank by 400, a grew by 10 — the larger movement comes first.
     expect(diff.changes[0].file).toBe("chunks/b.js");
+  });
+
+  it("sums chunks that normalise to the same logical name", () => {
+    // Two differently-hashed files can collapse to one logical chunk; their
+    // sizes must be added before comparing, not silently overwrite each other.
+    const diff = diffBundles(
+      report([["chunks/main-aaaaaaaa.js", 100], ["chunks/main-bbbbbbbb.js", 40]]),
+      report([["chunks/main-cccccccc.js", 200]]),
+    );
+    expect(diff.changes).toHaveLength(1);
+    expect(diff.changes[0]).toMatchObject({
+      file: "chunks/main.js",
+      beforeGzip: 140,
+      afterGzip: 200,
+      deltaGzip: 60,
+      status: "changed",
+    });
+  });
+
+  it("reports concrete before, after and delta on a changed chunk", () => {
+    const diff = diffBundles(
+      report([["chunks/a-11111111.js", 120]]),
+      report([["chunks/a-22222222.js", 95]]),
+    );
+    expect(diff.changes[0]).toMatchObject({
+      beforeGzip: 120,
+      afterGzip: 95,
+      deltaGzip: -25,
+    });
+  });
+
+  it("carries raw byte totals alongside gzip", () => {
+    const diff = diffBundles(
+      report([["chunks/a-11111111.js", 100]]),
+      report([["chunks/a-22222222.js", 150]]),
+    );
+    expect(diff.totalBytesBefore).toBe(300);
+    expect(diff.totalBytesAfter).toBe(450);
+    expect(diff.totalBytesDelta).toBe(150);
   });
 
   it("reports no percentage when there was no baseline", () => {
@@ -283,6 +332,43 @@ describe("renderMarkdownReport", () => {
       { thresholdBytes: 100 },
     );
     expect(md).toContain("No individual chunk changed size.");
+  });
+
+  it("labels added and removed chunks in the table", () => {
+    const diff = diffBundles(
+      report([["chunks/keep-11111111.js", 500], ["chunks/gone-11111111.js", 80]]),
+      report([["chunks/keep-22222222.js", 500], ["chunks/fresh-33333333.js", 60]]),
+    );
+    const md = renderMarkdownReport(diff);
+    expect(md).toContain("_(new)_");
+    expect(md).toContain("_(removed)_");
+  });
+
+  it("keeps the added/removed label outside the code span", () => {
+    // Markdown does not interpret underscores inside backticks, so a label
+    // within the code span would render literally as "_(new)_".
+    const diff = diffBundles(
+      report([["chunks/keep-11111111.js", 500]]),
+      report([["chunks/keep-22222222.js", 500], ["chunks/fresh-33333333.js", 60]]),
+    );
+    expect(renderMarkdownReport(diff)).toContain("` _(new)_");
+  });
+
+  it("escapes a pipe in a chunk name so the table cannot be broken", () => {
+    // Chunk names come from the pull request branch, so they are untrusted.
+    const diff = diffBundles(
+      report([["chunks/keep-11111111.js", 500]]),
+      report([["chunks/keep-22222222.js", 500], ["chunks/we|ird-33333333.js", 60]]),
+    );
+    expect(renderMarkdownReport(diff)).toContain("we\\|ird");
+  });
+
+  it("reports the raw total alongside the gzipped one", () => {
+    const diff = diffBundles(
+      report([["chunks/a-11111111.js", 100]]),
+      report([["chunks/a-22222222.js", 150]]),
+    );
+    expect(renderMarkdownReport(diff)).toContain("| Total (raw) |");
   });
 
   it("never emits NaN or Infinity", () => {

@@ -15,6 +15,17 @@ on:
     workflows: ["Bundle Size"]
     types: [completed]
 
+# Serialised per pull request. Several Bundle Size runs can finish close
+# together on a busy branch, and without this two comment jobs could race to
+# update the same comment.
+concurrency:
+  group: >-
+    ${{ github.workflow }}-${{
+      github.event.workflow_run.pull_requests[0].number ||
+      github.event.workflow_run.head_branch
+    }}
+  cancel-in-progress: true
+
 permissions:
   pull-requests: write
   actions: read

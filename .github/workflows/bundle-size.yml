@@ -55,8 +55,7 @@ jobs:
           npm run build
 
       - name: Measure pull request bundle
-        working-directory: head
-        run: node scripts/bundle-size.mjs measure .next/static ../head-bundle.json
+        run: node head/scripts/bundle-size.mjs measure head/.next/static head-bundle.json
 
       # A base branch that cannot build is not a reason to fail the PR check.
       # The report handles a missing baseline by reporting the current total
@@ -69,10 +68,16 @@ jobs:
           npm ci
           npm run build
 
+      # The script is run from the head checkout, not the base one: it is a new
+      # file on this branch, so the base checkout does not contain it. Only the
+      # directory being measured comes from base.
+      #
+      # continue-on-error because a base bundle that cannot be measured should
+      # produce the no-baseline report, not a failed check.
       - name: Measure base bundle
         if: steps.base-build.outcome == 'success'
-        working-directory: base
-        run: node scripts/bundle-size.mjs measure .next/static ../base-bundle.json
+        continue-on-error: true
+        run: node head/scripts/bundle-size.mjs measure base/.next/static base-bundle.json
 
       - name: Render report
         run: |
