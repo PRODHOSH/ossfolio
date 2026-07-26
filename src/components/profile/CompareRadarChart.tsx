@@ -21,9 +21,15 @@ interface CompareRadarChartProps {
  * Palette per DESIGN.md: a single emerald primary is the only chromatic event,
  * everything else stays on the monochrome grey ladder. Contributor A takes the
  * emerald, contributor B the ink-mute grey.
+ *
+ * Referenced as design tokens rather than literal hex so the chart follows the
+ * theme: `--color-ink-mute` resolves to #707070 in light mode and #a3a3a3 in
+ * dark, where the lighter grey is what stays legible. The existing recharts
+ * usage in CompareCharts.tsx already passes `var(--color-*)` into SVG stroke
+ * props, so this follows a pattern the codebase has proven works.
  */
-const COLOR_A = "#3ecf8e";
-const COLOR_B = "#707070";
+const COLOR_A = "var(--color-primary)";
+const COLOR_B = "var(--color-ink-mute)";
 
 interface TooltipPayloadEntry {
   payload?: {
@@ -45,7 +51,7 @@ interface RadarTooltipProps {
  * chart plots. The normalisation exists to make the shape readable; a reader
  * hovering an axis wants the real number.
  */
-const RadarTooltip = ({
+export const RadarTooltip = ({
   active,
   payload,
   usernameA,
