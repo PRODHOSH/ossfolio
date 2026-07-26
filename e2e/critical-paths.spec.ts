@@ -52,8 +52,12 @@ test.describe('critical paths', () => {
 
     // e2e-alice has a stored snapshot in the fixtures, so the DB-first path from #300 should
     // render her straight from it — no GitHub call, and no syncing state.
-    await expect(page.getByRole('heading', { name: 'E2E Alice' })).toBeVisible();
-    await expect(page.getByText('@e2e-alice', { exact: true }).first()).toBeVisible();
+    await expect(
+      page.getByRole('heading', { name: 'E2E Alice' }),
+    ).toBeVisible();
+    await expect(
+      page.getByText('@e2e-alice', { exact: true }).first(),
+    ).toBeVisible();
 
     await expect(page.getByText(/Building this profile/i)).toHaveCount(0);
   });
@@ -67,7 +71,9 @@ test.describe('critical paths', () => {
     const response = await page.goto('/e2e-bob');
     expect(response?.status()).toBe(200);
 
-    await expect(page.getByRole('heading', { name: /Building this profile/i })).toBeVisible();
+    await expect(
+      page.getByRole('heading', { name: /Building this profile/i }),
+    ).toBeVisible();
   });
 
   test('an unknown route 404s rather than erroring', async ({ page }) => {
