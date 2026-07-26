@@ -12,8 +12,11 @@ import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
 import { useBroadcastChannel } from "@/hooks/useBroadcastChannel";
 import { useVisibility } from "@/hooks/useVisibility";
 import { SkeletonCard } from "@/components/ui/skeleton-card";
-import { evaluateAchievements, countUnlocked } from "@/lib/achievements";
+import { evaluateAchievements, countUnlocked, type Achievement } from "@/lib/achievements";
 import { AchievementsGrid } from "@/components/profile/AchievementsGrid";
+import { MilestoneTimeline } from "@/components/profile/MilestoneTimeline";
+import { MilestoneCelebration } from "@/components/profile/MilestoneCelebration";
+import { syncUnlockedAchievements } from "@/lib/milestones";
 import type {
   ContributorStats,
   Org,
@@ -709,13 +712,33 @@ export function ProfileView({
   );
 
   const achievements = useMemo(
-    () => evaluateAchievements({ stats, longestStreak, hasFunding }),
-    [stats, longestStreak, hasFunding],
+    () => evaluateAchievements({ stats, longestStreak, currentStreak, hasFunding }),
+    [stats, longestStreak, currentStreak, hasFunding],
   );
   const unlockedCount = useMemo(
     () => countUnlocked(achievements),
     [achievements],
   );
+
+  const [unlockedMap, setUnlockedMap] = useState<Record<string, string>>({});
+  const [celebratingAchievement, setCelebratingAchievement] = useState<Achievement | null>(null);
+
+  useEffect(() => {
+    if (user?.login && achievements.length > 0) {
+      syncUnlockedAchievements(user.login, achievements).then((map) => {
+        if (map && Object.keys(map).length > 0) {
+          setUnlockedMap(map);
+        }
+      });
+    }
+  }, [user?.login, achievements]);
+
+  const achievementsWithDates = useMemo(() => {
+    return achievements.map((a) => ({
+      ...a,
+      unlockedAt: unlockedMap[a.id] || (a.unlocked ? new Date().toISOString() : undefined),
+    }));
+  }, [achievements, unlockedMap]);
 
   const [copied, setCopied] = useState(false);
   const [repoSort, setRepoSort] = useState<"stars" | "forks" | "updated">(
@@ -1647,10 +1670,20 @@ export function ProfileView({
         </div>
       )}
 
-      {/* Achievements — auto-earned milestones, distinct from the self-declared badges above */}
-      <AchievementsGrid
-        achievements={achievements}
-        unlockedCount={unlockedCount}
+      {/* Gamified Streaks & Milestone Timeline */}
+      <MilestoneTimeline
+        achievements={achievementsWithDates}
+        currentStreak={currentStreak}
+        longestStreak={longestStreak}
+        onCelebrate={(ach) => setCelebratingAchievement(ach)}
+        onShare={(ach) => setCelebratingAchievement(ach)}
+      />
+
+      <MilestoneCelebration
+        achievement={celebratingAchievement}
+        username={user?.login || ""}
+        isOpen={!!celebratingAchievement}
+        onClose={() => setCelebratingAchievement(null)}
       />
 
       {/* Tab navigation */}
