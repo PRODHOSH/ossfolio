@@ -113,6 +113,20 @@ async function claimSync(
   admin: SupabaseClient,
   username: string,
 ): Promise<boolean> {
+  // First, attempt PostgreSQL transactional advisory locking via RPC to halt concurrent workers immediately
+  try {
+    const { data: lockAcquired, error: rpcError } = await admin.rpc(
+      "try_acquire_profile_refresh_lock",
+      { p_username: username },
+    );
+    if (!rpcError && lockAcquired === false) {
+      console.warn(`[snapshot] advisory lock already held for username: ${username}`);
+      return false;
+    }
+  } catch (err) {
+    console.warn("[snapshot] RPC try_acquire_profile_refresh_lock failed or unconfigured:", err);
+  }
+
   const now = new Date();
   const lockCutoff = new Date(now.getTime() - SYNC_LOCK_MS).toISOString();
 
