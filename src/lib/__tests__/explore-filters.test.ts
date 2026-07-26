@@ -182,6 +182,40 @@ describe("buildExploreQuery", () => {
   });
 });
 
+describe("buildExploreQuery — pagination", () => {
+  // DiscoverPagination takes this object and adds `page` itself. If the object
+  // omitted the active filters, paging to page 2 would silently widen the
+  // results back to everything.
+  it("supplies every active filter for pagination links", () => {
+    const params = buildExploreQuery(
+      filters({ lang: "Rust", minScore: 500, q: "alice", sortBy: "prs" }),
+    );
+    expect(params.lang).toBe("Rust");
+    expect(params.minScore).toBe("500");
+    expect(params.q).toBe("alice");
+    expect(params.sortBy).toBe("prs");
+  });
+
+  it("leaves page out, since pagination sets it", () => {
+    expect(buildExploreQuery(filters({ lang: "Go", page: 3 }))).not.toHaveProperty(
+      "page",
+    );
+  });
+
+  it("round-trips through URLSearchParams the way pagination builds links", () => {
+    const params = new URLSearchParams(
+      buildExploreQuery(filters({ lang: "C++", minScore: 100 })),
+    );
+    params.set("page", "2");
+    const url = `/explore?${params.toString()}`;
+    // "C++" has to survive encoding or the filter breaks on the next page.
+    expect(url).toContain("lang=C%2B%2B");
+    expect(url).toContain("minScore=100");
+    expect(url).toContain("page=2");
+    expect(new URLSearchParams(url.split("?")[1]).get("lang")).toBe("C++");
+  });
+});
+
 describe("hasActiveFilters", () => {
   it("is false for the default view", () => {
     expect(hasActiveFilters(filters())).toBe(false);

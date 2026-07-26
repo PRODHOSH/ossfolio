@@ -632,7 +632,10 @@ export default async function ExplorePage({ searchParams }: ExplorePageProps) {
             hasNext={hasNext}
             hasPrev={hasPrev}
             baseUrl="/explore"
-            searchParams={{ q: searchQuery, type, sortBy }}
+            // Built from the same helper as the filter pills, so paging keeps
+            // the active language and score tier. Passing the raw params here
+            // would drop them and silently widen the results on page 2.
+            searchParams={buildExploreQuery(activeFilters)}
           />
         </div>
       </main>
