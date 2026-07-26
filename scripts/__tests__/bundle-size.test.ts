@@ -363,6 +363,33 @@ describe("renderMarkdownReport", () => {
     expect(renderMarkdownReport(diff)).toContain("we\\|ird");
   });
 
+  it("escapes a backslash before the pipe it precedes", () => {
+    // Escaping the pipe first leaves "a\\|b" rendering as a literal backslash
+    // followed by an unescaped pipe, which breaks the cell. The backslash has
+    // to be doubled first.
+    const diff = diffBundles(
+      report([["chunks/keep-11111111.js", 500]]),
+      report([
+        ["chunks/keep-22222222.js", 500],
+        ["chunks/a\\|b-33333333.js", 60],
+      ]),
+    );
+    const md = renderMarkdownReport(diff);
+    expect(md).toContain("a\\\\\\|b");
+  });
+
+  it("replaces a backtick, which cannot be escaped inside a code span", () => {
+    const diff = diffBundles(
+      report([["chunks/keep-11111111.js", 500]]),
+      report([
+        ["chunks/keep-22222222.js", 500],
+        ["chunks/ti`ck-33333333.js", 60],
+      ]),
+    );
+    const md = renderMarkdownReport(diff);
+    expect(md).toContain("ti'ck");
+  });
+
   it("reports the raw total alongside the gzipped one", () => {
     const diff = diffBundles(
       report([["chunks/a-11111111.js", 100]]),

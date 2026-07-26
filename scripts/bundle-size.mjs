@@ -174,7 +174,15 @@ export const formatDelta = (bytes) => {
  * close the code span, either of which corrupts the rendered comment.
  */
 const escapeTableCell = (value) =>
-  String(value).replace(/\|/g, "\\|").replace(/`/g, "'");
+  String(value)
+    // Backslashes first: escaping the pipe before the backslash leaves
+    // "a\\|b" rendering as a literal backslash followed by an *unescaped*
+    // pipe, which breaks the cell the escaping was meant to protect.
+    .replace(/\\/g, "\\\\")
+    .replace(/\|/g, "\\|")
+    // A backtick cannot be escaped inside a code span — it can only be
+    // replaced — so this substitutes rather than escapes.
+    .replace(/`/g, "'");
 
 /** Marker used to find and replace this workflow's previous comment. */
 export const COMMENT_MARKER = "<!-- ossfolio-bundle-size-report -->";
