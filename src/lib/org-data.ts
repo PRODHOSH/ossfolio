@@ -1,5 +1,6 @@
 import { supabase } from "@/lib/supabase";
 import { fetchWithTimeout } from "@/lib/fetch-with-timeout";
+import { GITHUB_API_BASE } from './constants';
 
 export interface OrgMember {
   login: string;
@@ -123,13 +124,13 @@ export async function refreshOrganizationStats(
 
   try {
     const [orgRes, reposRes, membersRes] = await Promise.allSettled([
-      fetchWithTimeout(`https://api.github.com/orgs/${encodeURIComponent(cleanSlug)}`, {
+      fetchWithTimeout(`${GITHUB_API_BASE}/orgs/${encodeURIComponent(cleanSlug)}`, {
         headers: { Accept: "application/vnd.github.v3+json" },
       }),
-      fetchWithTimeout(`https://api.github.com/orgs/${encodeURIComponent(cleanSlug)}/repos?per_page=30&sort=updated`, {
+      fetchWithTimeout(`${GITHUB_API_BASE}/orgs/${encodeURIComponent(cleanSlug)}/repos?per_page=30&sort=updated`, {
         headers: { Accept: "application/vnd.github.v3+json" },
       }),
-      fetchWithTimeout(`https://api.github.com/orgs/${encodeURIComponent(cleanSlug)}/public_members?per_page=30`, {
+      fetchWithTimeout(`${GITHUB_API_BASE}/orgs/${encodeURIComponent(cleanSlug)}/public_members?per_page=30`, {
         headers: { Accept: "application/vnd.github.v3+json" },
       }),
     ]);

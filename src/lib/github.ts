@@ -2,8 +2,9 @@ import type { ContributorStats, Repo, CoContributor } from "@/types";
 import { redis } from "./redis";
 import { fetchWithTimeout, FetchTimeoutError } from "@/lib/fetch-with-timeout";
 import { GitHubRateLimitError } from "@/lib/errors";
+import { GITHUB_API_BASE } from './constants';
 
-const GITHUB_GRAPHQL_URL = "https://api.github.com/graphql";
+const GITHUB_GRAPHQL_URL = `${GITHUB_API_BASE}/graphql`;
 
 const RETRY_CONFIG = {
   maxRetries: 3,

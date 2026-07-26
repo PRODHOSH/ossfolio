@@ -1,5 +1,6 @@
 import { ImageResponse } from "next/og";
 import { getProfileByUsername } from "@/lib/db";
+import { GITHUB_API_BASE } from '@/lib/constants';
 
 // Runtime managed by @opennextjs/cloudflare
 
@@ -12,7 +13,7 @@ interface OGImageProps {
 }
 
 async function fetchGitHubUser(username: string) {
-  const res = await fetch(`https://api.github.com/users/${username}`, {
+  const res = await fetch(`${GITHUB_API_BASE}/users/${username}`, {
     headers: { Accept: "application/vnd.github.v3+json" },
     next: { revalidate: 3600 },
   });
