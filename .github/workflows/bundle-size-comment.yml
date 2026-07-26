@@ -1,0 +1,103 @@
+name: Bundle Size Comment
+
+# Posts the report produced by `bundle-size.yml`.
+#
+# Split from that workflow on purpose. This one needs `pull-requests: write`,
+# and `workflow_run` grants it even for pull requests from forks — but it never
+# checks out or executes repository code. It downloads an artifact and posts the
+# text inside it, so a fork cannot use it to run anything with a write token.
+#
+# The comment is updated in place rather than appended, so pushing ten commits
+# leaves one report rather than ten.
+
+on:
+  workflow_run:
+    workflows: ["Bundle Size"]
+    types: [completed]
+
+permissions:
+  pull-requests: write
+  actions: read
+
+jobs:
+  comment:
+    name: comment
+    runs-on: ubuntu-latest
+    # Skip runs that were cancelled, and anything not triggered by a pull
+    # request, which would have no PR to comment on.
+    if: >
+      github.event.workflow_run.event == 'pull_request' &&
+      github.event.workflow_run.conclusion == 'success'
+
+    steps:
+      - name: Download report
+        uses: actions/download-artifact@v4
+        with:
+          name: bundle-report
+          path: bundle-report
+          run-id: ${{ github.event.workflow_run.id }}
+          github-token: ${{ github.token }}
+
+      - name: Post or update comment
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require("fs");
+
+            // Marker written into the report by scripts/bundle-size.mjs. Finding
+            // the previous comment by marker rather than by position means an
+            // unrelated comment can never be overwritten.
+            const MARKER = "<!-- ossfolio-bundle-size-report -->";
+
+            let body;
+            let prNumber;
+            try {
+              body = fs.readFileSync("bundle-report/report.md", "utf8");
+              prNumber = parseInt(
+                fs.readFileSync("bundle-report/pr-number.txt", "utf8").trim(),
+                10,
+              );
+            } catch (error) {
+              core.info(`No bundle report to post: ${error.message}`);
+              return;
+            }
+
+            if (!Number.isInteger(prNumber) || prNumber <= 0) {
+              core.info("Artifact did not contain a usable pull request number.");
+              return;
+            }
+
+            if (!body.includes(MARKER)) {
+              core.info("Report is missing its marker; refusing to post.");
+              return;
+            }
+
+            const { owner, repo } = context.repo;
+
+            const comments = await github.paginate(
+              github.rest.issues.listComments,
+              { owner, repo, issue_number: prNumber, per_page: 100 },
+            );
+
+            const existing = comments.find(
+              (comment) =>
+                comment.user?.type === "Bot" && comment.body?.includes(MARKER),
+            );
+
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner,
+                repo,
+                comment_id: existing.id,
+                body,
+              });
+              core.info(`Updated bundle report comment ${existing.id}.`);
+            } else {
+              await github.rest.issues.createComment({
+                owner,
+                repo,
+                issue_number: prNumber,
+                body,
+              });
+              core.info("Created bundle report comment.");
+            }
