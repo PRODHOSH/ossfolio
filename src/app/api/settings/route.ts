@@ -11,11 +11,16 @@ import { sanitizeFundingLinks, sanitizeSponsors } from "@/lib/sponsors";
 
 // Runtime managed by @opennextjs/cloudflare
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? "";
+function getSupabaseEnv() {
+  return {
+    url: process.env.NEXT_PUBLIC_SUPABASE_URL ?? "",
+    anonKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? "",
+  };
+}
 
 function createAuthClient(accessToken: string) {
-  return createClient(supabaseUrl, supabaseAnonKey, {
+  const { url, anonKey } = getSupabaseEnv();
+  return createClient(url, anonKey, {
     global: { headers: { Authorization: `Bearer ${accessToken}` } },
   });
 }
@@ -211,7 +216,8 @@ export async function DELETE(request: NextRequest) {
     return createErrorResponse("Account deletion is not configured", 503);
   }
 
-  const admin = createClient(supabaseUrl, serviceKey);
+  const { url } = getSupabaseEnv();
+  const admin = createClient(url, serviceKey);
   const { error } = await admin.auth.admin.deleteUser(user.id);
 
   if (error) {

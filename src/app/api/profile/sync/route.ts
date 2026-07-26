@@ -35,8 +35,12 @@ const GITHUB_TIMEOUT_MS = 8000;
  *     browser could not perform this write even if it tried.
  */
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? "";
+function getSupabaseEnv() {
+  return {
+    url: process.env.NEXT_PUBLIC_SUPABASE_URL ?? "",
+    anonKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? "",
+  };
+}
 
 function extractToken(request: NextRequest): string | null {
   const auth = request.headers.get("authorization");
@@ -72,7 +76,8 @@ export async function POST(request: NextRequest) {
 
   // Verify the caller. `getUser()` validates the JWT against Supabase rather than trusting
   // it, so a forged or expired token cannot get past this point.
-  const authed = createClient(supabaseUrl, supabaseAnonKey, {
+  const { url, anonKey } = getSupabaseEnv();
+  const authed = createClient(url, anonKey, {
     global: { headers: { Authorization: `Bearer ${token}` } },
   });
   const {
@@ -132,7 +137,7 @@ export async function POST(request: NextRequest) {
     return createErrorResponse("Server misconfigured", 500);
   }
 
-  const admin = createClient(supabaseUrl, serviceKey);
+  const admin = createClient(url, serviceKey);
   const { error } = await admin.from("profiles").upsert(
     {
       id: userId,
