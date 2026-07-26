@@ -815,7 +815,7 @@ export function ProfileView({
         if (btn) (btn as HTMLButtonElement).focus();
       }
     },
-    [activeTab],
+    [activeTab, profileTabs],
   );
 
   const uniqueLanguages = useMemo(() => {
