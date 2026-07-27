@@ -1,6 +1,11 @@
 import { getRequestConfig } from "next-intl/server";
 import { cookies, headers } from "next/headers";
-import { defaultLocale, isLocale, LOCALE_COOKIE } from "./config";
+import { defaultLocale, isLocale, LOCALE_COOKIE, Locale } from "./config";
+
+const messagesMap: Record<Locale, () => Promise<any>> = {
+  en: () => import("../../messages/en.json"),
+  es: () => import("../../messages/es.json"),
+};
 
 // Cookie-based locale resolution (no locale-prefixed routing), so existing
 // routes — including `[username]` profiles and `api/*` — are left untouched.
@@ -28,6 +33,6 @@ export default getRequestConfig(async () => {
 
   return {
     locale,
-    messages: (await import(`../../messages/${locale}.json`)).default,
+    messages: (await messagesMap[locale as Locale]()).default,
   };
 });

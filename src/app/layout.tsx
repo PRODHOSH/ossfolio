@@ -101,9 +101,8 @@ export default async function RootLayout({
       `}
         </Script>
 
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
+        <Script id="theme-script" strategy="beforeInteractive">
+          {`
           try {
             const storedTheme = localStorage.getItem('theme');
 
@@ -117,9 +116,8 @@ export default async function RootLayout({
               document.documentElement.classList.remove('dark');
             }
           } catch (_) {}
-        `,
-          }}
-        />
+        `}
+        </Script>
 
         <JsonLd
           data={{
@@ -145,7 +143,7 @@ export default async function RootLayout({
         />
       </head>
 
-      <body className={inter.className}>
+      <body className={inter.className} suppressHydrationWarning>
         <NextIntlClientProvider locale={locale} messages={messages}>
           <ThemeProvider>
             <SkipToContent />

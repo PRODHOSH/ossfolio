@@ -1,7 +1,8 @@
 import { ImageResponse } from "next/og";
 import { getProfileByUsername } from "@/lib/db";
+import { GITHUB_API_BASE } from '@/lib/constants';
 
-export const runtime = "edge";
+// Runtime managed by @opennextjs/cloudflare
 
 export const alt = "OSSfolio Profile";
 export const size = { width: 1200, height: 630 };
@@ -12,7 +13,7 @@ interface OGImageProps {
 }
 
 async function fetchGitHubUser(username: string) {
-  const res = await fetch(`https://api.github.com/users/${username}`, {
+  const res = await fetch(`${GITHUB_API_BASE}/users/${username}`, {
     headers: { Accept: "application/vnd.github.v3+json" },
     next: { revalidate: 3600 },
   });

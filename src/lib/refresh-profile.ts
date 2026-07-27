@@ -23,6 +23,23 @@ export async function refreshProfile(username: string): Promise<RefreshResult> {
   }
 
   const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
+  // Attempt PostgreSQL transactional advisory lock to prevent concurrent refresh races
+  try {
+    const { data: lockAcquired, error: rpcError } = await supabase.rpc(
+      "try_acquire_profile_refresh_lock",
+      { p_username: username },
+    );
+    if (!rpcError && lockAcquired === false) {
+      return {
+        status: "rate_limited",
+        retryAfterSeconds: Math.ceil(RATE_LIMIT_MS / 1000),
+      };
+    }
+  } catch (err) {
+    console.warn("[refresh-profile] RPC try_acquire_profile_refresh_lock error:", err);
+  }
+
   const now = new Date().toISOString();
   const cutoff = new Date(Date.now() - RATE_LIMIT_MS).toISOString();
 

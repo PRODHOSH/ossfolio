@@ -1,5 +1,6 @@
 {
   "Nav": {
+    "skipToMainContent": "Skip to main content",
     "features": "Features",
     "howItWorks": "How it works",
     "leaderboard": "Leaderboard",
@@ -15,7 +16,13 @@
     "closeMenu": "Close navigation menu",
     "toggleTheme": "Toggle theme",
     "switchToLight": "Switch to light mode",
-    "switchToDark": "Switch to dark mode"
+    "switchToDark": "Switch to dark mode",
+    "settings": "Settings",
+    "compare": "Compare Profiles",
+    "skipToMainContent": "Skip to main content"
+  },
+  "Navigation": {
+    "skipToMainContent": "Skip to main content"
   },
   "Footer": {
     "tagline": "Your open-source identity, beyond GitHub.",

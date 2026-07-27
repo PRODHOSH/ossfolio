@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useDebounce } from "@/hooks/useDebounce";
+import { POPULAR_LANGUAGES } from "@/lib/languages";
 
 const SORT_OPTIONS = [
   { value: "score", label: "Score" },
@@ -10,19 +11,6 @@ const SORT_OPTIONS = [
   { value: "contributions", label: "Contributions" },
   { value: "followers", label: "Followers" },
 ] as const;
-
-const POPULAR_LANGUAGES = [
-  "TypeScript",
-  "JavaScript",
-  "Python",
-  "Go",
-  "Rust",
-  "Java",
-  "C++",
-  "Ruby",
-  "PHP",
-  "Swift",
-];
 
 export function SearchFilters() {
   const router = useRouter();
@@ -103,14 +91,34 @@ export function SearchFilters() {
         marginBottom: "24px",
       }}
     >
-      <input
-        type="text"
-        placeholder="Search by username, name, or language..."
-        value={query}
-        onChange={(e) => setQuery(e.target.value)}
-        style={inputStyle}
-        aria-label="Search profiles"
-      />
+      <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+        <input
+          type="text"
+          placeholder="Search by username, name, organization, or language..."
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          style={inputStyle}
+          aria-label="Search profiles and organizations"
+        />
+        {query.trim().length > 0 && (
+          <a
+            href={`/org/${encodeURIComponent(query.trim())}`}
+            style={{
+              whiteSpace: "nowrap",
+              fontSize: "13px",
+              fontWeight: 600,
+              padding: "10px 14px",
+              borderRadius: "6px",
+              backgroundColor: "rgba(99, 102, 241, 0.15)",
+              color: "#818cf8",
+              border: "1px solid rgba(99, 102, 241, 0.3)",
+              textDecoration: "none",
+            }}
+          >
+            Org Dashboard →
+          </a>
+        )}
+      </div>
 
       <div
         style={{

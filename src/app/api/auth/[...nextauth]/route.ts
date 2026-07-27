@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-export const runtime = "edge";
+// Runtime managed by @opennextjs/cloudflare
 
 export function GET() {
   return NextResponse.json({ error: "Not found" }, { status: 404 });

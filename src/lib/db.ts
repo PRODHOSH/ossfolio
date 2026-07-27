@@ -139,11 +139,15 @@ export async function fetchExploreProfiles(opts: {
   sortBy: ExploreProfileSort;
   from: number;
   to: number;
+  /** Canonical language name, or null for no language filter. */
+  lang?: string | null;
+  /** Minimum score, or 0 for no score filter. */
+  minScore?: number;
 }): Promise<QueryResult<unknown[]>> {
   let query = supabase
     .from("profiles")
     .select(
-      "username, name, avatar_url, score, total_prs, total_issues, total_commits, score_delta_30_days",
+      "username, name, avatar_url, score, total_prs, total_issues, total_commits, score_delta_30_days, top_languages",
     )
     // Explore is a listing, so only public profiles belong in it. `unlisted` and `private` have
     // both opted out of being found.
@@ -153,6 +157,18 @@ export async function fetchExploreProfiles(opts: {
     query = query.or(
       `username.ilike.%${opts.searchQuery}%,name.ilike.%${opts.searchQuery}%`,
     );
+  }
+
+  if (opts.lang) {
+    // Array containment, matching the `top_languages @> array[lang]` predicate
+    // the `search_profiles` RPC uses for Discover, so both listings filter
+    // identically. The comparison is case-sensitive, which is why the caller
+    // normalises to GitHub's capitalisation first.
+    query = query.contains("top_languages", [opts.lang]);
+  }
+
+  if (opts.minScore && opts.minScore > 0) {
+    query = query.gte("score", opts.minScore);
   }
 
   let orderColumn = "score";

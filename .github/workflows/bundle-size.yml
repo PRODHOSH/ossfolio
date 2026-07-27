@@ -1,0 +1,101 @@
+name: Bundle Size
+
+# Builds the pull request and its base branch, measures the client JavaScript
+# each produces, and uploads the comparison as an artifact.
+#
+# This workflow deliberately does *not* post the comment. It checks out and
+# executes pull request code, and a `pull_request` run from a fork gets a
+# read-only token — which is the correct security boundary, not a limitation to
+# work around. Switching to `pull_request_target` to gain write access would
+# hand a privileged token to untrusted code.
+#
+# So the comment is posted by `bundle-size-comment.yml`, which runs on
+# `workflow_run` with write permission but never checks out or runs repository
+# code. It only publishes the Markdown this workflow produced.
+
+on:
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  measure:
+    name: measure
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out pull request
+        uses: actions/checkout@v4
+        with:
+          path: head
+
+      - name: Check out base branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.base_ref }}
+          path: base
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+          cache-dependency-path: head/package-lock.json
+
+      - name: Build pull request
+        working-directory: head
+        run: |
+          npm ci
+          npm run build
+
+      - name: Measure pull request bundle
+        run: node head/scripts/bundle-size.mjs measure head/.next/static head-bundle.json
+
+      # A base branch that cannot build is not a reason to fail the PR check.
+      # The report handles a missing baseline by reporting the current total
+      # on its own.
+      - name: Build base branch
+        id: base-build
+        continue-on-error: true
+        working-directory: base
+        run: |
+          npm ci
+          npm run build
+
+      # The script is run from the head checkout, not the base one: it is a new
+      # file on this branch, so the base checkout does not contain it. Only the
+      # directory being measured comes from base.
+      #
+      # continue-on-error because a base bundle that cannot be measured should
+      # produce the no-baseline report, not a failed check.
+      - name: Measure base bundle
+        if: steps.base-build.outcome == 'success'
+        continue-on-error: true
+        run: node head/scripts/bundle-size.mjs measure base/.next/static base-bundle.json
+
+      - name: Render report
+        run: |
+          mkdir -p bundle-report
+          # The base measurement is absent when the base build failed; the
+          # script treats an unreadable file as an empty bundle.
+          node head/scripts/bundle-size.mjs report \
+            base-bundle.json \
+            head-bundle.json \
+            bundle-report/report.md
+          # The commenting workflow cannot infer the pull request number from a
+          # workflow_run event, so it travels with the artifact.
+          echo "${{ github.event.pull_request.number }}" > bundle-report/pr-number.txt
+          cat bundle-report/report.md >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload report
+        uses: actions/upload-artifact@v4
+        with:
+          name: bundle-report
+          path: bundle-report/
+          retention-days: 7

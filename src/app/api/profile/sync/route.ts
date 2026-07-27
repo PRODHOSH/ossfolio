@@ -9,8 +9,9 @@ import { scoreWithAnomalyCheck } from "@/lib/anomaly";
 import { createApiResponse, createErrorResponse } from "@/lib/validators/api";
 import { fetchWithTimeout } from "@/lib/fetch-with-timeout";
 import type { ContributorStats, Repo } from "@/types";
+import { GITHUB_API_BASE } from '@/lib/constants';
 
-export const runtime = "edge";
+// Runtime managed by @opennextjs/cloudflare
 
 /** Bound every outbound GitHub call so a slow upstream cannot pin an edge invocation open. */
 const GITHUB_TIMEOUT_MS = 8000;
@@ -35,8 +36,12 @@ const GITHUB_TIMEOUT_MS = 8000;
  *     browser could not perform this write even if it tried.
  */
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? "";
+function getSupabaseEnv() {
+  return {
+    url: process.env.NEXT_PUBLIC_SUPABASE_URL ?? "",
+    anonKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? "",
+  };
+}
 
 function extractToken(request: NextRequest): string | null {
   const auth = request.headers.get("authorization");
@@ -52,7 +57,7 @@ async function statsFromRest(
   // SYNC_TIMEOUT_MS and redirects, but the invocation itself would otherwise keep running
   // until GitHub answers, so the request is aborted rather than merely abandoned.
   const reposRes = await fetchWithTimeout(
-    `https://api.github.com/users/${encodeURIComponent(username)}/repos?sort=stars&per_page=12&type=owner`,
+    `${GITHUB_API_BASE}/users/${encodeURIComponent(username)}/repos?sort=stars&per_page=12&type=owner`,
     {
       headers: { Accept: "application/vnd.github.v3+json" },
       cache: "no-store",
@@ -72,7 +77,8 @@ export async function POST(request: NextRequest) {
 
   // Verify the caller. `getUser()` validates the JWT against Supabase rather than trusting
   // it, so a forged or expired token cannot get past this point.
-  const authed = createClient(supabaseUrl, supabaseAnonKey, {
+  const { url, anonKey } = getSupabaseEnv();
+  const authed = createClient(url, anonKey, {
     global: { headers: { Authorization: `Bearer ${token}` } },
   });
   const {
@@ -132,7 +138,7 @@ export async function POST(request: NextRequest) {
     return createErrorResponse("Server misconfigured", 500);
   }
 
-  const admin = createClient(supabaseUrl, serviceKey);
+  const admin = createClient(url, serviceKey);
   const { error } = await admin.from("profiles").upsert(
     {
       id: userId,

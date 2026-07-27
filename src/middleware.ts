@@ -1,4 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
+import { recordProfileView } from "@/lib/analytics-tracker";
 
 const CSP_DIRECTIVES = {
   "default-src": ["'self'"],
@@ -44,6 +45,20 @@ const API_CORS_HEADERS: Record<string, string> = {
   "Access-Control-Max-Age": "86400",
 };
 
+const SYSTEM_ROUTES = new Set([
+  "",
+  "api",
+  "auth",
+  "discover",
+  "settings",
+  "compare",
+  "offline",
+  "favicon.ico",
+  "robots.txt",
+  "sitemap.xml",
+  "og-image.png",
+]);
+
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
@@ -55,6 +70,37 @@ export function middleware(request: NextRequest) {
     pathname.startsWith("/manifest")
   ) {
     return NextResponse.next();
+  }
+
+  // Non-blocking anonymous profile view tracking for GET /[username]
+  if (request.method === "GET") {
+    const parts = pathname.split("/").filter(Boolean);
+    if (parts.length === 1 && !SYSTEM_ROUTES.has(parts[0].toLowerCase())) {
+      const username = parts[0];
+      const referrerHeader = request.headers.get("referer");
+      const visitorIp =
+        request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+        request.headers.get("cf-connecting-ip");
+      const countryHeader =
+        request.headers.get("cf-ipcountry") ||
+        request.headers.get("x-vercel-ip-country");
+      const cityHeader =
+        request.headers.get("cf-ipcity") ||
+        request.headers.get("x-vercel-ip-city");
+      const userAgent = request.headers.get("user-agent");
+
+      // Record view asynchronously
+      recordProfileView({
+        username,
+        referrerHeader,
+        visitorIp,
+        countryHeader,
+        cityHeader,
+        userAgent,
+      }).catch((err) =>
+        console.error("Async middleware view tracking error:", err)
+      );
+    }
   }
 
   const response = NextResponse.next();

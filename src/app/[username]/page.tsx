@@ -22,7 +22,7 @@ import {
 import { calculateScore } from "@/lib/score";
 import { getProfileByUsername } from "@/lib/db";
 
-export const runtime = "edge";
+// Runtime managed by @opennextjs/cloudflare
 
 interface ProfilePageProps {
   params: Promise<{ username: string }>;
@@ -167,8 +167,19 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
   const stats = { ...liveStats, totalContributions };
   const liveScore = calculateScore(stats, mappedRepos);
 
+  interface PinnedRepo {
+    id: number;
+    name: string;
+    description: string | null;
+    stargazers_count: number;
+    forks_count: number;
+    language: string | null;
+    html_url: string;
+    topics: string[];
+  }
+
   // --- NEW: Fetch GraphQL profile specifically for Pinned Repos ---
-  let pinnedReposRaw: any[] = [];
+  let pinnedReposRaw: PinnedRepo[] = [];
   try {
     const token =
       process.env.GITHUB_TOKEN || process.env.GITHUB_API_TOKEN || "";
@@ -176,7 +187,8 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
       const gqlProfile = await fetchContributorProfile(username, token);
       if (gqlProfile?.pinnedItems?.nodes?.length > 0) {
         // Map GraphQL shape to match REST API shape expected by ProfileView
-        pinnedReposRaw = gqlProfile.pinnedItems.nodes.map((n: any) => ({
+        pinnedReposRaw = gqlProfile.pinnedItems.nodes.map((n: { name: string; description: string | null; stargazerCount: number; forkCount: number; primaryLanguage: { name: string; color: string } | null; url: string }, index: number) => ({
+          id: -index - 1, // synthetic id for pinned repos to satisfy type
           name: n.name,
           description: n.description,
           stargazers_count: n.stargazerCount,
@@ -197,11 +209,27 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
     pinnedReposRaw.length > 0 ? "Pinned repositories" : "Popular repositories";
   // ----------------------------------------------------------------
 
+  interface Badge {
+    program: string;
+    years: number[];
+  }
+
+  interface ProfileRow {
+    id: string;
+    score?: number | null;
+    updated_at?: string | null;
+    badges?: Array<{ program?: string; years?: Array<string | number> }> | null;
+    headline?: string | null;
+    pinned_repos?: string[] | null;
+    custom_links?: Array<{ label: string; url: string }> | null;
+    visibility?: string | null;
+  }
+
   let score = liveScore;
   let updatedAt: string | null = null;
-  let badges: any[] = [];
+  let badges: Badge[] = [];
   let profileId: string | null = null;
-  let profileRow: any = null;
+  let profileRow: ProfileRow | null = null;
   let customizationFetchSettled = false;
   let visibilityUnknown = false;
   try {
@@ -219,7 +247,7 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
     if (error) {
       visibilityUnknown = true;
     } else {
-      profileRow = data;
+      profileRow = data as unknown as ProfileRow;
     }
 
     if (profileRow) {
@@ -233,16 +261,16 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
       if (Array.isArray(profileRow.badges)) {
         badges = profileRow.badges
           .filter(
-            (b: any) =>
+            (b) =>
               b &&
               typeof b.program === "string" &&
               b.program.trim() !== "" &&
               Array.isArray(b.years),
           )
-          .map((b: any) => ({
-            program: b.program,
-            years: b.years
-              .map((y: any) => Number(y))
+          .map((b) => ({
+            program: b.program as string,
+            years: (b.years as Array<string | number>)
+              .map((y) => Number(y))
               .filter((y: number) => !isNaN(y)),
           }));
       }

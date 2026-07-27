@@ -7,13 +7,20 @@ import {
   createErrorResponse,
 } from "@/lib/validators/api";
 
-export const runtime = "edge";
+import { sanitizeFundingLinks, sanitizeSponsors } from "@/lib/sponsors";
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? "";
+// Runtime managed by @opennextjs/cloudflare
+
+function getSupabaseEnv() {
+  return {
+    url: process.env.NEXT_PUBLIC_SUPABASE_URL ?? "",
+    anonKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? "",
+  };
+}
 
 function createAuthClient(accessToken: string) {
-  return createClient(supabaseUrl, supabaseAnonKey, {
+  const { url, anonKey } = getSupabaseEnv();
+  return createClient(url, anonKey, {
     global: { headers: { Authorization: `Bearer ${accessToken}` } },
   });
 }
@@ -40,7 +47,7 @@ export async function GET(request: NextRequest) {
 
   const { data, error } = await supabase
     .from("profiles")
-    .select("headline, pinned_repos, custom_links, badges, visibility")
+    .select("headline, pinned_repos, custom_links, badges, visibility, funding_links, sponsors")
     .eq("id", user.id)
     .single();
 
@@ -126,10 +133,14 @@ export async function PUT(request: NextRequest) {
       .filter(Boolean);
   }
 
-  // 'private' is new: the column's CHECK previously rejected it, so the third state the UI is meant
-  // to offer could never be stored. Still an explicit allow-list rather than a passthrough — the
-  // value lands in a CHECK-constrained column, and a 400 from us beats a constraint violation from
-  // Postgres.
+  if (body.funding_links !== undefined) {
+    updates.funding_links = sanitizeFundingLinks(body.funding_links);
+  }
+
+  if (body.sponsors !== undefined) {
+    updates.sponsors = sanitizeSponsors(body.sponsors);
+  }
+
   if (
     body.visibility === "public" ||
     body.visibility === "unlisted" ||
@@ -205,7 +216,8 @@ export async function DELETE(request: NextRequest) {
     return createErrorResponse("Account deletion is not configured", 503);
   }
 
-  const admin = createClient(supabaseUrl, serviceKey);
+  const { url } = getSupabaseEnv();
+  const admin = createClient(url, serviceKey);
   const { error } = await admin.auth.admin.deleteUser(user.id);
 
   if (error) {

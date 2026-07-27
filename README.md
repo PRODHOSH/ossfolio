@@ -285,10 +285,11 @@ Everyone who has helped build OSSfolio — code, design, docs, ideas, all of it.
 
 ### My ELUSOC 2026 Admin Badges!
 
-<a href="https://edulinkup.dev/elusoc/profile/PRODHOSH">
-  <img src="https://edulinkup.dev/elusoc/images/ticket/overseer.png" width="60" alt="Overseer" />
-  <img src="https://edulinkup.dev/elusoc/images/ticket/warden.png" width="60" alt="Warden" />
+<a href="https://www.edulinkup.dev/elusoc/profile/PRODHOSH">
+  <img src="https://www.edulinkup.dev/elusoc/images/ticket/overseer.png" width="60" alt="Overseer" />
+  <img src="https://www.edulinkup.dev/elusoc/images/ticket/warden.png" width="60" alt="Warden" />
   <img src="https://www.edulinkup.dev/elusoc/images/ticket/commander.png" width="60" alt="Commander" />
+  <img src="https://www.edulinkup.dev/elusoc/images/ticket/grandmaster.png" width="60" alt="Grandmaster" />
 </a>
 
 ## License

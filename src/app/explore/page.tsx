@@ -9,8 +9,18 @@ import {
   type ExploreProfileSort,
 } from "@/lib/db";
 import { DiscoverPagination } from "@/components/discover/DiscoverPagination";
+import { POPULAR_LANGUAGES } from "@/lib/languages";
+import {
+  SCORE_TIERS,
+  normalizeLanguage,
+  normalizeScoreTier,
+  buildExploreQuery,
+  hasActiveFilters,
+  describeFilters,
+  type ExploreFilters,
+} from "@/lib/explore-filters";
 
-export const runtime = "edge";
+// Runtime managed by @opennextjs/cloudflare
 
 export const metadata: Metadata = {
   title: "Explore Contributors",
@@ -19,6 +29,31 @@ export const metadata: Metadata = {
 };
 
 const PAGE_SIZE = 50;
+
+/**
+ * Filter pill styling. DESIGN.md treats the emerald primary as the only
+ * chromatic event, so an inactive pill is monochrome and the active one is the
+ * single point of colour.
+ */
+const pillStyle: React.CSSProperties = {
+  fontSize: "13px",
+  fontWeight: 500,
+  padding: "6px 12px",
+  borderRadius: "999px",
+  border: "1px solid var(--color-hairline)",
+  color: "var(--color-ink-mute)",
+  backgroundColor: "var(--color-canvas)",
+  textDecoration: "none",
+  lineHeight: 1.4,
+};
+
+const activePillStyle: React.CSSProperties = {
+  ...pillStyle,
+  fontWeight: 600,
+  color: "var(--color-on-primary)",
+  backgroundColor: "var(--color-primary)",
+  borderColor: "var(--color-primary)",
+};
 
 interface LeaderboardRow {
   username: string;
@@ -46,6 +81,8 @@ interface ExplorePageProps {
     q?: string;
     sortBy?: string;
     type?: string;
+    lang?: string;
+    minScore?: string;
   }>;
 }
 
@@ -54,6 +91,8 @@ async function fetchPage(
   searchQuery: string,
   sortBy: string,
   type: string,
+  lang: string | null,
+  minScore: number,
 ): Promise<{ rows: LeaderboardData[]; hasNext: boolean }> {
   const from = (page - 1) * PAGE_SIZE;
   const to = from + PAGE_SIZE;
@@ -67,6 +106,8 @@ async function fetchPage(
           sortBy: sortBy as ExploreProfileSort,
           from,
           to,
+          lang,
+          minScore,
         });
     if (error || !Array.isArray(data)) return { rows: [], hasNext: false };
     const hasNext = data.length > PAGE_SIZE;
@@ -82,6 +123,8 @@ export default async function ExplorePage({ searchParams }: ExplorePageProps) {
     q: qParam,
     sortBy: sortByParam,
     type: typeParam,
+    lang: langParam,
+    minScore: minScoreParam,
   } = await searchParams;
   const page = Math.max(1, Math.floor(Number(pageParam)) || 1);
   const searchQuery = typeof qParam === "string" ? qParam.trim() : "";
@@ -102,7 +145,28 @@ export default async function ExplorePage({ searchParams }: ExplorePageProps) {
       ? typeParam
       : "users";
 
-  const { rows, hasNext } = await fetchPage(page, searchQuery, sortBy, type);
+  // Organisations have no language or score-tier data, so those filters only
+  // apply to the contributor listing.
+  const lang = type === "users" ? normalizeLanguage(langParam) : null;
+  const minScore = type === "users" ? normalizeScoreTier(minScoreParam) : 0;
+
+  const activeFilters: ExploreFilters = {
+    type,
+    q: searchQuery,
+    sortBy,
+    lang,
+    minScore,
+    page,
+  };
+
+  const { rows, hasNext } = await fetchPage(
+    page,
+    searchQuery,
+    sortBy,
+    type,
+    lang,
+    minScore,
+  );
   const hasPrev = page > 1;
   const rankOffset = (page - 1) * PAGE_SIZE;
 
@@ -181,6 +245,12 @@ export default async function ExplorePage({ searchParams }: ExplorePageProps) {
             }}
           >
             <input type="hidden" name="type" value={type} />
+            {/* Without these, submitting a search would drop the active filter
+                pills and quietly widen the result set. */}
+            {lang && <input type="hidden" name="lang" value={lang} />}
+            {minScore > 0 && (
+              <input type="hidden" name="minScore" value={String(minScore)} />
+            )}
             <input
               type="text"
               name="q"
@@ -228,6 +298,122 @@ export default async function ExplorePage({ searchParams }: ExplorePageProps) {
             </button>
           </form>
 
+          {/* Filter pills — server-rendered links so every filtered view has a
+              shareable URL, rather than client state that vanishes on reload. */}
+          {type === "users" && (
+            <div style={{ marginBottom: "24px" }}>
+              <div
+                style={{
+                  display: "flex",
+                  flexWrap: "wrap",
+                  gap: "8px",
+                  alignItems: "center",
+                  marginBottom: "12px",
+                }}
+              >
+                <span
+                  style={{
+                    fontSize: "12px",
+                    fontWeight: 600,
+                    color: "var(--color-ink-mute)",
+                    textTransform: "uppercase",
+                    letterSpacing: "0.04em",
+                    marginRight: "4px",
+                  }}
+                >
+                  Language
+                </span>
+                <Link
+                  href={{
+                    pathname: "/explore",
+                    query: buildExploreQuery(activeFilters, { lang: null }),
+                  }}
+                  style={lang === null ? activePillStyle : pillStyle}
+                  aria-current={lang === null ? "true" : undefined}
+                >
+                  All
+                </Link>
+                {POPULAR_LANGUAGES.map((option) => (
+                  <Link
+                    key={option}
+                    href={{
+                      pathname: "/explore",
+                      query: buildExploreQuery(activeFilters, {
+                        // Clicking the active pill clears it, so a filter can
+                        // always be undone without hunting for a reset button.
+                        lang: lang === option ? null : option,
+                      }),
+                    }}
+                    style={lang === option ? activePillStyle : pillStyle}
+                    aria-current={lang === option ? "true" : undefined}
+                  >
+                    {option}
+                  </Link>
+                ))}
+              </div>
+
+              <div
+                style={{
+                  display: "flex",
+                  flexWrap: "wrap",
+                  gap: "8px",
+                  alignItems: "center",
+                }}
+              >
+                <span
+                  style={{
+                    fontSize: "12px",
+                    fontWeight: 600,
+                    color: "var(--color-ink-mute)",
+                    textTransform: "uppercase",
+                    letterSpacing: "0.04em",
+                    marginRight: "4px",
+                  }}
+                >
+                  Score
+                </span>
+                {SCORE_TIERS.map((tier) => (
+                  <Link
+                    key={tier.value}
+                    href={{
+                      pathname: "/explore",
+                      query: buildExploreQuery(activeFilters, {
+                        minScore: tier.value,
+                      }),
+                    }}
+                    style={
+                      minScore === tier.value ? activePillStyle : pillStyle
+                    }
+                    aria-current={minScore === tier.value ? "true" : undefined}
+                  >
+                    {tier.label}
+                  </Link>
+                ))}
+              </div>
+
+              {hasActiveFilters(activeFilters) && (
+                <p
+                  style={{
+                    fontSize: "13px",
+                    color: "var(--color-ink-mute)",
+                    margin: "16px 0 0 0",
+                  }}
+                >
+                  Showing {describeFilters(activeFilters)}.{" "}
+                  <Link
+                    href={{ pathname: "/explore", query: { type } }}
+                    style={{
+                      color: "var(--color-primary)",
+                      textDecoration: "none",
+                    }}
+                  >
+                    Clear all
+                  </Link>
+                </p>
+              )}
+            </div>
+          )}
+
           {rows.length === 0 ? (
             <div
               style={{
@@ -237,7 +423,11 @@ export default async function ExplorePage({ searchParams }: ExplorePageProps) {
                 textAlign: "center",
               }}
             >
-              <p>No results found.</p>
+              <p>
+                {hasActiveFilters(activeFilters)
+                  ? `No contributors match ${describeFilters(activeFilters)}.`
+                  : "No results found."}
+              </p>
             </div>
           ) : (
             <ol
@@ -252,26 +442,26 @@ export default async function ExplorePage({ searchParams }: ExplorePageProps) {
             >
               {rows.map((row, index) => {
                 const rank = rankOffset + index + 1;
-                const isOrg = type === "organizations";
-                const rowData = row as any;
+                const isOrg = 'slug' in row;
                 const name = isOrg
-                  ? rowData.name
-                  : rowData.name || rowData.username;
-                const sub = isOrg ? `@${rowData.slug}` : `@${rowData.username}`;
+                  ? row.name
+                  : row.name || row.username;
+                const sub = isOrg ? `@${row.slug}` : `@${row.username}`;
+                const linkId = isOrg ? row.slug : row.username;
                 const avatar =
-                  rowData.avatar_url ||
-                  `https://github.com/${isOrg ? encodeURIComponent(rowData.slug) : encodeURIComponent(rowData.username)}.png`;
+                  row.avatar_url ||
+                  `https://github.com/${encodeURIComponent(linkId)}.png`;
                 const score =
-                  typeof rowData.score === "number" ? rowData.score : 0;
+                  typeof row.score === "number" ? row.score : 0;
                 const isTop = rank <= 3;
 
                 return (
-                  <li key={isOrg ? rowData.slug : rowData.username}>
+                  <li key={linkId}>
                     <Link
                       href={{
                         pathname: isOrg
-                          ? `/org/${encodeURIComponent(rowData.slug)}`
-                          : `/${encodeURIComponent(rowData.username)}`,
+                          ? `/org/${encodeURIComponent(row.slug)}`
+                          : `/${encodeURIComponent(row.username)}`,
                       }}
                       style={{
                         display: "flex",
@@ -370,9 +560,9 @@ export default async function ExplorePage({ searchParams }: ExplorePageProps) {
                               color: "var(--color-ink-mute-2)",
                             }}
                           >
-                            {rowData.total_prs || 0} PRs,{" "}
-                            {rowData.total_issues || 0} issues,{" "}
-                            {rowData.total_commits || 0} commits
+                            {row.total_prs || 0} PRs,{" "}
+                            {row.total_issues || 0} issues,{" "}
+                            {row.total_commits || 0} commits
                           </span>
                         )}
                       </span>
@@ -397,13 +587,13 @@ export default async function ExplorePage({ searchParams }: ExplorePageProps) {
                         >
                           {score}
                         </span>
-                        {sortBy === "improvement" &&
-                        typeof rowData.score_delta_30_days === "number" ? (
+                        {!isOrg && sortBy === "improvement" &&
+                        typeof row.score_delta_30_days === "number" ? (
                           <span
                             style={{
                               fontSize: "11px",
                               color:
-                                rowData.score_delta_30_days > 0
+                                row.score_delta_30_days > 0
                                   ? "#10b981"
                                   : "var(--color-ink-mute)",
                               fontWeight: 600,
@@ -414,9 +604,9 @@ export default async function ExplorePage({ searchParams }: ExplorePageProps) {
                             }}
                             title="Improvement over last 30 days"
                           >
-                            {rowData.score_delta_30_days > 0
-                              ? `📈 +${rowData.score_delta_30_days}`
-                              : `➖ ${rowData.score_delta_30_days}`}
+                            {row.score_delta_30_days > 0
+                              ? `📈 +${row.score_delta_30_days}`
+                              : `➖ ${row.score_delta_30_days}`}
                           </span>
                         ) : (
                           <span
@@ -442,7 +632,10 @@ export default async function ExplorePage({ searchParams }: ExplorePageProps) {
             hasNext={hasNext}
             hasPrev={hasPrev}
             baseUrl="/explore"
-            searchParams={{ q: searchQuery, type, sortBy }}
+            // Built from the same helper as the filter pills, so paging keeps
+            // the active language and score tier. Passing the raw params here
+            // would drop them and silently widen the results on page 2.
+            searchParams={buildExploreQuery(activeFilters)}
           />
         </div>
       </main>

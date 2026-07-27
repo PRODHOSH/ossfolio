@@ -12,8 +12,11 @@ import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
 import { useBroadcastChannel } from "@/hooks/useBroadcastChannel";
 import { useVisibility } from "@/hooks/useVisibility";
 import { SkeletonCard } from "@/components/ui/skeleton-card";
-import { evaluateAchievements, countUnlocked } from "@/lib/achievements";
+import { evaluateAchievements, countUnlocked, type Achievement } from "@/lib/achievements";
 import { AchievementsGrid } from "@/components/profile/AchievementsGrid";
+import { MilestoneTimeline } from "@/components/profile/MilestoneTimeline";
+import { MilestoneCelebration } from "@/components/profile/MilestoneCelebration";
+import { syncUnlockedAchievements } from "@/lib/milestones";
 import type {
   ContributorStats,
   Org,
@@ -21,7 +24,9 @@ import type {
   HeatmapWeek,
   BadgeItem,
   MergedPR,
+  CoContributor,
 } from "@/types";
+import { ImpactNetworkSkeleton } from "@/components/profile/ImpactNetworkSkeleton";
 import { toPng } from "html-to-image";
 import { supabase } from "@/lib/supabase";
 import { updateProfileBadges } from "@/lib/db";
@@ -31,7 +36,8 @@ import { OrganizationSection } from "@/components/profile/OrganizationSection";
 import { ProfileReposSection } from "@/components/profile/ProfileReposSection";
 import { ProfileBadgeModal } from "@/components/profile/ProfileBadgeModal";
 import { DeveloperInsightsCard } from "@/components/profile/DeveloperInsightsCard";
-import * as Tooltip from "@radix-ui/react-tooltip";
+import { SponsorshipSection } from "@/components/profile/SponsorshipSection";
+import { getSponsorshipData, type SponsorshipData } from "@/lib/sponsors";
 
 // Code-split the contribution heatmap out of the initial ProfileView bundle.
 // ProfileView is a client component, so `ssr: false` is valid here; the heatmap
@@ -56,6 +62,17 @@ const HeatmapWithYearNav = dynamic(
         <SkeletonCard variant="card" lines={7} />
       </div>
     ),
+  },
+);
+
+const ImpactNetwork = dynamic(
+  () =>
+    import("@/components/profile/ImpactNetwork").then(
+      (mod) => mod.ImpactNetwork,
+    ),
+  {
+    ssr: false,
+    loading: () => <ImpactNetworkSkeleton />,
   },
 );
 
@@ -143,6 +160,8 @@ interface ProfileExtras {
   profileId: string | null;
   rateLimited?: boolean;
   mergedPRs: MergedPR[];
+  coContributors?: CoContributor[];
+  sponsorshipData?: SponsorshipData;
 }
 
 function formatCount(n: number): string {
@@ -630,6 +649,14 @@ function FilterTab({ label, isActive, onClick, dotColor }: FilterTabProps) {
     </button>
   );
 }
+const profileTabs = [
+  { key: "repos" as const, label: "Repos" },
+  { key: "stats" as const, label: "Stats" },
+  { key: "prs" as const, label: "PRs" },
+  { key: "timeline" as const, label: "Timeline" },
+  { key: "network" as const, label: "Network" },
+];
+
 function ContributorScoreCard({ children }: { children: React.ReactNode }) {
   const [animate, setAnimate] = useState(true);
 
@@ -663,10 +690,12 @@ export function ProfileView({
   profileId,
   rateLimited,
   mergedPRs,
+  coContributors = [],
   customLinks = [],
   pinnedRepos = [],
   customizationLoaded = false,
-  repoSectionTitle, // <-- NEW: Added this prop
+  repoSectionTitle,
+  sponsorshipData: initialSponsorshipData,
 }: {
   user: GitHubUser;
   repos: GitHubRepo[];
@@ -675,20 +704,49 @@ export function ProfileView({
     customLinks?: Array<{ label: string; url: string }>;
     pinnedRepos?: string[];
     customizationLoaded?: boolean;
-    repoSectionTitle?: string; // <-- NEW: Added to TypeScript definitions
+    repoSectionTitle?: string;
   }) {
-  // Derived from stats the page already fetched and passed down, so the whole feature
-  // costs no extra GitHub calls and no extra database queries. `useMemo` keeps the array
-  // referentially stable across the many re-renders this component does (tab switches,
-  // repo filtering, sorting), so the cards don't rebuild on every keystroke.
+  const [sponsorshipData, setSponsorshipData] = useState<SponsorshipData | undefined>(initialSponsorshipData);
+
+  useEffect(() => {
+    if (!sponsorshipData && user.login) {
+      getSponsorshipData(user.login).then((data) => setSponsorshipData(data));
+    }
+  }, [user.login, sponsorshipData]);
+
+  const hasFunding = !!(
+    sponsorshipData &&
+    (sponsorshipData.fundingLinks.length > 0 || sponsorshipData.sponsors.length > 0)
+  );
+
   const achievements = useMemo(
-    () => evaluateAchievements({ stats, longestStreak }),
-    [stats, longestStreak],
+    () => evaluateAchievements({ stats, longestStreak, currentStreak, hasFunding }),
+    [stats, longestStreak, currentStreak, hasFunding],
   );
   const unlockedCount = useMemo(
     () => countUnlocked(achievements),
     [achievements],
   );
+
+  const [unlockedMap, setUnlockedMap] = useState<Record<string, string>>({});
+  const [celebratingAchievement, setCelebratingAchievement] = useState<Achievement | null>(null);
+
+  useEffect(() => {
+    if (user?.login && achievements.length > 0) {
+      syncUnlockedAchievements(user.login, achievements).then((map) => {
+        if (map && Object.keys(map).length > 0) {
+          setUnlockedMap(map);
+        }
+      });
+    }
+  }, [user?.login, achievements]);
+
+  const achievementsWithDates = useMemo(() => {
+    return achievements.map((a) => ({
+      ...a,
+      unlockedAt: unlockedMap[a.id] || (a.unlocked ? new Date().toISOString() : undefined),
+    }));
+  }, [achievements, unlockedMap]);
 
   const [copied, setCopied] = useState(false);
   const [repoSort, setRepoSort] = useState<"stars" | "forks" | "updated">(
@@ -699,7 +757,7 @@ export function ProfileView({
   const [repoFilter, setRepoFilter] = useState("");
   const [activeLanguage, setActiveLanguage] = useState<string>("All");
   const [activeTab, setActiveTab] = useState<
-    "repos" | "stats" | "prs" | "timeline"
+    "repos" | "stats" | "prs" | "timeline" | "network"
   >("repos");
 
   const [pinnedList, setPinnedList] = useState<string[]>(pinnedRepos);
@@ -716,13 +774,6 @@ export function ProfileView({
   }
 
   const MAX_PINNED = 6;
-
-  const profileTabs = [
-    { key: "repos" as const, label: "Repos" },
-    { key: "stats" as const, label: "Stats" },
-    { key: "prs" as const, label: "PRs" },
-    { key: "timeline" as const, label: "Timeline" },
-  ];
 
   const tabTransition = {
     duration: 0.18,
@@ -764,7 +815,7 @@ export function ProfileView({
         if (btn) (btn as HTMLButtonElement).focus();
       }
     },
-    [activeTab],
+    [activeTab, profileTabs],
   );
 
   const uniqueLanguages = useMemo(() => {
@@ -931,7 +982,7 @@ export function ProfileView({
   // multiple AnimatePresence transitions.
   const tabDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const setActiveTabDebounced = useCallback(
-    (key: "repos" | "stats" | "prs" | "timeline") => {
+    (key: "repos" | "stats" | "prs" | "timeline" | "network") => {
       if (tabDebounceRef.current) clearTimeout(tabDebounceRef.current);
       tabDebounceRef.current = setTimeout(() => {
         setActiveTab(key);
@@ -1297,6 +1348,7 @@ export function ProfileView({
               stats={stats}
               isRefreshing={isRefreshing}
               onRefresh={handleRefresh}
+              isOwner={isOwner}
             />
           </div>
 
@@ -1642,10 +1694,20 @@ export function ProfileView({
         </div>
       )}
 
-      {/* Achievements — auto-earned milestones, distinct from the self-declared badges above */}
-      <AchievementsGrid
-        achievements={achievements}
-        unlockedCount={unlockedCount}
+      {/* Gamified Streaks & Milestone Timeline */}
+      <MilestoneTimeline
+        achievements={achievementsWithDates}
+        currentStreak={currentStreak}
+        longestStreak={longestStreak}
+        onCelebrate={(ach) => setCelebratingAchievement(ach)}
+        onShare={(ach) => setCelebratingAchievement(ach)}
+      />
+
+      <MilestoneCelebration
+        achievement={celebratingAchievement}
+        username={user?.login || ""}
+        isOpen={!!celebratingAchievement}
+        onClose={() => setCelebratingAchievement(null)}
       />
 
       {/* Tab navigation */}
@@ -2338,6 +2400,27 @@ export function ProfileView({
             <ContributionTimeline mergedPRs={mergedPRs} badges={badgesList} />
           </motion.div>
         )}
+
+        {activeTab === "network" && (
+          <motion.div
+            key="network"
+            role="tabpanel"
+            id="profile-tabpanel-network"
+            aria-labelledby="profile-tab-network"
+            initial={tabInitial}
+            animate={tabAnimate}
+            exit={tabExit}
+          >
+            {/* Contribution Impact Network Graph */}
+            <ImpactNetwork
+              user={user}
+              repos={repos}
+              orgs={orgs}
+              mergedPRs={mergedPRs}
+              coContributors={coContributors}
+            />
+          </motion.div>
+        )}
       </AnimatePresence>
 
       {/* Tech stack */}
@@ -2435,6 +2518,9 @@ export function ProfileView({
           </div>
         </div>
       )}
+
+      {/* Sponsorship & Funding */}
+      {sponsorshipData && <SponsorshipSection sponsorshipData={sponsorshipData} />}
 
       {/* Organizations */}
       <OrganizationSection orgs={orgs} />

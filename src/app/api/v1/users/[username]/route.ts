@@ -5,8 +5,9 @@ import {
   createApiResponse,
   createErrorResponse,
 } from "@/lib/validators/api";
+import { computeETag, isNotModified } from "@/lib/http-cache";
 
-export const runtime = "edge";
+// Runtime managed by @opennextjs/cloudflare
 
 // Public, cross-origin REST endpoint for third-party consumers of a profile's
 // aggregated score/stats. Reads are open because profiles are already publicly
@@ -202,9 +203,30 @@ export async function GET(
     last_refreshed_at: profile.last_refreshed_at,
   };
 
-  return withCors(
-    createApiResponse(body, 200, {
-      "Cache-Control": "public, s-maxage=300, stale-while-revalidate=600",
-    }),
-  );
+  // The tag is derived from the exact bytes this endpoint would return.
+  // `NextResponse.json` serialises with `JSON.stringify`, so hashing the same
+  // value here yields a validator that genuinely matches the payload.
+  const etag = await computeETag(JSON.stringify(body));
+
+  const cacheHeaders: Record<string, string> = {
+    "Cache-Control": "public, s-maxage=300, stale-while-revalidate=600",
+    ETag: etag,
+  };
+
+  // The caller already holds this exact representation, so send no payload.
+  //
+  // Built with an explicit null body rather than `createApiResponse`: 304 is a
+  // null-body status, and the Response constructor rejects it outright if a body
+  // is supplied — `NextResponse.json(x, { status: 304 })` throws.
+  //
+  // Only the cache-relevant headers travel with a 304 (RFC 9110 §15.4.5). The
+  // security headers on the 200 guard how a body is interpreted, and there is no
+  // body here; the client merges these fields into the response it already has.
+  if (isNotModified(request.headers.get("if-none-match"), etag)) {
+    return withCors(
+      new NextResponse(null, { status: 304, headers: cacheHeaders }),
+    );
+  }
+
+  return withCors(createApiResponse(body, 200, cacheHeaders));
 }

@@ -25,3 +25,12 @@ jobs:
           days-before-close: 7
           stale-issue-label: "stale"
           stale-pr-label: "stale"
+          # Newcomer-facing and deliberately-parked work must survive the sweep.
+          # A "good first issue" is meant to sit unclaimed until someone new picks
+          # it up, so the 30-day timer would close exactly the issues the repo
+          # wants to keep open. Comma-separated, per the action's input format.
+          exempt-issue-labels: "good first issue,pinned"
+          exempt-pr-labels: "pinned"
+          # Already the action's default; stated explicitly because closing a
+          # stale PR must never destroy the contributor's branch.
+          delete-branch: false

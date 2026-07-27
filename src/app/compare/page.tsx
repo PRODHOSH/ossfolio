@@ -16,8 +16,10 @@ import { getProfileByUsername } from "@/lib/db";
 import type { ContributorStats, Repo } from "@/types";
 import { CompareForm } from "@/components/profile/CompareForm";
 import { CompareCharts } from "@/components/profile/CompareCharts";
+import { CompareRadarChart } from "@/components/profile/CompareRadarChart";
+import { GITHUB_API_BASE } from '@/lib/constants';
 
-export const runtime = "edge";
+// Runtime managed by @opennextjs/cloudflare
 
 export const metadata: Metadata = {
   title: "Compare Contributors",
@@ -42,7 +44,7 @@ interface ProfileData {
 
 async function fetchGitHubUser(username: string) {
   const encodedUsername = encodeURIComponent(username);
-  const res = await fetch(`https://api.github.com/users/${encodedUsername}`, {
+  const res = await fetch(`${GITHUB_API_BASE}/users/${encodedUsername}`, {
     headers: { Accept: "application/vnd.github.v3+json" },
     next: { revalidate: 3600 },
   });
@@ -58,7 +60,7 @@ async function fetchGitHubRepos(username: string) {
   // (only created, updated, pushed, full_name). Fetch a page of repos with a
   // supported sort, then order by stargazers_count client-side for the top 6.
   const res = await fetch(
-    `https://api.github.com/users/${encodeURIComponent(username)}/repos?sort=updated&per_page=100&type=owner`,
+    `${GITHUB_API_BASE}/users/${encodeURIComponent(username)}/repos?sort=updated&per_page=100&type=owner`,
     {
       headers: { Accept: "application/vnd.github.v3+json" },
       next: { revalidate: 3600 },
@@ -503,6 +505,23 @@ export default async function ComparePage({ searchParams }: ComparePageProps) {
                   </div>
                 );
               })}
+            </div>
+          )}
+
+          {profileA && profileB && (
+            <div style={{ marginTop: "40px" }}>
+              <CompareRadarChart
+                userA={{
+                  username: a,
+                  stats: profileA.stats,
+                  repos: profileA.repos,
+                }}
+                userB={{
+                  username: b,
+                  stats: profileB.stats,
+                  repos: profileB.repos,
+                }}
+              />
             </div>
           )}
 
