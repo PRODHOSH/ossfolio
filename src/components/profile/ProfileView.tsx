@@ -649,6 +649,14 @@ function FilterTab({ label, isActive, onClick, dotColor }: FilterTabProps) {
     </button>
   );
 }
+const profileTabs = [
+  { key: "repos" as const, label: "Repos" },
+  { key: "stats" as const, label: "Stats" },
+  { key: "prs" as const, label: "PRs" },
+  { key: "timeline" as const, label: "Timeline" },
+  { key: "network" as const, label: "Network" },
+];
+
 function ContributorScoreCard({ children }: { children: React.ReactNode }) {
   const [animate, setAnimate] = useState(true);
 
@@ -766,14 +774,6 @@ export function ProfileView({
   }
 
   const MAX_PINNED = 6;
-
-  const profileTabs = [
-    { key: "repos" as const, label: "Repos" },
-    { key: "stats" as const, label: "Stats" },
-    { key: "prs" as const, label: "PRs" },
-    { key: "timeline" as const, label: "Timeline" },
-    { key: "network" as const, label: "Network" },
-  ];
 
   const tabTransition = {
     duration: 0.18,
