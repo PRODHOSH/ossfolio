@@ -54,7 +54,8 @@ describe("OpenGraph Font ArrayBuffer Caching & Response Headers", () => {
 
       const fetchSpy = vi.spyOn(globalThis, "fetch").mockImplementation(async (url) => {
         const urlStr = String(url);
-        if (urlStr.includes("fonts.googleapis.com")) {
+        const parsedUrl = new URL(urlStr);
+        if (parsedUrl.hostname === "fonts.googleapis.com") {
           return new Response(mockCssText, { status: 200 });
         }
         if (urlStr.includes("inter-500.ttf")) {
@@ -87,7 +88,8 @@ describe("OpenGraph Font ArrayBuffer Caching & Response Headers", () => {
         .mockRejectedValueOnce(new Error("Network Error"))
         .mockImplementation(async (url) => {
           const urlStr = String(url);
-          if (urlStr.includes("fonts.googleapis.com")) {
+          const parsedUrl = new URL(urlStr);
+          if (parsedUrl.hostname === "fonts.googleapis.com") {
             return new Response(
               `
               @font-face {
@@ -150,7 +152,8 @@ describe("OpenGraph Font ArrayBuffer Caching & Response Headers", () => {
 
       const fetchSpy = vi.spyOn(globalThis, "fetch").mockImplementation(async (url) => {
         const urlStr = String(url);
-        if (urlStr.includes("api.github.com")) {
+        const parsedUrl = new URL(urlStr);
+        if (parsedUrl.hostname === "api.github.com") {
           return new Response(
             JSON.stringify({
               name: "The Octocat",
@@ -159,7 +162,7 @@ describe("OpenGraph Font ArrayBuffer Caching & Response Headers", () => {
             { status: 200 },
           );
         }
-        if (urlStr.includes("fonts.googleapis.com")) {
+        if (parsedUrl.hostname === "fonts.googleapis.com") {
           return new Response(mockCssText, { status: 200 });
         }
         return new Response(new ArrayBuffer(16), { status: 200 });
