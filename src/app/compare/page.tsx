@@ -14,10 +14,33 @@ import { generateMockHeatmap } from "@/lib/mock";
 import { calculateScore } from "@/lib/score";
 import { getProfileByUsername } from "@/lib/db";
 import type { ContributorStats, Repo } from "@/types";
+import dynamic from "next/dynamic";
 import { CompareForm } from "@/components/profile/CompareForm";
-import { CompareCharts } from "@/components/profile/CompareCharts";
-import { CompareRadarChart } from "@/components/profile/CompareRadarChart";
+import { CompareRadarChartSkeleton } from "@/components/profile/CompareRadarChartSkeleton";
+import { CompareChartsSkeleton } from "@/components/profile/CompareChartsSkeleton";
 import { GITHUB_API_BASE } from '@/lib/constants';
+
+const CompareRadarChart = dynamic(
+  () =>
+    import("@/components/profile/CompareRadarChart").then(
+      (mod) => mod.CompareRadarChart,
+    ),
+  {
+    ssr: false,
+    loading: () => <CompareRadarChartSkeleton />,
+  },
+);
+
+const CompareCharts = dynamic(
+  () =>
+    import("@/components/profile/CompareCharts").then(
+      (mod) => mod.CompareCharts,
+    ),
+  {
+    ssr: false,
+    loading: () => <CompareChartsSkeleton />,
+  },
+);
 
 // Runtime managed by @opennextjs/cloudflare
 

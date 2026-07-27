@@ -11,6 +11,7 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import { supabase } from "@/lib/supabase";
+import { ProfileAnalyticsChartSkeleton } from "@/components/profile/ProfileAnalyticsChartSkeleton";
 
 interface ProfileAnalyticsModalProps {
   username: string;
@@ -317,30 +318,34 @@ export function ProfileAnalyticsModal({
               <h3 style={{ fontSize: "14px", fontWeight: 600, margin: "0 0 16px 0", color: "var(--color-ink)" }}>
                 Views Over Time ({days} Days)
               </h3>
-              <div style={{ width: "100%", height: "220px" }}>
-                <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart data={data.viewsTrend}>
-                    <defs>
-                      <linearGradient id="colorViews" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#3ecf8e" stopOpacity={0.4} />
-                        <stop offset="95%" stopColor="#3ecf8e" stopOpacity={0} />
-                      </linearGradient>
-                    </defs>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#2a2a2a" />
-                    <XAxis dataKey="date" stroke="#64748b" fontSize={11} tickFormatter={(str) => str.slice(5)} />
-                    <YAxis stroke="#64748b" fontSize={11} allowDecimals={false} />
-                    <RechartsTooltip
-                      contentStyle={{
-                        backgroundColor: "#18181b",
-                        borderColor: "#3ecf8e",
-                        borderRadius: "8px",
-                        fontSize: "12px",
-                      }}
-                    />
-                    <Area type="monotone" dataKey="views" name="Page Views" stroke="#3ecf8e" strokeWidth={2} fillOpacity={1} fill="url(#colorViews)" />
-                  </AreaChart>
-                </ResponsiveContainer>
-              </div>
+              {!data.viewsTrend || data.viewsTrend.length === 0 ? (
+                <ProfileAnalyticsChartSkeleton />
+              ) : (
+                <div style={{ width: "100%", height: "220px" }}>
+                  <ResponsiveContainer width="100%" height="100%">
+                    <AreaChart data={data.viewsTrend}>
+                      <defs>
+                        <linearGradient id="colorViews" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="#3ecf8e" stopOpacity={0.4} />
+                          <stop offset="95%" stopColor="#3ecf8e" stopOpacity={0} />
+                        </linearGradient>
+                      </defs>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#2a2a2a" />
+                      <XAxis dataKey="date" stroke="#64748b" fontSize={11} tickFormatter={(str) => str.slice(5)} />
+                      <YAxis stroke="#64748b" fontSize={11} allowDecimals={false} />
+                      <RechartsTooltip
+                        contentStyle={{
+                          backgroundColor: "#18181b",
+                          borderColor: "#3ecf8e",
+                          borderRadius: "8px",
+                          fontSize: "12px",
+                        }}
+                      />
+                      <Area type="monotone" dataKey="views" name="Page Views" stroke="#3ecf8e" strokeWidth={2} fillOpacity={1} fill="url(#colorViews)" />
+                    </AreaChart>
+                  </ResponsiveContainer>
+                </div>
+              )}
             </div>
 
             {/* Breakdowns: Referrers & Top Countries */}
