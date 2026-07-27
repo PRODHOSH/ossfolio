@@ -30,6 +30,7 @@ import { ProfileActions } from "@/components/profile/ProfileActions";
 import { OrganizationSection } from "@/components/profile/OrganizationSection";
 import { ProfileReposSection } from "@/components/profile/ProfileReposSection";
 import { ProfileBadgeModal } from "@/components/profile/ProfileBadgeModal";
+import { DeveloperInsightsCard } from "@/components/profile/DeveloperInsightsCard";
 import * as Tooltip from "@radix-ui/react-tooltip";
 
 // Code-split the contribution heatmap out of the initial ProfileView bundle.
@@ -1444,6 +1445,30 @@ export function ProfileView({
           </div>
         </div>
       </div>
+
+      <DeveloperInsightsCard
+        profile={{
+          username: user.login,
+          name: user.name,
+          bio: user.bio,
+          location: user.location,
+          followers: user.followers,
+          following: user.following,
+          publicRepos: user.public_repos,
+          score,
+          stats,
+          techStack,
+          organizations: orgs.map((org) => org.login),
+          repositories: repos.slice(0, 6).map((repo) => ({
+            name: repo.name,
+            description: repo.description,
+            language: repo.language,
+            stars: repo.stargazers_count,
+            forks: repo.forks_count,
+            topics: repo.topics ?? [],
+          })),
+        }}
+      />
 
       {/* Badges section */}
       {(badgesList.length > 0 || isOwner) && (
