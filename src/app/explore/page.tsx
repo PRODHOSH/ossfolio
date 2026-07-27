@@ -442,26 +442,26 @@ export default async function ExplorePage({ searchParams }: ExplorePageProps) {
             >
               {rows.map((row, index) => {
                 const rank = rankOffset + index + 1;
-                const isOrg = type === "organizations";
-                const rowData = row as any;
+                const isOrg = 'slug' in row;
                 const name = isOrg
-                  ? rowData.name
-                  : rowData.name || rowData.username;
-                const sub = isOrg ? `@${rowData.slug}` : `@${rowData.username}`;
+                  ? row.name
+                  : row.name || row.username;
+                const sub = isOrg ? `@${row.slug}` : `@${row.username}`;
+                const linkId = isOrg ? row.slug : row.username;
                 const avatar =
-                  rowData.avatar_url ||
-                  `https://github.com/${isOrg ? encodeURIComponent(rowData.slug) : encodeURIComponent(rowData.username)}.png`;
+                  row.avatar_url ||
+                  `https://github.com/${encodeURIComponent(linkId)}.png`;
                 const score =
-                  typeof rowData.score === "number" ? rowData.score : 0;
+                  typeof row.score === "number" ? row.score : 0;
                 const isTop = rank <= 3;
 
                 return (
-                  <li key={isOrg ? rowData.slug : rowData.username}>
+                  <li key={linkId}>
                     <Link
                       href={{
                         pathname: isOrg
-                          ? `/org/${encodeURIComponent(rowData.slug)}`
-                          : `/${encodeURIComponent(rowData.username)}`,
+                          ? `/org/${encodeURIComponent(row.slug)}`
+                          : `/${encodeURIComponent(row.username)}`,
                       }}
                       style={{
                         display: "flex",
@@ -560,9 +560,9 @@ export default async function ExplorePage({ searchParams }: ExplorePageProps) {
                               color: "var(--color-ink-mute-2)",
                             }}
                           >
-                            {rowData.total_prs || 0} PRs,{" "}
-                            {rowData.total_issues || 0} issues,{" "}
-                            {rowData.total_commits || 0} commits
+                            {row.total_prs || 0} PRs,{" "}
+                            {row.total_issues || 0} issues,{" "}
+                            {row.total_commits || 0} commits
                           </span>
                         )}
                       </span>
@@ -587,13 +587,13 @@ export default async function ExplorePage({ searchParams }: ExplorePageProps) {
                         >
                           {score}
                         </span>
-                        {sortBy === "improvement" &&
-                        typeof rowData.score_delta_30_days === "number" ? (
+                        {!isOrg && sortBy === "improvement" &&
+                        typeof row.score_delta_30_days === "number" ? (
                           <span
                             style={{
                               fontSize: "11px",
                               color:
-                                rowData.score_delta_30_days > 0
+                                row.score_delta_30_days > 0
                                   ? "#10b981"
                                   : "var(--color-ink-mute)",
                               fontWeight: 600,
@@ -604,9 +604,9 @@ export default async function ExplorePage({ searchParams }: ExplorePageProps) {
                             }}
                             title="Improvement over last 30 days"
                           >
-                            {rowData.score_delta_30_days > 0
-                              ? `📈 +${rowData.score_delta_30_days}`
-                              : `➖ ${rowData.score_delta_30_days}`}
+                            {row.score_delta_30_days > 0
+                              ? `📈 +${row.score_delta_30_days}`
+                              : `➖ ${row.score_delta_30_days}`}
                           </span>
                         ) : (
                           <span
