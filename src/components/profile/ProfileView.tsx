@@ -187,15 +187,18 @@ function formatUpdatedAt(iso: string): string {
 function ProfileFreshness({
   username,
   updatedAt,
+  score,
 }: {
   username: string;
   updatedAt?: string;
+  score?: number;
 }) {
   const router = useRouter();
   const [refreshing, setRefreshing] = useState(false);
   const [lastRefresh, setLastRefresh] = useState(updatedAt);
   const [relativeTime, setRelativeTime] = useState("...");
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [announcement, setAnnouncement] = useState("");
 
   useEffect(() => {
     const compute = () => {
@@ -220,26 +223,37 @@ function ProfileFreshness({
   const handleRefresh = async () => {
     setRefreshing(true);
     setErrorMsg(null);
+    setAnnouncement(`Refreshing profile data for @${username}...`);
     try {
       const res = await fetch(`/api/${username}/refresh`, { method: "POST" });
       if (res.ok) {
         const data = await res.json();
         setLastRefresh(data.refreshedAt);
+        const scoreText =
+          typeof score === "number"
+            ? ` New score: ${score.toLocaleString("en-US")}.`
+            : "";
+        setAnnouncement(`Profile stats refreshed successfully.${scoreText}`);
         router.refresh();
       } else {
         const payload = await res
           .json()
           .catch(() => ({ error: "Refresh failed" }));
         if (res.status === 429 && payload.retryAfterSeconds) {
-          setErrorMsg(
-            `Try again in ${Math.ceil(payload.retryAfterSeconds / 60)} min`,
+          const mins = Math.ceil(payload.retryAfterSeconds / 60);
+          setErrorMsg(`Try again in ${mins} min`);
+          setAnnouncement(
+            `Refresh rate limited. Please try again in ${mins} minute${mins === 1 ? "" : "s"}.`,
           );
         } else {
-          setErrorMsg(payload.error || "Refresh failed");
+          const errStr = payload.error || "Refresh failed";
+          setErrorMsg(errStr);
+          setAnnouncement(`Failed to refresh profile data: ${errStr}.`);
         }
       }
     } catch {
       setErrorMsg("Network error");
+      setAnnouncement("Failed to refresh profile data due to a network error.");
     } finally {
       setRefreshing(false);
     }
@@ -255,6 +269,9 @@ function ProfileFreshness({
         flexWrap: "wrap",
       }}
     >
+      <div className="sr-only" role="status" aria-live="polite" aria-atomic="true">
+        {announcement}
+      </div>
       <span style={{ fontSize: "12px", color: "var(--color-ink-mute)" }}>
         Updated {relativeTime}
       </span>
@@ -885,19 +902,42 @@ export function ProfileView({
     };
   }, [lastRefresh, tabVisible]);
 
+  const [refreshAnnouncement, setRefreshAnnouncement] = useState("");
+
   const handleRefresh = async () => {
     setIsRefreshing(true);
+    setRefreshAnnouncement(`Refreshing GitHub profile statistics for @${user.login}...`);
     try {
       const res = await fetch(`/api/${user.login}/refresh`, { method: "POST" });
       if (res.ok) {
         const data = await res.json();
         setLastRefresh(data.refreshedAt);
         postMessage({ type: "refreshed", username: user.login });
+        setRefreshAnnouncement(
+          `Profile stats refreshed successfully. New score: ${score.toLocaleString("en-US")}.`,
+        );
         router.refresh();
       } else {
         const payload = await res.json().catch(() => ({}));
+        if (res.status === 429 && payload.retryAfterSeconds) {
+          const mins = Math.ceil(payload.retryAfterSeconds / 60);
+          setRefreshAnnouncement(
+            `Refresh rate limited. Please try again in ${mins} minute${mins === 1 ? "" : "s"}.`,
+          );
+        } else {
+          setRefreshAnnouncement(
+            `Failed to refresh profile data: ${payload.error || "Refresh failed"}.`,
+          );
+        }
         throw new Error(payload.error || "Refresh failed");
       }
+    } catch (err: any) {
+      if (!refreshAnnouncement.includes("rate limited")) {
+        setRefreshAnnouncement(
+          `Failed to refresh profile data: ${err?.message || "Network error"}.`,
+        );
+      }
+      throw err;
     } finally {
       setIsRefreshing(false);
     }
@@ -1106,6 +1146,9 @@ export function ProfileView({
     <div
       style={{ maxWidth: "56rem", margin: "0 auto", padding: "48px 20px 80px" }}
     >
+      <div className="sr-only" role="status" aria-live="polite" aria-atomic="true">
+        {refreshAnnouncement}
+      </div>
       {/* Profile header */}
       <div
         style={{

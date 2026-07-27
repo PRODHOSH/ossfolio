@@ -85,20 +85,32 @@ export function ProfileActions({
     }
   };
 
+  const [announcement, setAnnouncement] = useState("");
+
   const handleRefreshClick = async () => {
     setRefreshState("loading");
+    setAnnouncement(`Refreshing GitHub profile statistics for @${username}...`);
     try {
       await onRefresh();
       setRefreshState("success");
+      setAnnouncement(
+        `Profile stats refreshed successfully. New score: ${score.toLocaleString("en-US")}.`,
+      );
       setTimeout(() => setRefreshState("idle"), 2500);
-    } catch (err) {
+    } catch (err: any) {
       setRefreshState("error");
+      setAnnouncement(
+        `Failed to refresh profile stats: ${err?.message || "Error occurred"}.`,
+      );
       setTimeout(() => setRefreshState("idle"), 2500);
     }
   };
 
   return (
     <>
+      <div className="sr-only" role="status" aria-live="polite" aria-atomic="true">
+        {announcement}
+      </div>
       <div
         style={{
           display: "flex",
