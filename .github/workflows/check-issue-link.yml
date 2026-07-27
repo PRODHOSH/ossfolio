@@ -1,8 +1,33 @@
 name: Verify PR Issue Link
 
+# Runs on `pull_request_target` rather than `pull_request`.
+#
+# A `pull_request` run triggered from a fork receives a read-only GITHUB_TOKEN
+# regardless of the repository's default workflow permissions, so
+# `issues.createComment` answered 403 and the unhandled rejection aborted the
+# script before it could report the actual validation verdict. Contributors on
+# forks therefore saw an opaque "Resource not accessible by integration" error
+# instead of the guidance this check exists to give them.
+#
+# `pull_request_target` is safe in this workflow for the same reason it is in
+# pr-welcome.yml, pr-merged-thanks.yml and auto-label.yml: the job never checks
+# out, builds, installs or executes anything from the pull request. It reads one
+# inert string — the PR description — through the `context` object.
+#
+# Two rules keep it that way, and both must hold for any future edit:
+#   1. Never add a checkout, build or install step here.
+#   2. Never interpolate PR-controlled text into the script through a workflow
+#      expression. Values reached through `context.payload` are handed to the
+#      script as data at runtime; an expression is instead pasted into the
+#      script source before it runs, which is a script-injection vector.
+
 on:
-  pull_request:
+  pull_request_target:
     types: [opened, edited, synchronize]
+
+permissions:
+  contents: read
+  pull-requests: write
 
 jobs:
   verify-link:
@@ -12,23 +37,90 @@ jobs:
         uses: actions/github-script@v7
         with:
           script: |
+            // Identifies this workflow's own comment so repeated runs update one
+            // notice instead of stacking a new warning on every `synchronize`.
+            // Same upsert convention as bundle-size-comment.yml.
+            const MARKER = "<!-- ossfolio:issue-link-check -->";
+
+            const { owner, repo } = context.repo;
+            const prNumber = context.payload.pull_request.number;
             const prBody = context.payload.pull_request.body || "";
 
-            // Regex to look for GitHub linking keywords followed by an issue number (e.g., Closes #123, Fixes #45)
+            // Unchanged from the previous revision. This PR fixes how the result
+            // is delivered, not what counts as a valid link, so no PR that passes
+            // today can start failing because of it.
             const regex = /(close|closes|closed|fix|fixes|fixed|resolve|resolves|resolved)\s+#\d+/i;
             const hasLink = regex.test(prBody);
 
-            if (!hasLink) {
-              // Leave an educational comment on the PR
-              await github.rest.issues.createComment({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                issue_number: context.payload.pull_request.number,
-                body: "⚠️ **Action Required:** Please update your PR description to link the issue you are solving (e.g., write `Closes #issue-number` or `Fixes #issue-number`). This is required to pass automated validation status checks."
-              });
+            const warning = [
+              MARKER,
+              "",
+              "⚠️ **Action Required:** Please update your PR description to link the issue you are solving (e.g., write `Closes #issue-number` or `Fixes #issue-number`). This is required to pass automated validation status checks.",
+            ].join("\n");
 
-              // Fail the workflow check explicitly
-              core.setFailed("PR description does not contain an issue linking keyword expression.");
+            const resolved = [
+              MARKER,
+              "",
+              "✅ **Issue link found.** Thanks — this PR now references the issue it resolves.",
+            ].join("\n");
+
+            const desired = hasLink ? resolved : warning;
+
+            // Paginate: a long review thread can exceed one page, and missing an
+            // earlier notice would recreate the duplicate-comment bug.
+            let existing = null;
+            try {
+              const comments = await github.paginate(
+                github.rest.issues.listComments,
+                { owner, repo, issue_number: prNumber, per_page: 100 },
+              );
+              existing = comments.find(
+                (comment) =>
+                  comment.user?.type === "Bot" && comment.body?.includes(MARKER),
+              );
+            } catch (error) {
+              core.warning(`Could not read existing comments: ${error.message}`);
+            }
+
+            // Commenting is best-effort. The status check must reflect the
+            // description, never the comment API's outcome — that coupling was
+            // the original bug.
+            try {
+              if (existing) {
+                // Skip a no-op write so pushing ten commits to an unlinked PR
+                // does not mark the same comment "edited" ten times.
+                if (existing.body !== desired) {
+                  await github.rest.issues.updateComment({
+                    owner,
+                    repo,
+                    comment_id: existing.id,
+                    body: desired,
+                  });
+                  core.info(`Updated issue-link notice ${existing.id}.`);
+                }
+              } else if (!hasLink) {
+                // Only warn. A compliant PR that never triggered a warning does
+                // not need a comment congratulating it.
+                await github.rest.issues.createComment({
+                  owner,
+                  repo,
+                  issue_number: prNumber,
+                  body: desired,
+                });
+                core.info("Posted issue-link warning.");
+              }
+            } catch (error) {
+              core.warning(
+                `Could not post the issue-link notice: ${error.message}`,
+              );
+            }
+
+            if (!hasLink) {
+              core.setFailed(
+                "PR description does not contain an issue linking keyword expression.",
+              );
             } else {
-              console.log("Validation Passed: Found a qualifying issue link keyword.");
+              core.info(
+                "Validation Passed: Found a qualifying issue link keyword.",
+              );
             }
