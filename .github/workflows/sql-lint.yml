@@ -1,0 +1,94 @@
+name: SQL Migration Checks
+
+# Validates changes under `supabase/migrations/`.
+#
+# Runs on `pull_request` rather than `pull_request_target`: the job reads files
+# and posts nothing, so the read-only token a fork receives is all it needs. That
+# also means it never runs with write access alongside pull request code.
+#
+# Scope is deliberately limited to files the pull request actually changed. A
+# check that fails on pre-existing history is a check contributors learn to
+# ignore, so historical problems are surfaced as warnings in the job summary
+# instead of failing someone else's unrelated work.
+
+on:
+  pull_request:
+    paths:
+      - "supabase/**"
+      - "scripts/sql-lint.mjs"
+      - ".github/workflows/sql-lint.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  migrations:
+    name: migrations
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out pull request
+        uses: actions/checkout@v4
+        with:
+          # The base branch has to be present locally to diff against it.
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install sqlfluff
+        # Pinned so the parser cannot change underneath the repository without a
+        # commit. An unpinned linter turns every future release into a surprise
+        # CI failure nobody asked for.
+        run: pip install "sqlfluff==4.2.2"
+
+      - name: Collect changed SQL files
+        id: changed
+        env:
+          BASE_REF: ${{ github.base_ref }}
+        run: |
+          set -euo pipefail
+          git fetch --no-tags origin "$BASE_REF"
+          CHANGED=$(git diff --name-only "origin/$BASE_REF...HEAD" -- 'supabase/**' || true)
+          echo "Changed files under supabase/:"
+          echo "${CHANGED:-  (none)}"
+          {
+            echo "files<<SQLLINT_EOF"
+            echo "$CHANGED"
+            echo "SQLLINT_EOF"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Validate SQL syntax
+        env:
+          CHANGED_FILES: ${{ steps.changed.outputs.files }}
+        run: |
+          set -euo pipefail
+          MIGRATIONS=$(echo "$CHANGED_FILES" | grep -E '^supabase/migrations/.*\.sql$' || true)
+          if [ -z "$MIGRATIONS" ]; then
+            echo "No migration files changed; nothing to parse."
+            exit 0
+          fi
+          STATUS=0
+          while IFS= read -r file; do
+            [ -z "$file" ] && continue
+            [ -f "$file" ] || continue
+            echo "Parsing $file"
+            sqlfluff parse --dialect postgres "$file" > /dev/null || STATUS=1
+          done <<< "$MIGRATIONS"
+          exit $STATUS
+
+      - name: Run migration checks
+        env:
+          CHANGED_FILES: ${{ steps.changed.outputs.files }}
+        run: |
+          set -euo pipefail
+          # shellcheck disable=SC2086
+          node scripts/sql-lint.mjs $(echo "$CHANGED_FILES" | tr '\n' ' ') \
+            | tee -a "$GITHUB_STEP_SUMMARY"
