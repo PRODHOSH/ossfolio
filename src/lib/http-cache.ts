@@ -51,6 +51,36 @@ function stripWeakPrefix(entityTag: string): string {
 }
 
 /**
+ * Split an `If-None-Match` field value into its entity-tags.
+ *
+ * A naive `split(",")` is wrong: a comma is a legal character *inside* an
+ * opaque-tag, because `etagc` admits %x23-7E and 0x2C falls in that range
+ * (RFC 9110 §8.8.3). So `"a,b"` is one tag, not two. Quoting has no escape
+ * mechanism — DQUOTE itself is excluded from `etagc` — so tracking whether we
+ * are inside quotes is sufficient to tokenise correctly.
+ */
+function splitEntityTags(header: string): string[] {
+  const tags: string[] = [];
+  let current = "";
+  let inQuotes = false;
+
+  for (const character of header) {
+    if (character === '"') {
+      inQuotes = !inQuotes;
+      current += character;
+    } else if (character === "," && !inQuotes) {
+      tags.push(current);
+      current = "";
+    } else {
+      current += character;
+    }
+  }
+  tags.push(current);
+
+  return tags;
+}
+
+/**
  * Decide whether a caller's `If-None-Match` header already covers `etag`.
  *
  * Returns true when the request should be answered `304 Not Modified`.
@@ -77,8 +107,7 @@ export function isNotModified(
 
   const current = stripWeakPrefix(etag);
 
-  return header
-    .split(",")
+  return splitEntityTags(header)
     .map((candidate) => stripWeakPrefix(candidate.trim()))
     .some((candidate) => candidate !== "" && candidate === current);
 }

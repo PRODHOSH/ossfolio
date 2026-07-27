@@ -80,11 +80,24 @@ describe("GET /api/v1/users/[username] — conditional caching", () => {
     expect((await call()).headers.get("etag")).toBe((await call()).headers.get("etag"));
   });
 
-  it("200 body shape is unchanged by this feature", async () => {
+  it("200 body matches the public contract exactly — no field added or dropped", async () => {
+    // Deep equality rather than a partial match: this endpoint is a versioned
+    // public contract, so a field appearing or disappearing should fail here and
+    // force a deliberate decision, not slip through unnoticed.
     const body = await (await call()).json();
-    expect(body).toMatchObject({
-      username: "octocat", score: 1234,
+    expect(body).toEqual({
+      username: "octocat",
+      name: "The Octocat",
+      avatar_url: "https://a",
+      github_url: "https://g",
+      bio: null,
+      headline: null,
+      score: 1234,
+      followers: 10,
+      top_languages: ["TypeScript"],
       stats: { commits: 1, prs: 2, issues: 3, reviews: 4 },
+      badges: [],
+      last_refreshed_at: "2026-07-26T00:00:00.000Z",
     });
   });
 });

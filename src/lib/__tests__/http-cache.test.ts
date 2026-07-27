@@ -95,6 +95,26 @@ describe("isNotModified", () => {
     expect(isNotModified(",,,", ETAG)).toBe(false);
   });
 
+  it("treats a comma inside a quoted tag as content, not a delimiter", () => {
+    // `etagc` admits %x23-7E and 0x2C sits in that range, so "a,b" is one
+    // entity-tag rather than two. RFC 9110 §8.8.3.
+    expect(isNotModified('"a,b"', '"a,b"')).toBe(true);
+  });
+
+  it("still splits on commas that sit between quoted tags", () => {
+    expect(isNotModified('"a,b", "abc123"', '"abc123"')).toBe(true);
+    expect(isNotModified('"a,b","c,d"', '"c,d"')).toBe(true);
+  });
+
+  it("does not let a quoted comma cause a false match", () => {
+    expect(isNotModified('"a,b"', '"a"')).toBe(false);
+    expect(isNotModified('"a,b"', '"b"')).toBe(false);
+  });
+
+  it("handles a quoted comma alongside a weak validator", () => {
+    expect(isNotModified('W/"a,b"', '"a,b"')).toBe(true);
+  });
+
   it("round-trips against a real computed tag", async () => {
     const tag = await computeETag('{"username":"octocat"}');
     expect(isNotModified(tag, tag)).toBe(true);
