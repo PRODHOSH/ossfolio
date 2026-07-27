@@ -9,6 +9,7 @@ import { scoreWithAnomalyCheck } from "@/lib/anomaly";
 import { createApiResponse, createErrorResponse } from "@/lib/validators/api";
 import { fetchWithTimeout } from "@/lib/fetch-with-timeout";
 import type { ContributorStats, Repo } from "@/types";
+import { GITHUB_API_BASE } from '@/lib/constants';
 
 // Runtime managed by @opennextjs/cloudflare
 
@@ -56,7 +57,7 @@ async function statsFromRest(
   // SYNC_TIMEOUT_MS and redirects, but the invocation itself would otherwise keep running
   // until GitHub answers, so the request is aborted rather than merely abandoned.
   const reposRes = await fetchWithTimeout(
-    `https://api.github.com/users/${encodeURIComponent(username)}/repos?sort=stars&per_page=12&type=owner`,
+    `${GITHUB_API_BASE}/users/${encodeURIComponent(username)}/repos?sort=stars&per_page=12&type=owner`,
     {
       headers: { Accept: "application/vnd.github.v3+json" },
       cache: "no-store",
