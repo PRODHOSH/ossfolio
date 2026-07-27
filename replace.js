@@ -14,13 +14,10 @@ for (const file of files) {
   
   let newContent = content;
   // Replace template literals: `https://api.github.com/...
-  newContent = newContent.replace(/`https:\/\/api\.github\.com/g, '`\\${GITHUB_API_BASE}');
+  newContent = newContent.replace(/`https:\/\/api\.github\.com/g, '`${GITHUB_API_BASE}');
   
   // Replace standard strings: "https://api.github.com/..."
-  newContent = newContent.replace(/["']https:\/\/api\.github\.com([^"']*)["']/g, '`\\${GITHUB_API_BASE}$1`');
-  
-  // If we mistakenly created `${GITHUB_API_BASE}` without template literals
-  newContent = newContent.replace(/`\$\{GITHUB_API_BASE\}`/g, 'GITHUB_API_BASE');
+  newContent = newContent.replace(/["']https:\/\/api\.github\.com([^"']*)["']/g, '`${GITHUB_API_BASE}$1`');
   
   if (content !== newContent) {
     if (!content.includes('GITHUB_API_BASE')) {
