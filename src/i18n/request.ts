@@ -1,8 +1,8 @@
 import { getRequestConfig } from "next-intl/server";
 import { cookies, headers } from "next/headers";
-import { defaultLocale, isLocale, LOCALE_COOKIE, Locale } from "./config";
+import { defaultLocale, isLocale, LOCALE_COOKIE, Locale, Messages } from "./config";
 
-const messagesMap: Record<Locale, () => Promise<any>> = {
+const messagesMap: Record<Locale, () => Promise<{ default: Messages }>> = {
   en: () => import("../../messages/en.json"),
   es: () => import("../../messages/es.json"),
 };
