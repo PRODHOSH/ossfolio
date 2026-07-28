@@ -204,7 +204,7 @@ function clientIp(request: NextRequest): string | null {
  * ever needs to know whether it has seen *this* caller before, which a digest answers just
  * as well. Web Crypto is available in the edge runtime, so this costs nothing.
  */
-async function keyFor(identifier: string): Promise<string> {
+async function keyFor(identifier: string, namespace = "refresh"): Promise<string> {
   const digest = await crypto.subtle.digest(
     "SHA-256",
     new TextEncoder().encode(identifier),
@@ -213,7 +213,27 @@ async function keyFor(identifier: string): Promise<string> {
     .map((b) => b.toString(16).padStart(2, "0"))
     .join("");
   // 16 bytes is far beyond enough to avoid collisions here, and keeps the key short.
-  return `ratelimit:refresh:${hex.slice(0, 32)}`;
+  return `ratelimit:${namespace}:${hex.slice(0, 32)}`;
+}
+
+async function checkNamedRateLimit(
+  request: NextRequest,
+  namespace: string,
+): Promise<RateLimitResult> {
+  const identifier = clientIp(request) ?? "unidentified";
+  try {
+    const key = await keyFor(identifier, namespace);
+    const now = Date.now();
+    const resetAt = now + WINDOW_SECONDS * 1000;
+    const acquired = await redis.set(key, resetAt, { nx: true, ex: WINDOW_SECONDS });
+    if (acquired === "OK") return { allowed: true, retryAfterSeconds: 0 };
+    const storedResetAt = await redis.get<number>(key);
+    const remainingMs = typeof storedResetAt === "number" ? storedResetAt - now : WINDOW_SECONDS * 1000;
+    return { allowed: false, retryAfterSeconds: Math.max(1, Math.ceil(remainingMs / 1000)) };
+  } catch (error) {
+    console.error(`[rate-limit] ${namespace} limiter unavailable, allowing request:`, error instanceof Error ? error.message : error);
+    return { allowed: true, retryAfterSeconds: 0 };
+  }
 }
 
 /**
@@ -292,3 +312,9 @@ export async function checkRefreshRateLimit(
   }
 }
 
+/** Limits costly AI generation separately from manual profile refreshes. */
+export function checkDeveloperInsightsRateLimit(
+  request: NextRequest,
+): Promise<RateLimitResult> {
+  return checkNamedRateLimit(request, "developer-insights");
+}
