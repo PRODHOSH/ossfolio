@@ -2,10 +2,11 @@
 
 import React, { createContext, useContext, useEffect, useState } from "react";
 
-type Theme = "light" | "dark";
+type Theme = "light" | "dark" | "high-contrast";
 
 interface ThemeContextType {
   theme: Theme;
+  setTheme: (theme: Theme) => void;
   toggleTheme: () => void;
 }
 
@@ -19,31 +20,44 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     setTimeout(() => {
       setMounted(true);
       const savedTheme = localStorage.getItem("theme") as Theme | null;
-      const prefersDark = window.matchMedia(
-        "(prefers-color-scheme: dark)",
-      ).matches;
-      const initialTheme = savedTheme || (prefersDark ? "dark" : "light");
+      const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+
+      const initialTheme =
+        savedTheme && ["light", "dark", "high-contrast"].includes(savedTheme)
+          ? savedTheme
+          : prefersDark
+          ? "dark"
+          : "light";
+
       setTheme(initialTheme);
     }, 0);
   }, []);
 
   useEffect(() => {
     if (!mounted) return;
+
+    // Remove existing theme classes from HTML element
+    document.documentElement.classList.remove("dark", "high-contrast");
+
     if (theme === "dark") {
       document.documentElement.classList.add("dark");
-      localStorage.setItem("theme", "dark");
-    } else {
-      document.documentElement.classList.remove("dark");
-      localStorage.setItem("theme", "light");
+    } else if (theme === "high-contrast") {
+      document.documentElement.classList.add("high-contrast");
     }
+
+    localStorage.setItem("theme", theme);
   }, [theme, mounted]);
 
   const toggleTheme = () => {
-    setTheme((prev) => (prev === "dark" ? "light" : "dark"));
+    setTheme((prev) => {
+      if (prev === "light") return "dark";
+      if (prev === "dark") return "high-contrast";
+      return "light";
+    });
   };
 
   return (
-    <ThemeContext.Provider value={{ theme, toggleTheme }}>
+    <ThemeContext.Provider value={{ theme, setTheme, toggleTheme }}>
       {children}
     </ThemeContext.Provider>
   );
