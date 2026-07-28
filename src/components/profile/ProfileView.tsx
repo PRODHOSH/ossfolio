@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import * as Tooltip from "@radix-ui/react-tooltip";
+import { ScoreBreakdownModal } from "@/components/profile/ScoreBreakdownModal";
 import Image from "next/image";
 import dynamic from "next/dynamic";
 import { AnimatePresence, motion } from "framer-motion";
@@ -724,6 +726,7 @@ export function ProfileView({
     repoSectionTitle?: string;
   }) {
   const [sponsorshipData, setSponsorshipData] = useState<SponsorshipData | undefined>(initialSponsorshipData);
+  const [isScoreModalOpen, setIsScoreModalOpen] = useState(false);
 
   useEffect(() => {
     if (!sponsorshipData && user.login) {
@@ -2386,17 +2389,53 @@ export function ProfileView({
                       </span>
 
                       {item.label === "Contributor score" && (
-                        <Link
-                          href="/score-explained"
+                        <div
                           style={{
-                            fontSize: "11px",
-                            color: "var(--color-ink-mute-2)",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            gap: "6px",
                             marginTop: "4px",
-                            textDecoration: "none",
                           }}
                         >
-                          Score explained →
-                        </Link>
+                          <Link
+                            href="/score-explained"
+                            style={{
+                              fontSize: "11px",
+                              color: "var(--color-ink-mute-2)",
+                              textDecoration: "none",
+                            }}
+                          >
+                            Score explained →
+                          </Link>
+                          <button
+                            type="button"
+                            onClick={() => setIsScoreModalOpen(true)}
+                            aria-label="View score calculation breakdown"
+                            style={{
+                              background: "none",
+                              border: "none",
+                              color: "#3ecf8e",
+                              cursor: "pointer",
+                              padding: "2px",
+                              display: "inline-flex",
+                              alignItems: "center",
+                            }}
+                          >
+                            <svg
+                              width="14"
+                              height="14"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                            >
+                              <circle cx="12" cy="12" r="10" />
+                              <line x1="12" y1="16" x2="12" y2="12" />
+                              <line x1="12" y1="8" x2="12.01" y2="8" />
+                            </svg>
+                          </button>
+                        </div>
                       )}
                     </div>
                   );
@@ -2627,6 +2666,26 @@ export function ProfileView({
           username={user.login}
         />
       )}
+      {/* Badge Modal */}
+      {isOwner && (
+        <ProfileBadgeModal
+          open={isBadgeModalOpen}
+          onClose={() => setIsBadgeModalOpen(false)}
+          badgesList={badgesList}
+          onBadgesUpdate={setBadgesList}
+          profileId={profileId}
+          username={user.login}
+        />
+      )}
+
+      {/* Score Breakdown Modal */}
+      <ScoreBreakdownModal
+        isOpen={isScoreModalOpen}
+        onClose={() => setIsScoreModalOpen(false)}
+        stats={stats}
+        stars={totalStars}
+        score={score}
+      />
     </div>
   );
 }
