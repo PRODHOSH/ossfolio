@@ -1,10 +1,19 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { useState } from "react";
 import type { ContributorStats } from "@/types";
 import { ExportMenu } from "@/components/profile/ExportMenu";
 
-import { ProfileAnalyticsModal } from "@/components/profile/ProfileAnalyticsModal";
+const ProfileAnalyticsModal = dynamic(
+  () =>
+    import("@/components/profile/ProfileAnalyticsModal").then(
+      (mod) => mod.ProfileAnalyticsModal,
+    ),
+  {
+    ssr: false,
+  },
+);
 
 interface ProfileActionsProps {
   username: string;
