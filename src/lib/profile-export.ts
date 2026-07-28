@@ -1,9 +1,13 @@
-import { fetchLiveStats, fetchMergedPRs, fetchOrganizations } from "@/lib/profile-data";
-import type { ContributorStats, MergedPR, Org } from "@/types";
+import {
+  fetchLiveStats,
+  fetchMergedPRs,
+  fetchOrganizations,
+} from '@/lib/profile-data';
+import type { ContributorStats, MergedPR, Org } from '@/types';
 
-export type ExportFormat = "json" | "csv";
-export type BadgeType = "score" | "stats" | "heatmap";
-export type BadgeTheme = "dark" | "light" | "neon" | "minimal";
+export type ExportFormat = 'json' | 'csv';
+export type BadgeType = 'score' | 'stats' | 'heatmap';
+export type BadgeTheme = 'dark' | 'light' | 'neon' | 'minimal';
 
 export interface BadgeOptions {
   type?: BadgeType;
@@ -24,8 +28,8 @@ export interface ProfileExportData {
  */
 export async function exportProfileData(
   username: string,
-  format: ExportFormat = "json",
-  providedStats?: ContributorStats
+  format: ExportFormat = 'json',
+  providedStats?: ContributorStats,
 ): Promise<{ content: string; mimeType: string; filename: string }> {
   const cleanUsername = username.trim().toLowerCase();
 
@@ -47,17 +51,25 @@ export async function exportProfileData(
         fetchMergedPRs(cleanUsername, 50),
       ]);
 
-      if (liveStats.status === "fulfilled") stats = liveStats.value;
-      if (liveOrgs.status === "fulfilled") orgs = liveOrgs.value;
-      if (livePRs.status === "fulfilled") mergedPRs = livePRs.value;
+      if (liveStats.status === 'fulfilled') stats = liveStats.value;
+      if (liveOrgs.status === 'fulfilled') orgs = liveOrgs.value;
+      if (livePRs.status === 'fulfilled') mergedPRs = livePRs.value;
     } catch (err) {
-      console.warn("Error fetching profile export data:", err);
+      console.warn('Error fetching profile export data:', err);
     }
   }
 
   const score = Math.min(
     99,
-    Math.max(30, Math.floor(stats.totalCommits * 0.1 + stats.totalPRs * 2 + stats.totalIssues * 1.5 + 50))
+    Math.max(
+      30,
+      Math.floor(
+        stats.totalCommits * 0.1 +
+          stats.totalPRs * 2 +
+          stats.totalIssues * 1.5 +
+          50,
+      ),
+    ),
   );
 
   const exportPayload: ProfileExportData = {
@@ -69,17 +81,17 @@ export async function exportProfileData(
     recentPRs: mergedPRs,
   };
 
-  if (format === "csv") {
+  if (format === 'csv') {
     const csvRows: string[] = [];
-    csvRows.push("Metric,Value");
+    csvRows.push('Metric,Value');
     csvRows.push(`Username,${cleanUsername}`);
     csvRows.push(`Contributor Score,${score}`);
     csvRows.push(`Total Commits,${stats.totalCommits}`);
     csvRows.push(`Total PRs,${stats.totalPRs}`);
     csvRows.push(`Total Issues,${stats.totalIssues}`);
     csvRows.push(`Total Reviews,${stats.totalReviews}`);
-    csvRows.push("");
-    csvRows.push("PR Title,Repository,Merged At,URL");
+    csvRows.push('');
+    csvRows.push('PR Title,Repository,Merged At,URL');
 
     mergedPRs.forEach((pr) => {
       const titleEscaped = `"${pr.title.replace(/"/g, '""')}"`;
@@ -87,15 +99,15 @@ export async function exportProfileData(
     });
 
     return {
-      content: csvRows.join("\n"),
-      mimeType: "text/csv; charset=utf-8",
+      content: csvRows.join('\n'),
+      mimeType: 'text/csv; charset=utf-8',
       filename: `${cleanUsername}-ossfolio-contributions.csv`,
     };
   }
 
   return {
     content: JSON.stringify(exportPayload, null, 2),
-    mimeType: "application/json; charset=utf-8",
+    mimeType: 'application/json; charset=utf-8',
     filename: `${cleanUsername}-ossfolio-contributions.json`,
   };
 }
@@ -108,32 +120,32 @@ const THEME_STYLES: Record<
   { bg: string; border: string; text: string; mute: string; accent: string }
 > = {
   dark: {
-    bg: "#0d1117",
-    border: "#30363d",
-    text: "#e6edf3",
-    mute: "#8b949e",
-    accent: "#6366f1",
+    bg: '#0d1117',
+    border: '#30363d',
+    text: '#e6edf3',
+    mute: '#8b949e',
+    accent: '#6366f1',
   },
   light: {
-    bg: "#ffffff",
-    border: "#d0d7de",
-    text: "#1f2328",
-    mute: "#656d76",
-    accent: "#4f46e5",
+    bg: '#ffffff',
+    border: '#d0d7de',
+    text: '#1f2328',
+    mute: '#656d76',
+    accent: '#4f46e5',
   },
   neon: {
-    bg: "#090d16",
-    border: "rgba(62, 207, 142, 0.4)",
-    text: "#38bdf8",
-    mute: "#94a3b8",
-    accent: "#3ecf8e",
+    bg: '#090d16',
+    border: 'rgba(62, 207, 142, 0.4)',
+    text: '#38bdf8',
+    mute: '#94a3b8',
+    accent: '#3ecf8e',
   },
   minimal: {
-    bg: "rgba(15, 23, 42, 0.9)",
-    border: "rgba(255, 255, 255, 0.12)",
-    text: "#f8fafc",
-    mute: "#94a3b8",
-    accent: "#818cf8",
+    bg: 'rgba(15, 23, 42, 0.9)',
+    border: 'rgba(255, 255, 255, 0.12)',
+    text: '#f8fafc',
+    mute: '#94a3b8',
+    accent: '#818cf8',
   },
 };
 
@@ -143,11 +155,11 @@ const THEME_STYLES: Record<
 export async function generateBadgeSvg(
   username: string,
   options: BadgeOptions = {},
-  providedStats?: ContributorStats
+  providedStats?: ContributorStats,
 ): Promise<string> {
   const cleanUsername = username.trim().toLowerCase();
-  const type = options.type || "score";
-  const themeKey = options.theme || "dark";
+  const type = options.type || 'score';
+  const themeKey = options.theme || 'dark';
   const theme = THEME_STYLES[themeKey] || THEME_STYLES.dark;
 
   let stats: ContributorStats = providedStats || {
@@ -159,7 +171,15 @@ export async function generateBadgeSvg(
   };
   let score = Math.min(
     99,
-    Math.max(30, Math.floor(stats.totalCommits * 0.1 + stats.totalPRs * 2 + stats.totalIssues * 1.5 + 50))
+    Math.max(
+      30,
+      Math.floor(
+        stats.totalCommits * 0.1 +
+          stats.totalPRs * 2 +
+          stats.totalIssues * 1.5 +
+          50,
+      ),
+    ),
   );
 
   if (!providedStats) {
@@ -169,15 +189,23 @@ export async function generateBadgeSvg(
         stats = fetchedStats;
         score = Math.min(
           99,
-          Math.max(30, Math.floor(stats.totalCommits * 0.1 + stats.totalPRs * 2 + stats.totalIssues * 1.5 + 50))
+          Math.max(
+            30,
+            Math.floor(
+              stats.totalCommits * 0.1 +
+                stats.totalPRs * 2 +
+                stats.totalIssues * 1.5 +
+                50,
+            ),
+          ),
         );
       }
     } catch (err) {
-      console.warn("Could not fetch stats for SVG badge, using fallback:", err);
+      console.warn('Could not fetch stats for SVG badge, using fallback:', err);
     }
   }
 
-  if (type === "stats") {
+  if (type === 'stats') {
     // Multi-metric compact stats banner
     return `<svg xmlns="http://www.w3.org/2000/svg" width="460" height="90" viewBox="0 0 460 90">
   <style>
@@ -210,16 +238,24 @@ export async function generateBadgeSvg(
 </svg>`;
   }
 
-  if (type === "heatmap") {
+  if (type === 'heatmap') {
     // Mini contribution activity graph
     const rects: string[] = [];
-    const colors = ["rgba(99, 102, 241, 0.15)", "#818cf8", "#6366f1", "#4f46e5", "#4338ca"];
-    let col = 0;
+    const colors = [
+      'rgba(99, 102, 241, 0.15)',
+      '#818cf8',
+      '#6366f1',
+      '#4f46e5',
+      '#4338ca',
+    ];
+    const col = 0;
     for (let i = 0; i < 28; i++) {
       const x = 16 + (i % 14) * 14;
       const y = 42 + Math.floor(i / 14) * 14;
       const level = (i * 7) % 5;
-      rects.push(`<rect x="${x}" y="${y}" width="10" height="10" rx="2" fill="${colors[level]}" />`);
+      rects.push(
+        `<rect x="${x}" y="${y}" width="10" height="10" rx="2" fill="${colors[level]}" />`,
+      );
     }
 
     return `<svg xmlns="http://www.w3.org/2000/svg" width="240" height="80" viewBox="0 0 240 80">
@@ -231,7 +267,7 @@ export async function generateBadgeSvg(
   <rect class="bg" x="0.5" y="0.5" width="239" height="79" />
   <text class="label" x="16" y="24">@${cleanUsername}</text>
   <text class="sub" x="150" y="24">Activity</text>
-  ${rects.join("\n  ")}
+  ${rects.join('\n  ')}
 </svg>`;
   }
 

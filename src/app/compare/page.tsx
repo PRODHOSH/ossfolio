@@ -1,5 +1,3 @@
-'use client';
-
 import { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -28,10 +26,7 @@ const CompareRadarChart = dynamic(
     import('@/components/profile/CompareRadarChart').then(
       (mod) => mod.CompareRadarChart,
     ),
-  {
-    ssr: false,
-    loading: () => <CompareRadarChartSkeleton />,
-  },
+  { loading: () => <CompareRadarChartSkeleton /> },
 );
 
 const CompareCharts = dynamic(
@@ -39,10 +34,7 @@ const CompareCharts = dynamic(
     import('@/components/profile/CompareCharts').then(
       (mod) => mod.CompareCharts,
     ),
-  {
-    ssr: false,
-    loading: () => <CompareChartsSkeleton />,
-  },
+  { loading: () => <CompareChartsSkeleton /> },
 );
 
 // Runtime managed by @opennextjs/cloudflare

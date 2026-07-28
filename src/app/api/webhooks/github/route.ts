@@ -53,7 +53,7 @@ function timingSafeEqualBuffer(
 }
 
 /** Verify GitHub's `X-Hub-Signature-256` (HMAC-SHA256 of raw body in constant time). */
-export async function verifySignature(
+async function verifySignature(
   secret: string,
   body: string,
   header: string | null,
