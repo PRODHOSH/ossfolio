@@ -21,46 +21,72 @@ async function fetchGitHubUser(username: string) {
   return res.json();
 }
 
+let cachedFontsPromise: Promise<[ArrayBuffer, ArrayBuffer]> | null = null;
+
+/**
+ * Resets the in-memory font cache. Used for testing.
+ */
+export function resetFontCacheForTesting() {
+  cachedFontsPromise = null;
+}
+
+/**
+ * Fetches and caches the Inter font ArrayBuffers across reused edge worker isolations.
+ */
+export async function getInterFonts(): Promise<[ArrayBuffer, ArrayBuffer]> {
+  if (cachedFontsPromise) {
+    return cachedFontsPromise;
+  }
+
+  cachedFontsPromise = (async () => {
+    try {
+      // Fetch Inter font from the Google Fonts CSS API.
+      const interFontData = await fetch(
+        "https://fonts.googleapis.com/css2?family=Inter:wght@400;500&display=swap",
+        {
+          headers: {
+            "User-Agent":
+              "Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10_6_8; de-at) AppleWebKit/533.21.1 (KHTML, like Gecko) Version/5.0.5 Safari/533.21.1",
+          },
+        },
+      ).then((res) => res.text());
+
+      // Extract font file URLs for weight 500 (medium) and weight 400 (regular)
+      const mediumUrlMatch = interFontData.match(
+        /font-weight:\s*500;[^}]*?src:\s*url\(([^)]+)\)/,
+      );
+      const regularUrlMatch = interFontData.match(
+        /font-weight:\s*400;[^}]*?src:\s*url\(([^)]+)\)/,
+      );
+
+      const [interMedium, interRegular] = await Promise.all([
+        fetch(
+          mediumUrlMatch?.[1] ??
+            "https://fonts.gstatic.com/s/inter/v18/UcC73FwrK3iLTeHuS_fjbvMwCp50SjIa1ZL7.woff2",
+        ).then((res) => res.arrayBuffer()),
+        fetch(
+          regularUrlMatch?.[1] ??
+            "https://fonts.gstatic.com/s/inter/v18/UcC73FwrK3iLTeHuS_fvbvMwCp50SjIa1ZL7.woff2",
+        ).then((res) => res.arrayBuffer()),
+      ]);
+
+      return [interMedium, interRegular];
+    } catch (err) {
+      cachedFontsPromise = null;
+      throw err;
+    }
+  })();
+
+  return cachedFontsPromise;
+}
+
 export default async function OGImage({ params }: OGImageProps) {
   const { username } = await params;
 
-  // Fetch Inter font from the Google Fonts CSS API.
-  // We request the CSS with a User-Agent that triggers woff format (which Satori
-  // can also read), then extract the font-file URL from the @font-face block.
-  const interFontData = await fetch(
-    "https://fonts.googleapis.com/css2?family=Inter:wght@400;500&display=swap",
-    {
-      headers: {
-        // A non-browser UA makes Google Fonts return TTF (TrueType) format,
-        // which is what Satori/ImageResponse needs.
-        "User-Agent":
-          "Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10_6_8; de-at) AppleWebKit/533.21.1 (KHTML, like Gecko) Version/5.0.5 Safari/533.21.1",
-      },
-    },
-  ).then((res) => res.text());
-
-  // Extract the font file URL for weight 500 (medium) — used for display text
-  const mediumUrlMatch = interFontData.match(
-    /font-weight:\s*500;[^}]*?src:\s*url\(([^)]+)\)/,
-  );
-  // Extract the font file URL for weight 400 (regular) — used for body text
-  const regularUrlMatch = interFontData.match(
-    /font-weight:\s*400;[^}]*?src:\s*url\(([^)]+)\)/,
-  );
-
-  const [interMedium, interRegular] = await Promise.all([
-    fetch(
-      mediumUrlMatch?.[1] ??
-        "https://fonts.gstatic.com/s/inter/v18/UcC73FwrK3iLTeHuS_fjbvMwCp50SjIa1ZL7.woff2",
-    ).then((res) => res.arrayBuffer()),
-    fetch(
-      regularUrlMatch?.[1] ??
-        "https://fonts.gstatic.com/s/inter/v18/UcC73FwrK3iLTeHuS_fvbvMwCp50SjIa1ZL7.woff2",
-    ).then((res) => res.arrayBuffer()),
-  ]);
-
-  // Fetch user data and the stored profile summary in parallel
-  const [user, profileResult] = await Promise.all([
+  // Fetch fonts (uses in-memory cached ArrayBuffers across worker isolations)
+  // alongside user data and stored profile summary in parallel
+  const [[interMedium, interRegular], user, profileResult] = await Promise.all([
+    getInterFonts(),
     fetchGitHubUser(username),
     getProfileByUsername(
       username,
@@ -79,12 +105,6 @@ export default async function OGImage({ params }: OGImageProps) {
   const profileRow = profileResult.data;
 
   // A private profile has no page, so it must not have a social card either.
-  //
-  // This has to short-circuit rather than filter the row, which is what it did before. Everything on
-  // the card below — avatar, display name, @username, the OSSfolio branding and the profile URL — is
-  // built from the GitHub response, not from `profileRow`. Excluding the row only zeroed the stored
-  // stats: the card still rendered, still carried the person's face and handle, and was still
-  // shareable. It just claimed a score of 0. That is not privacy, it is a worse-looking leak.
   if (profileRow?.visibility === "private") {
     return new Response(null, { status: 404 });
   }
@@ -105,7 +125,7 @@ export default async function OGImage({ params }: OGImageProps) {
     { label: "Reviews", value: statValue(profileRow?.total_reviews) },
   ].filter((s): s is { label: string; value: number } => s.value !== null);
 
-  return new ImageResponse(
+  const response = new ImageResponse(
     <div
       style={{
         width: "100%",
@@ -343,6 +363,12 @@ export default async function OGImage({ params }: OGImageProps) {
           style: "normal",
         },
       ],
+      headers: {
+        "Cache-Control": "public, immutable, max-age=31536000",
+      },
     },
   );
+
+  response.headers.set("Cache-Control", "public, immutable, max-age=31536000");
+  return response;
 }
