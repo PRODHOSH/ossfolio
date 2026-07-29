@@ -1161,8 +1161,18 @@ export function ProfileView({
           alignItems: "flex-start",
           gap: "24px",
           flexWrap: "wrap",
-          paddingBottom: "40px",
-          borderBottom: "1px solid var(--color-hairline)",
+          padding: "24px",
+          marginBottom: "40px",
+          // DESIGN.md sanctions elevation, not translucency: line 491 commits
+          // to the white canvas and rules out atmospheric backdrops, and the
+          // word "glassmorphic" appears nowhere in the spec. Level 1
+          // (0 1px 3px rgba(0,0,0,0.06), "subtle card lift") is the weight the
+          // Elevation & Depth table specifies for exactly this, paired with the
+          // hairline border and {rounded.lg} 12px radius.
+          background: "var(--color-canvas-soft)",
+          border: "1px solid var(--color-hairline)",
+          borderRadius: "12px",
+          boxShadow: "0 1px 3px rgba(0,0,0,0.06)",
         }}
       >
         <Image
@@ -1224,25 +1234,28 @@ export function ProfileView({
           </div>
 
           {(() => {
+            // Tier accents come from named tokens in globals.css rather than
+            // hex literals, so the DESIGN.md exception they represent lives in
+            // one documented place and dark mode can adjust the fill.
             let tierName = "Bronze Contributor";
-            let tierColor = "#cd7f32";
-            let tierBg = "rgba(205, 127, 50, 0.15)";
+            let tierColor = "var(--color-tier-bronze)";
+            let tierBg = "var(--color-tier-bronze-soft)";
             if (score >= 1000) {
               tierName = "Diamond Contributor";
-              tierColor = "#00e1d9";
-              tierBg = "rgba(0, 225, 217, 0.15)";
+              tierColor = "var(--color-tier-diamond)";
+              tierBg = "var(--color-tier-diamond-soft)";
             } else if (score >= 500) {
               tierName = "Platinum Contributor";
-              tierColor = "#e5e4e2";
-              tierBg = "rgba(229, 228, 226, 0.15)";
+              tierColor = "var(--color-tier-platinum)";
+              tierBg = "var(--color-tier-platinum-soft)";
             } else if (score >= 250) {
               tierName = "Gold Contributor";
-              tierColor = "#ffd700";
-              tierBg = "rgba(255, 215, 0, 0.15)";
+              tierColor = "var(--color-tier-gold)";
+              tierBg = "var(--color-tier-gold-soft)";
             } else if (score >= 100) {
               tierName = "Silver Contributor";
-              tierColor = "#c0c0c0";
-              tierBg = "rgba(192, 192, 192, 0.15)";
+              tierColor = "var(--color-tier-silver)";
+              tierBg = "var(--color-tier-silver-soft)";
             }
             return (
               <div

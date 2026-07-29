@@ -26,6 +26,24 @@
 
   /* Structural Structural Borders Line Layers */
   --color-hairline: #dfdfdf;
+
+  /* Contributor tier accents.
+     A deliberate, documented exception to the single-emerald rule in DESIGN.md
+     ("Single emerald primary as the only chromatic event; everything else is
+     monochrome"). These five encode an earned achievement level rather than
+     decoration, so the colours are retained as a product decision — see #561.
+     Naming them keeps the exception in one place instead of five hex literals
+     inline, and gives dark mode somewhere to adjust. */
+  --color-tier-bronze: #cd7f32;
+  --color-tier-bronze-soft: rgba(205, 127, 50, 0.15);
+  --color-tier-silver: #c0c0c0;
+  --color-tier-silver-soft: rgba(192, 192, 192, 0.15);
+  --color-tier-gold: #ffd700;
+  --color-tier-gold-soft: rgba(255, 215, 0, 0.15);
+  --color-tier-platinum: #e5e4e2;
+  --color-tier-platinum-soft: rgba(229, 228, 226, 0.15);
+  --color-tier-diamond: #00e1d9;
+  --color-tier-diamond-soft: rgba(0, 225, 217, 0.15);
   --color-hairline-strong: #c7c7c7;
   --color-hairline-cool: #ededed;
 
@@ -73,6 +91,16 @@
   --color-hairline: #2e2e2e;
   --color-hairline-strong: #444444;
   --color-hairline-cool: #252525;
+
+  /* Tier hues are unchanged; only the fill is lifted. At 0.15 these washes are
+     effectively invisible against the near-black canvas, so the badge reads as
+     an outline with no surface. The foreground and border colours stay exactly
+     as they are in light mode, so the tier identity does not shift. */
+  --color-tier-bronze-soft: rgba(205, 127, 50, 0.22);
+  --color-tier-silver-soft: rgba(192, 192, 192, 0.22);
+  --color-tier-gold-soft: rgba(255, 215, 0, 0.22);
+  --color-tier-platinum-soft: rgba(229, 228, 226, 0.22);
+  --color-tier-diamond-soft: rgba(0, 225, 217, 0.22);
 }
 
 /* ─────────────────────────────────────────────────────────────────────────────
