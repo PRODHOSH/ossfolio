@@ -37,7 +37,8 @@ export function OrgDashboard({ initialOrg }: OrgDashboardProps) {
         method: "POST",
       });
       if (res.ok) {
-        const data = await res.json();
+        const json = await res.json();
+        const data = json.data ?? json;
         setOrg(data);
       }
     } catch (err) {
@@ -55,7 +56,7 @@ export function OrgDashboard({ initialOrg }: OrgDashboardProps) {
         method: "POST",
       });
       const data = await res.json();
-      if (res.ok && data.success) {
+      if (res.ok && (data.success || data.data?.message)) {
         setClaimSuccess(true);
         setOrg((prev) => ({ ...prev, isClaimed: true }));
         setTimeout(() => {
@@ -63,7 +64,8 @@ export function OrgDashboard({ initialOrg }: OrgDashboardProps) {
           setClaimSuccess(false);
         }, 1500);
       } else {
-        setClaimError(data.error || "Claim failed. Make sure you are signed in.");
+        const errorMsg = data.error?.message || (typeof data.error === "string" ? data.error : null) || "Claim failed. Make sure you are signed in.";
+        setClaimError(errorMsg);
       }
     } catch (err) {
       setClaimError("An unexpected error occurred.");

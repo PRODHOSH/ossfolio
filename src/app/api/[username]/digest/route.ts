@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { createApiResponse, createErrorResponse } from "@/lib/validators/api";
 import { getContributionDigest, DigestPeriod } from "@/lib/digest";
 
 export async function GET(
@@ -11,17 +11,14 @@ export async function GET(
   const period: DigestPeriod = periodParam === "monthly" ? "monthly" : "weekly";
 
   if (!username) {
-    return NextResponse.json({ error: "Username is required" }, { status: 400 });
+    return createErrorResponse("Username is required", 400);
   }
 
   try {
     const digestData = await getContributionDigest(username, period);
-    return NextResponse.json(digestData);
+    return createApiResponse(digestData);
   } catch (error) {
     console.error("Failed to generate contribution digest:", error);
-    return NextResponse.json(
-      { error: "Failed to generate digest" },
-      { status: 500 }
-    );
+    return createErrorResponse("Failed to generate digest", 500);
   }
 }

@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { createApiResponse, createErrorResponse } from "@/lib/validators/api";
 import { refreshOrganizationStats } from "@/lib/org-data";
 
 export async function POST(
@@ -8,17 +8,14 @@ export async function POST(
   const { organization } = await params;
 
   if (!organization) {
-    return NextResponse.json({ error: "Organization slug is required" }, { status: 400 });
+    return createErrorResponse("Organization slug is required", 400);
   }
 
   try {
     const updatedData = await refreshOrganizationStats(organization);
-    return NextResponse.json(updatedData);
+    return createApiResponse(updatedData);
   } catch (err) {
     console.error("Failed to refresh organization stats:", err);
-    return NextResponse.json(
-      { error: "Failed to refresh organization stats" },
-      { status: 500 }
-    );
+    return createErrorResponse("Failed to refresh organization stats", 500);
   }
 }

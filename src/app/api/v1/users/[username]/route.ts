@@ -206,7 +206,7 @@ export async function GET(
   // The tag is derived from the exact bytes this endpoint would return.
   // `NextResponse.json` serialises with `JSON.stringify`, so hashing the same
   // value here yields a validator that genuinely matches the payload.
-  const etag = await computeETag(JSON.stringify(body));
+  const etag = await computeETag(JSON.stringify({ success: true, data: body }));
 
   const cacheHeaders: Record<string, string> = {
     "Cache-Control": "public, s-maxage=300, stale-while-revalidate=600",

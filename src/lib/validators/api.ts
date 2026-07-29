@@ -1,5 +1,30 @@
 import { NextResponse } from "next/server";
-import { AppError, toApiErrorBody } from "@/lib/errors";
+import { AppError, toApiErrorBody, type ErrorCode } from "@/lib/errors";
+
+export type { ErrorCode } from "@/lib/errors";
+
+export type ApiSuccessResponse<T> = {
+  success: true;
+  data: T;
+};
+
+export type ApiErrorDetails = {
+  code: ErrorCode;
+  message: string;
+  details?: unknown;
+};
+
+export type ApiErrorResponse = {
+  success: false;
+  error: ApiErrorDetails;
+  code?: ErrorCode;
+  status?: number;
+  timestamp?: string;
+  retryAfterSeconds?: number;
+  [key: string]: unknown;
+};
+
+export type ApiResponse<T> = ApiSuccessResponse<T> | ApiErrorResponse;
 
 export function sanitizeUsername(value: unknown): string | null {
   if (typeof value !== "string") return null;
@@ -72,8 +97,12 @@ export function createApiResponse<T>(
   data: T,
   status = 200,
   extraHeaders?: Record<string, string>,
-): NextResponse {
-  return NextResponse.json(data, {
+): NextResponse<ApiResponse<T>> {
+  const body: ApiSuccessResponse<T> = {
+    success: true,
+    data,
+  };
+  return NextResponse.json(body, {
     status,
     headers: {
       "X-Content-Type-Options": "nosniff",
@@ -89,13 +118,21 @@ export function createErrorResponse(
   status = 400,
   extra?: Record<string, unknown>,
   headers?: Record<string, string>,
-): NextResponse {
-  const body: Record<string, unknown> = {
-    error,
-    code: errorCodeForStatus(status),
+): NextResponse<ApiErrorResponse> {
+  const code = errorCodeForStatus(status);
+  const body: ApiErrorResponse = {
+    success: false,
+    error: {
+      code,
+      message: error,
+      ...(extra && Object.keys(extra).length > 0 ? { details: extra } : {}),
+    },
+    code,
     status,
     timestamp: new Date().toISOString(),
-    ...extra,
+    ...(extra?.retryAfterSeconds !== undefined
+      ? { retryAfterSeconds: extra.retryAfterSeconds as number }
+      : {}),
   };
   return NextResponse.json(body, {
     status,
@@ -107,11 +144,12 @@ export function createErrorResponse(
   });
 }
 
-function errorCodeForStatus(status: number): string {
+function errorCodeForStatus(status: number): ErrorCode {
   switch (status) {
     case 400:
       return "VALIDATION_ERROR";
     case 401:
+    case 403:
       return "AUTH_ERROR";
     case 404:
       return "NOT_FOUND";
@@ -129,7 +167,7 @@ function errorCodeForStatus(status: number): string {
 export function apiErrorResponse(
   error: AppError,
   extraHeaders?: Record<string, string>,
-): NextResponse {
+): NextResponse<ApiErrorResponse> {
   const body = toApiErrorBody(error);
   const headers: Record<string, string> = {
     "X-Content-Type-Options": "nosniff",

@@ -1,4 +1,5 @@
-import { NextResponse, type NextRequest } from "next/server";
+import { type NextRequest } from "next/server";
+import { createApiResponse, createErrorResponse } from "@/lib/validators/api";
 import { supabase } from "@/lib/supabase";
 
 export async function GET(
@@ -7,7 +8,7 @@ export async function GET(
 ) {
   const { username } = await params;
   if (!username) {
-    return NextResponse.json({ error: "Username is required" }, { status: 400 });
+    return createErrorResponse("Username is required", 400);
   }
 
   const cleanUsername = username.toLowerCase();
@@ -34,7 +35,7 @@ export async function GET(
   }
 
   if (!userId) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return createErrorResponse("Unauthorized", 401);
   }
 
   // 2. Verify Profile Ownership
@@ -49,9 +50,9 @@ export async function GET(
     authUsername === cleanUsername;
 
   if (!isOwner) {
-    return NextResponse.json(
-      { error: "Forbidden: Analytics are private to the profile owner" },
-      { status: 403 }
+    return createErrorResponse(
+      "Forbidden: Analytics are private to the profile owner",
+      403
     );
   }
 
@@ -69,7 +70,7 @@ export async function GET(
 
   if (error) {
     console.error("Failed to query profile_views:", error.message);
-    return NextResponse.json({ error: "Failed to fetch analytics" }, { status: 500 });
+    return createErrorResponse("Failed to fetch analytics", 500);
   }
 
   const views = rawViews || [];
@@ -138,7 +139,7 @@ export async function GET(
     count,
   }));
 
-  return NextResponse.json({
+  return createApiResponse({
     username: cleanUsername,
     days,
     totalViews,
