@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { createApiResponse, createErrorResponse } from "@/lib/validators/api";
 import { claimOrganization } from "@/lib/org-data";
 import { supabase } from "@/lib/supabase";
 
@@ -9,7 +9,7 @@ export async function POST(
   const { organization } = await params;
 
   if (!organization) {
-    return NextResponse.json({ error: "Organization slug is required" }, { status: 400 });
+    return createErrorResponse("Organization slug is required", 400);
   }
 
   // Check auth user session
@@ -30,24 +30,24 @@ export async function POST(
     }
 
     if (!userId) {
-      return NextResponse.json(
-        { error: "Authentication required to claim an organization" },
-        { status: 401 }
+      return createErrorResponse(
+        "Authentication required to claim an organization",
+        401
       );
     }
 
     const success = await claimOrganization(organization, userId);
 
     if (success) {
-      return NextResponse.json({ success: true, message: "Organization claimed successfully" });
+      return createApiResponse({ message: "Organization claimed successfully" });
     }
 
-    return NextResponse.json(
-      { error: "Organization is already claimed or could not be updated" },
-      { status: 400 }
+    return createErrorResponse(
+      "Organization is already claimed or could not be updated",
+      400
     );
   } catch (err) {
     console.error("Error in claim organization endpoint:", err);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return createErrorResponse("Internal server error", 500);
   }
 }

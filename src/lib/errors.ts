@@ -83,22 +83,40 @@ export class GitHubRateLimitError extends Error {
   }
 }
 
+export type ErrorCode =
+  | "VALIDATION_ERROR"
+  | "AUTH_ERROR"
+  | "NOT_FOUND"
+  | "RATE_LIMITED"
+  | "UPSTREAM_ERROR"
+  | "SERVICE_UNAVAILABLE"
+  | "INTERNAL_ERROR";
+
 export interface ApiErrorBody {
-  error: string;
-  code: string;
+  success: false;
+  error: {
+    code: ErrorCode;
+    message: string;
+    details?: Record<string, unknown>;
+  };
+  code: ErrorCode;
   status: number;
   timestamp: string;
-  details?: Record<string, unknown>;
   retryAfterSeconds?: number;
 }
 
 export function toApiErrorBody(error: AppError): ApiErrorBody {
+  const code = (error.code || "INTERNAL_ERROR") as ErrorCode;
   return {
-    error: error.message,
-    code: error.code,
+    success: false,
+    error: {
+      code,
+      message: error.message,
+      ...(error.details ? { details: error.details } : {}),
+    },
+    code,
     status: error.status,
     timestamp: new Date().toISOString(),
-    ...(error.details ? { details: error.details } : {}),
     ...(error.retryAfterSeconds !== undefined
       ? { retryAfterSeconds: error.retryAfterSeconds }
       : {}),

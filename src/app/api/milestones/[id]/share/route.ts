@@ -1,3 +1,4 @@
+import { createApiResponse, createErrorResponse } from "@/lib/validators/api";
 import { DEFINITIONS } from "@/lib/achievements";
 import { supabase } from "@/lib/supabase";
 
@@ -10,19 +11,13 @@ export async function GET(
   const username = searchParams.get("username") || "";
 
   if (!id) {
-    return new Response(
-      JSON.stringify({ error: "Milestone ID parameter is required" }),
-      { status: 400, headers: { "Content-Type": "application/json" } }
-    );
+    return createErrorResponse("Milestone ID parameter is required", 400);
   }
 
   const definition = DEFINITIONS.find((d) => d.id === id);
 
   if (!definition) {
-    return new Response(
-      JSON.stringify({ error: "Milestone not found" }),
-      { status: 404, headers: { "Content-Type": "application/json" } }
-    );
+    return createErrorResponse("Milestone not found", 404);
   }
 
   let unlockedAt: string | null = null;
@@ -49,8 +44,8 @@ export async function GET(
   const description = `${definition.name}: ${definition.tagline}. Track open source achievements and streaks on OSSfolio.`;
   const shareText = `🏆 I unlocked the "${definition.name}" milestone (${definition.tagline}) on OSSfolio!`;
 
-  return new Response(
-    JSON.stringify({
+  return createApiResponse(
+    {
       id: definition.id,
       name: definition.name,
       tagline: definition.tagline,
@@ -65,13 +60,10 @@ export async function GET(
         description,
         icon: definition.icon,
       },
-    }),
+    },
+    200,
     {
-      status: 200,
-      headers: {
-        "Content-Type": "application/json",
-        "Cache-Control": "public, max-age=300, s-maxage=600",
-      },
+      "Cache-Control": "public, max-age=300, s-maxage=600",
     }
   );
 }

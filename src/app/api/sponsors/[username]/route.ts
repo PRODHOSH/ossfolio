@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { createApiResponse, createErrorResponse } from "@/lib/validators/api";
 import { getSponsorshipData } from "@/lib/sponsors";
 
 export async function GET(
@@ -8,18 +8,16 @@ export async function GET(
   const { username } = await params;
 
   if (!username) {
-    return NextResponse.json({ error: "Username parameter is required" }, { status: 400 });
+    return createErrorResponse("Username parameter is required", 400);
   }
 
   try {
     const data = await getSponsorshipData(username);
-    return NextResponse.json(data, {
-      headers: {
-        "Cache-Control": "public, max-age=1800, s-maxage=1800",
-      },
+    return createApiResponse(data, 200, {
+      "Cache-Control": "public, max-age=1800, s-maxage=1800",
     });
   } catch (err) {
     console.error("Failed to fetch sponsorship data:", err);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return createErrorResponse("Internal server error", 500);
   }
 }

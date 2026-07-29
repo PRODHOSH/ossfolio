@@ -229,7 +229,8 @@ function ProfileFreshness({
     try {
       const res = await fetch(`/api/${username}/refresh`, { method: "POST" });
       if (res.ok) {
-        const data = await res.json();
+        const json = await res.json();
+        const data = json.data ?? json;
         setLastRefresh(data.refreshedAt);
         const scoreText =
           typeof score === "number"
@@ -241,8 +242,9 @@ function ProfileFreshness({
         const payload = await res
           .json()
           .catch(() => ({ error: "Refresh failed" }));
-        if (res.status === 429 && payload.retryAfterSeconds) {
-          const mins = Math.ceil(payload.retryAfterSeconds / 60);
+        const retryAfterSeconds = payload.retryAfterSeconds || payload.error?.details?.retryAfterSeconds;
+        if (res.status === 429 && retryAfterSeconds) {
+          const mins = Math.ceil(retryAfterSeconds / 60);
           setErrorMsg(`Try again in ${mins} min`);
           setAnnouncement(
             `Refresh rate limited. Please try again in ${mins} minute${mins === 1 ? "" : "s"}.`,
