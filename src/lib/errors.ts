@@ -92,7 +92,14 @@ export type ErrorCode =
   | "SERVICE_UNAVAILABLE"
   | "INTERNAL_ERROR";
 
-export interface ApiErrorBody {
+// A type alias rather than an interface, deliberately.
+//
+// ApiErrorResponse in validators/api.ts carries an `[key: string]: unknown`
+// index signature. TypeScript gives type aliases an implicit index signature
+// but not interfaces, so declaring this as an interface made it unassignable to
+// ApiErrorResponse — which is what errorResponse() returns. The members are
+// identical either way; only the assignability rule differs.
+export type ApiErrorBody = {
   success: false;
   error: {
     code: ErrorCode;
@@ -103,7 +110,7 @@ export interface ApiErrorBody {
   status: number;
   timestamp: string;
   retryAfterSeconds?: number;
-}
+};
 
 export function toApiErrorBody(error: AppError): ApiErrorBody {
   const code = (error.code || "INTERNAL_ERROR") as ErrorCode;
