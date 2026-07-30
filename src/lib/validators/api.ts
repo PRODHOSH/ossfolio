@@ -182,11 +182,3 @@ export function apiErrorResponse(
     headers,
   });
 }
-  if (error.retryAfterSeconds !== undefined) {
-    headers["Retry-After"] = String(error.retryAfterSeconds);
-  }
-  return NextResponse.json(body, {
-    status: error.status,
-    headers,
-  });
-}
