@@ -24,6 +24,11 @@ export interface ScoreBreakdown {
   total: number;
 }
 
+/** Helper to prevent floating-point precision drift */
+function roundPrecision(value: number, decimals = 2): number {
+  return Number(value.toFixed(decimals));
+}
+
 export function getScoreBreakdown(
   stats: {
     totalCommits: number;
@@ -39,13 +44,14 @@ export function getScoreBreakdown(
   const reviewsContribution = stats.totalReviews * SCORE_WEIGHTS.REVIEW;
   const starsContribution = Math.min(totalStars, STAR_CAP) * SCORE_WEIGHTS.STAR;
 
-  const total = Math.round(
+  const rawTotal =
     commitsContribution +
-      prsContribution +
-      issuesContribution +
-      reviewsContribution +
-      starsContribution,
-  );
+    prsContribution +
+    issuesContribution +
+    reviewsContribution +
+    starsContribution;
+
+  const total = Math.round(roundPrecision(rawTotal));
 
   return {
     commits: stats.totalCommits,
