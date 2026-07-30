@@ -168,12 +168,20 @@ export function apiErrorResponse(
   error: AppError,
   extraHeaders?: Record<string, string>,
 ): NextResponse<ApiErrorResponse> {
-  const body = toApiErrorBody(error);
+  const body = toApiErrorBody(error) as unknown as ApiErrorResponse;
   const headers: Record<string, string> = {
     "X-Content-Type-Options": "nosniff",
     "X-Frame-Options": "DENY",
     ...extraHeaders,
   };
+  if (error.retryAfterSeconds !== undefined) {
+    headers["Retry-After"] = String(error.retryAfterSeconds);
+  }
+  return NextResponse.json(body, {
+    status: error.status,
+    headers,
+  });
+}
   if (error.retryAfterSeconds !== undefined) {
     headers["Retry-After"] = String(error.retryAfterSeconds);
   }
