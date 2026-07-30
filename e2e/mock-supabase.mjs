@@ -173,6 +173,12 @@ const server = createServer((req, res) => {
     res.end(JSON.stringify(rows));
   };
 
+  if (url.pathname === "/" || url.pathname === "/health") {
+    res.statusCode = 200;
+    res.end(JSON.stringify({ status: "ok" }));
+    return;
+  }
+
   if (url.pathname.startsWith("/rest/v1/profiles")) {
     const username = eqValue(url.searchParams, "username");
     const id = eqValue(url.searchParams, "id");
@@ -197,7 +203,7 @@ const server = createServer((req, res) => {
   respond([]);
 });
 
-server.listen(PORT, "127.0.0.1", () => {
+server.listen(PORT, "0.0.0.0", () => {
   // Playwright's `webServer` waits for this port, so the message is only for humans.
   console.log(`[mock-supabase] listening on http://127.0.0.1:${PORT}`);
 });
