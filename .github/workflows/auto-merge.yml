@@ -6,14 +6,21 @@ on:
 
 jobs:
   enable-auto-merge:
-    if: github.event.review.state == 'approved' && github.event.review.user.login == 'PRODHOSH'
+    if: >-
+      github.event.review.state == 'approved' &&
+      github.event.pull_request.draft == false &&
+      contains(fromJSON('["MEMBER", "OWNER", "COLLABORATOR"]'), github.event.review.author_association)
     runs-on: ubuntu-latest
     permissions:
       pull-requests: write
       contents: write
     steps:
       - name: Enable Auto-Merge via GitHub CLI
+        id: auto_merge
+        continue-on-error: true
         run: |
-          gh pr merge ${{ github.event.pull_request.number }} --auto --merge --repo ${{ github.repository }}
+          if ! gh pr merge ${{ github.event.pull_request.number }} --auto --merge --repo ${{ github.repository }}; then
+            echo "::notice::Auto-merge could not be enabled automatically (pending status checks, draft state, or elevated scope required)."
+          fi
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
