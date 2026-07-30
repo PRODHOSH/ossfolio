@@ -101,18 +101,27 @@ export async function processDeadLetterQueue(
     }
 
     for (const item of items as WebhookDeadLetterRow[]) {
-      result.processed++;
       const currentNow = new Date().toISOString();
 
-      // Lock row to processing status
-      await adminClient
+      // Atomically lock row from pending -> processing to prevent race conditions
+      const { data: lockData, error: lockError } = await adminClient
         .from("webhook_dead_letter_queue")
         .update({
           status: "processing",
           last_retry_at: currentNow,
           updated_at: currentNow,
         })
-        .eq("id", item.id);
+        .eq("id", item.id)
+        .eq("status", "pending")
+        .select("id")
+        .maybeSingle();
+
+      if (lockError || !lockData) {
+        // Row was already claimed/processed by another concurrent worker
+        continue;
+      }
+
+      result.processed++;
 
       const refreshRes = await refreshProfile(item.username);
 
@@ -136,7 +145,7 @@ export async function processDeadLetterQueue(
             .update({
               status: "failed",
               retry_count: nextRetryCount,
-              error_reason: `max_retries_exceeded: ${refreshRes.status}`,
+              error_reason: `max_retries_exceeded: ${String(refreshRes.status)}`,
               updated_at: finishNow,
             })
             .eq("id", item.id);
@@ -154,7 +163,7 @@ export async function processDeadLetterQueue(
               status: "pending",
               retry_count: nextRetryCount,
               next_retry_at: nextRetryDate,
-              error_reason: `retry_scheduled: ${refreshRes.status}`,
+              error_reason: `retry_scheduled: ${String(refreshRes.status)}`,
               updated_at: finishNow,
             })
             .eq("id", item.id);
