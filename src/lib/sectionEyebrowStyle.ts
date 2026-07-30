@@ -3,4 +3,6 @@ export const sectionEyebrowStyle = {
   fontWeight: 500,
   color: "#3ecf8e",
   marginBottom: "10px",
-};
+} as const;
+
+export type SectionEyebrowStyle = typeof sectionEyebrowStyle;
