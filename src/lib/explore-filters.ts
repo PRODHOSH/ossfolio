@@ -85,21 +85,30 @@ export type ExploreQuery = Record<string, string>;
  */
 export const buildExploreQuery = (
   current: ExploreFilters,
-  patch: Partial<Pick<ExploreFilters, "lang" | "minScore" | "type" | "sortBy" | "q">> = {},
+  patch: Partial<ExploreFilters> = {},
 ): ExploreQuery => {
   const merged = { ...current, ...patch };
-  const query: ExploreQuery = {};
+  const params = new URLSearchParams();
 
-  // `users` is the default view, so it does not need to appear in the URL.
-  if (merged.type && merged.type !== "users") query.type = merged.type;
-  if (merged.q) query.q = merged.q;
-  if (merged.sortBy && merged.sortBy !== "score") query.sortBy = merged.sortBy;
-  if (merged.lang) query.lang = merged.lang;
-  if (merged.minScore > 0) query.minScore = String(merged.minScore);
+  // 1. Query Parameter Merging: Strictly filter out defaults and empty strings
+  if (merged.type && merged.type !== "users") params.set("type", merged.type);
+  if (merged.q && merged.q.trim() !== "") params.set("q", merged.q.trim());
+  if (merged.sortBy && merged.sortBy !== "score") params.set("sortBy", merged.sortBy);
+  if (merged.lang && merged.lang.trim() !== "") params.set("lang", merged.lang.trim());
+  if (merged.minScore && merged.minScore > 0) params.set("minScore", String(merged.minScore));
 
-  // Pagination is deliberately not carried over: `patch` is only ever a filter
-  // change, and any filter change invalidates the current page number.
-  return query;
+  // Ensure stale pagination resets if other filter criteria actively changed
+  const filterChanged = ["type", "q", "sortBy", "lang", "minScore"].some(
+    (key) =>
+      key in patch &&
+      patch[key as keyof ExploreFilters] !== current[key as keyof ExploreFilters]
+  );
+
+  if (!filterChanged && merged.page > 1) {
+    params.set("page", String(merged.page));
+  }
+
+  return Object.fromEntries(params.entries());
 };
 
 /** True when any filter beyond the default view is active. */
@@ -112,10 +121,12 @@ export const hasActiveFilters = (filters: ExploreFilters): boolean =>
  * string.
  */
 export const describeFilters = (filters: ExploreFilters): string => {
-  const parts: string[] = [];
-  if (filters.lang) parts.push(filters.lang);
-  if (filters.minScore > 0) parts.push(`score ${filters.minScore}+`);
-  if (filters.q) parts.push(`matching “${filters.q}”`);
-  if (parts.length === 0) return "";
-  return parts.join(" · ");
+  // 2. Filter Description Parsing: Clean array-based filtering to prevent trailing separators
+  return [
+    filters.lang,
+    filters.minScore > 0 ? `score ${filters.minScore}+` : null,
+    filters.q ? `matching “${filters.q}”` : null,
+  ]
+    .filter(Boolean)
+    .join(" • ");
 };
