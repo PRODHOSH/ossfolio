@@ -1,5 +1,6 @@
 import { useState, useMemo } from "react";
 import type { MergedPR } from "@/types";
+import { StatusPill } from "@/components/ui/status-pill";
 
 interface LatestMergedPRsProps {
   mergedPRs: MergedPR[];
@@ -122,9 +123,14 @@ export function LatestMergedPRs({ mergedPRs }: LatestMergedPRsProps) {
                     "var(--color-hairline-strong)";
                 }}
               >
-                <span style={{ fontWeight: 500, marginBottom: "4px" }}>
-                  {pr.title}
-                </span>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "4px" }}>
+                  <span style={{ fontWeight: 500 }}>
+                    {pr.title}
+                  </span>
+                  <StatusPill variant={pr.state || "merged"} size="micro">
+                    {pr.state || "merged"}
+                  </StatusPill>
+                </div>
                 <span
                   style={{ fontSize: "13px", color: "var(--color-ink-mute)" }}
                 >

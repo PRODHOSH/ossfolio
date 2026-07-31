@@ -14,6 +14,7 @@ import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
 import { useBroadcastChannel } from "@/hooks/useBroadcastChannel";
 import { useVisibility } from "@/hooks/useVisibility";
 import { SkeletonCard } from "@/components/ui/skeleton-card";
+import { ContributorBadge } from "@/components/ui/contributor-badge";
 import { evaluateAchievements, countUnlocked, type Achievement } from "@/lib/achievements";
 import { AchievementsGrid } from "@/components/profile/AchievementsGrid";
 import { MilestoneTimeline } from "@/components/profile/MilestoneTimeline";
@@ -1234,28 +1235,20 @@ export function ProfileView({
           </div>
 
           {(() => {
-            // Tier accents come from named tokens in globals.css rather than
-            // hex literals, so the DESIGN.md exception they represent lives in
-            // one documented place and dark mode can adjust the fill.
+            let tier: "bronze" | "silver" | "gold" | "platinum" | "diamond" = "bronze";
             let tierName = "Bronze Contributor";
-            let tierColor = "var(--color-tier-bronze)";
-            let tierBg = "var(--color-tier-bronze-soft)";
             if (score >= 1000) {
+              tier = "diamond";
               tierName = "Diamond Contributor";
-              tierColor = "var(--color-tier-diamond)";
-              tierBg = "var(--color-tier-diamond-soft)";
             } else if (score >= 500) {
+              tier = "platinum";
               tierName = "Platinum Contributor";
-              tierColor = "var(--color-tier-platinum)";
-              tierBg = "var(--color-tier-platinum-soft)";
             } else if (score >= 250) {
+              tier = "gold";
               tierName = "Gold Contributor";
-              tierColor = "var(--color-tier-gold)";
-              tierBg = "var(--color-tier-gold-soft)";
             } else if (score >= 100) {
+              tier = "silver";
               tierName = "Silver Contributor";
-              tierColor = "var(--color-tier-silver)";
-              tierBg = "var(--color-tier-silver-soft)";
             }
             return (
               <div
@@ -1265,22 +1258,9 @@ export function ProfileView({
                   alignItems: "center",
                 }}
               >
-                <span
-                  style={{
-                    fontSize: "11px",
-                    fontWeight: 700,
-                    textTransform: "uppercase",
-                    letterSpacing: "0.05em",
-                    color: tierColor,
-                    backgroundColor: tierBg,
-                    border: `1px solid ${tierColor}`,
-                    padding: "3px 8px",
-                    borderRadius: "4px",
-                    boxShadow: "0 2px 8px rgba(0,0,0,0.05)",
-                  }}
-                >
+                <ContributorBadge tier={tier}>
                   {tierName}
-                </span>
+                </ContributorBadge>
               </div>
             );
           })()}
@@ -1663,42 +1643,25 @@ export function ProfileView({
                 {badgesList.map((badge) => {
                   if (!badge || !badge.program || !Array.isArray(badge.years))
                     return null;
-                  const style = PROGRAM_STYLING[badge.program] || {
-                    gradient:
-                      "linear-gradient(135deg, #707070 0%, #9a9a9a 100%)",
-                    text: "#ffffff",
-                    bg: "rgba(128, 128, 128, 0.1)",
-                  };
+                  const progKey = badge.program.toLowerCase();
+                  const progVariant = (
+                    ["gsoc", "gssoc", "hacktoberfest", "elusoc", "swoc"].includes(progKey)
+                      ? progKey
+                      : "default"
+                  ) as "gsoc" | "gssoc" | "hacktoberfest" | "elusoc" | "swoc" | "default";
                   const fullName =
                     PROGRAM_FULL_NAMES[badge.program] ?? badge.program;
                   return (
                     <Tooltip.Root key={badge.program}>
                       <Tooltip.Trigger asChild>
-                        <div
+                        <ContributorBadge
                           tabIndex={0}
                           aria-label={fullName}
-                          style={{
-                            display: "inline-flex",
-                            alignItems: "center",
-                            gap: "8px",
-                            padding: "6px 14px",
-                            borderRadius: "9999px",
-                            background: style.gradient,
-                            color: style.text,
-                            fontSize: "13px",
-                            fontWeight: 600,
-                            boxShadow: "0 2px 4px rgba(0,0,0,0.08)",
-                          }}
+                          program={progVariant}
                         >
                           <span>{badge.program}</span>
                           <span
-                            style={{
-                              backgroundColor: "rgba(255, 255, 255, 0.25)",
-                              padding: "2px 6px",
-                              borderRadius: "9999px",
-                              fontSize: "11px",
-                              fontWeight: 500,
-                            }}
+                            className="bg-white/25 px-1.5 py-0.5 rounded-full text-[11px] font-medium"
                           >
                             {badge.years.join(", ")}
                           </span>
@@ -1724,7 +1687,7 @@ export function ProfileView({
                               &times;
                             </button>
                           )}
-                        </div>
+                        </ContributorBadge>
                       </Tooltip.Trigger>
                       <Tooltip.Portal>
                         <Tooltip.Content
