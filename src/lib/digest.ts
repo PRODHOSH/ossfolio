@@ -62,6 +62,7 @@ export interface ContributionDigestData {
 
 /**
  * Calculate period start and end dates based on selected period
+ * using strict UTC math to prevent local timezone drift.
  */
 export function getPeriodDateRange(
   period: DigestPeriod,
@@ -71,9 +72,9 @@ export function getPeriodDateRange(
   const startDate = new Date(referenceDate);
 
   if (period === "weekly") {
-    startDate.setDate(endDate.getDate() - 7);
+    startDate.setUTCDate(endDate.getUTCDate() - 7);
   } else {
-    startDate.setDate(endDate.getDate() - 30);
+    startDate.setUTCDate(endDate.getUTCDate() - 30);
   }
 
   return { startDate, endDate };
@@ -140,10 +141,10 @@ export async function getContributionDigest(
     console.error("Error fetching live profile data for digest:", e);
   }
 
-  // Filter PRs within period date range
+  // Filter PRs within period date range using strict absolute timestamp math
   const periodPRs = mergedPRs.filter((pr) => {
     const d = new Date(pr.mergedAt || pr.createdAt || 0);
-    return d >= startDate && d <= endDate;
+    return d.getTime() >= startDate.getTime() && d.getTime() <= endDate.getTime();
   });
 
   const prsMergedCount = periodPRs.length > 0 ? periodPRs.length : mergedPRs.length > 0 ? Math.min(mergedPRs.length, period === "weekly" ? 3 : 8) : period === "weekly" ? 2 : 6;
@@ -265,26 +266,55 @@ export async function getContributionDigest(
 }
 
 /**
+ * Safely escape XML entities in standard text nodes and attributes.
+ */
+function escapeXml(unsafe: string): string {
+  if (!unsafe) return "";
+  return unsafe
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&apos;");
+}
+
+/**
+ * Safely escape CDATA sections by splitting nested `]]>` sequences.
+ */
+function escapeCdata(unsafe: string): string {
+  if (!unsafe) return "";
+  return unsafe.replace(/]]>/g, "]]]]><![CDATA[>");
+}
+
+/**
  * Generates an RSS 2.0 XML feed string for a user's digest activities
  */
 export function generateDigestRssXml(
   username: string,
   digest: ContributionDigestData
 ): string {
-  const channelUrl = `https://ossfolio.qzz.io/digest/${encodeURIComponent(username)}?period=${digest.period}`;
-  const feedTitle = `OSSfolio Contribution Digest - ${digest.name || username} (${digest.period.toUpperCase()})`;
-  const feedDescription = `Weekly & monthly open-source activity digest for ${username} on OSSfolio.`;
+  const rawChannelUrl = `https://ossfolio.qzz.io/digest/${encodeURIComponent(username)}?period=${digest.period}`;
+  
+  // Apply strict escaping for structural XML fields
+  const channelUrl = escapeXml(rawChannelUrl);
+  const feedUrl = escapeXml(`https://ossfolio.qzz.io/api/${encodeURIComponent(username)}/digest/feed`);
+  const feedTitle = escapeCdata(`OSSfolio Contribution Digest - ${digest.name || username} (${digest.period.toUpperCase()})`);
+  const feedDescription = escapeCdata(`Weekly & monthly open-source activity digest for ${username} on OSSfolio.`);
 
   const itemsXml = digest.activities
     .map((act) => {
       const pubDate = new Date(act.timestamp).toUTCString();
-      const itemUrl = act.url || channelUrl;
+      const itemUrl = escapeXml(act.url || rawChannelUrl);
+      const guid = escapeXml(`${digest.username}-${act.id}-${digest.period}`);
+      const safeTitle = escapeCdata(act.title);
+      const safeDesc = escapeCdata(`${act.description || act.title} - ${act.badge || "Contribution"}`);
+      
       return `    <item>
-      <title><![CDATA[${act.title}]]></title>
+      <title><![CDATA[${safeTitle}]]></title>
       <link>${itemUrl}</link>
-      <guid isPermaLink="false">${digest.username}-${act.id}-${digest.period}</guid>
+      <guid isPermaLink="false">${guid}</guid>
       <pubDate>${pubDate}</pubDate>
-      <description><![CDATA[${act.description || act.title} - ${act.badge || "Contribution"}]]></description>
+      <description><![CDATA[${safeDesc}]]></description>
     </item>`;
     })
     .join("\n");
@@ -297,7 +327,7 @@ export function generateDigestRssXml(
     <description><![CDATA[${feedDescription}]]></description>
     <language>en-us</language>
     <lastBuildDate>${new Date(digest.generatedAt).toUTCString()}</lastBuildDate>
-    <atom:link href="https://ossfolio.qzz.io/api/${encodeURIComponent(username)}/digest/feed" rel="self" type="application/rss+xml" />
+    <atom:link href="${feedUrl}" rel="self" type="application/rss+xml" />
 ${itemsXml}
   </channel>
 </rss>`;
