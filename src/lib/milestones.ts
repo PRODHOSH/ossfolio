@@ -58,10 +58,13 @@ export async function syncUnlockedAchievements(
     const newUnlocks = unlocked.filter((a) => !existing[a.id]);
 
     if (newUnlocks.length > 0) {
+      // 1. Unify the timestamp so the DB and local state match exactly
+      const now = new Date().toISOString();
+
       const recordsToInsert = newUnlocks.map((a) => ({
         username: normalizedUsername,
         achievement_id: a.id,
-        unlocked_at: new Date().toISOString(),
+        unlocked_at: now,
         metadata: {
           name: a.name,
           target: a.target,
@@ -69,13 +72,19 @@ export async function syncUnlockedAchievements(
         },
       }));
 
-      await supabase
+      // 2. Explicitly catch and handle the upsert error
+      const { error } = await supabase
         .from("achievement_unlocks")
         .upsert(recordsToInsert, { onConflict: "username, achievement_id" });
 
-      // Merge newly inserted timestamps into result
+      if (error) {
+        console.error("Supabase upsert failed during achievement sync:", error.message);
+        return existing; // Abort local merge so we don't falsely show them as saved
+      }
+
+      // Merge newly inserted timestamps into result using the unified timestamp
       newUnlocks.forEach((a) => {
-        existing[a.id] = new Date().toISOString();
+        existing[a.id] = now;
       });
     }
 
