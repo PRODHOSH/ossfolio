@@ -30,6 +30,7 @@ export interface ContributorProfile {
   techStack: TechEntry[];
   fundingLinks?: FundingLink[];
   sponsors?: SponsorItem[];
+  contributionState?: "active" | "inactive" | "hiatus";
 }
 
 export interface ContributorStats {
@@ -159,4 +160,3 @@ export interface ImpactNetworkData {
   nodes: NetworkNode[];
   edges: NetworkEdge[];
 }
-
