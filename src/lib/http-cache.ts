@@ -105,7 +105,14 @@ export function isNotModified(
   if (header === "") return false;
   if (header === "*") return true;
 
-  const current = stripWeakPrefix(etag);
+  // Strict RFC 9110 validation: the origin ETag must be enclosed in double quotes.
+  // If quotes were accidentally stripped upstream, fail closed and warn.
+  if (!etag.includes('"')) {
+    console.warn(`[http-cache] Rejected malformed origin ETag (missing quotes): ${etag}`);
+    return false;
+  }
+
+  const current = stripWeakPrefix(etag.trim());
 
   return splitEntityTags(header)
     .map((candidate) => stripWeakPrefix(candidate.trim()))
