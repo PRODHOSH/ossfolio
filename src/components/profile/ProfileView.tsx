@@ -1988,265 +1988,278 @@ export function ProfileView({
                         gap: "16px",
                       }}
                     >
-                      {filteredRepos.map((repo) => {
-                        const isPinnedRepo = pinnedList.includes(repo.name);
-                        return (
-                          <div
-                            key={repo.id}
-                            style={{ position: "relative", display: "flex" }}
-                          >
-                            <a
-                              href={repo.html_url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              style={{
-                                display: "flex",
-                                flexDirection: "column",
-                                gap: "8px",
-                                padding: "20px",
-                                paddingTop: isOwner ? "44px" : "20px",
-                                width: "100%",
-                                border: isPinnedRepo
-                                  ? "1px solid var(--color-primary)"
-                                  : "1px solid var(--color-hairline)",
-                                boxShadow: isPinnedRepo
-                                  ? "0 0 0 1px var(--color-primary)"
-                                  : "none",
-                                borderRadius: "12px",
-                                textDecoration: "none",
-                                backgroundColor: "var(--color-canvas-soft)",
+                      <AnimatePresence mode="popLayout">
+                        {filteredRepos.map((repo) => {
+                          const isPinnedRepo = pinnedList.includes(repo.name);
+                          return (
+                            <motion.div
+                              key={repo.id}
+                              layout
+                              layoutId={`repo-card-${repo.id}`}
+                              initial={{ opacity: 0, scale: 0.96 }}
+                              animate={{ opacity: 1, scale: 1 }}
+                              exit={{ opacity: 0, scale: 0.96 }}
+                              transition={{
+                                type: "spring",
+                                stiffness: 350,
+                                damping: 25,
+                                opacity: { duration: 0.2 },
                               }}
-                              onMouseEnter={(e) => {
-                                if (!isPinnedRepo)
-                                  e.currentTarget.style.borderColor =
-                                    "var(--color-hairline-strong)";
-                                e.currentTarget.style.boxShadow = isPinnedRepo
-                                  ? "0 0 0 1px var(--color-primary), 0 1px 3px rgba(0,0,0,0.12)"
-                                  : "0 1px 3px rgba(0,0,0,0.12)";
-                              }}
-                              onMouseLeave={(e) => {
-                                e.currentTarget.style.borderColor = isPinnedRepo
-                                  ? "var(--color-primary)"
-                                  : "var(--color-hairline)";
-                                e.currentTarget.style.boxShadow = isPinnedRepo
-                                  ? "0 0 0 1px var(--color-primary)"
-                                  : "none";
-                              }}
+                              style={{ position: "relative", display: "flex" }}
                             >
-                              <p
+                              <a
+                                href={repo.html_url}
+                                target="_blank"
+                                rel="noopener noreferrer"
                                 style={{
-                                  fontSize: "14px",
-                                  fontWeight: 600,
-                                  color: "var(--color-ink)",
-                                  margin: 0,
-                                  overflow: "hidden",
-                                  textOverflow: "ellipsis",
-                                  whiteSpace: "nowrap",
+                                  display: "flex",
+                                  flexDirection: "column",
+                                  gap: "8px",
+                                  padding: "20px",
+                                  paddingTop: isOwner ? "44px" : "20px",
+                                  width: "100%",
+                                  border: isPinnedRepo
+                                    ? "1px solid var(--color-primary)"
+                                    : "1px solid var(--color-hairline)",
+                                  boxShadow: isPinnedRepo
+                                    ? "0 0 0 1px var(--color-primary)"
+                                    : "none",
+                                  borderRadius: "12px",
+                                  textDecoration: "none",
+                                  backgroundColor: "var(--color-canvas-soft)",
+                                }}
+                                onMouseEnter={(e) => {
+                                  if (!isPinnedRepo)
+                                    e.currentTarget.style.borderColor =
+                                      "var(--color-hairline-strong)";
+                                  e.currentTarget.style.boxShadow = isPinnedRepo
+                                    ? "0 0 0 1px var(--color-primary), 0 1px 3px rgba(0,0,0,0.12)"
+                                    : "0 1px 3px rgba(0,0,0,0.12)";
+                                }}
+                                onMouseLeave={(e) => {
+                                  e.currentTarget.style.borderColor = isPinnedRepo
+                                    ? "var(--color-primary)"
+                                    : "var(--color-hairline)";
+                                  e.currentTarget.style.boxShadow = isPinnedRepo
+                                    ? "0 0 0 1px var(--color-primary)"
+                                    : "none";
                                 }}
                               >
-                                {repo.name}
-                              </p>
-                              <p
-                                style={{
-                                  fontSize: "13px",
-                                  color: "var(--color-ink-mute)",
-                                  margin: 0,
-                                  lineHeight: 1.45,
-                                  display: "-webkit-box",
-                                  WebkitLineClamp: 2,
-                                  WebkitBoxOrient: "vertical" as const,
-                                  overflow: "hidden",
-                                  minHeight: "38px",
-                                }}
-                              >
-                                {repo.description || "No description"}
-                              </p>
-                              {repo.topics && repo.topics.length > 0 && (
+                                <p
+                                  style={{
+                                    fontSize: "14px",
+                                    fontWeight: 600,
+                                    color: "var(--color-ink)",
+                                    margin: 0,
+                                    overflow: "hidden",
+                                    textOverflow: "ellipsis",
+                                    whiteSpace: "nowrap",
+                                  }}
+                                >
+                                  {repo.name}
+                                </p>
+                                <p
+                                  style={{
+                                    fontSize: "13px",
+                                    color: "var(--color-ink-mute)",
+                                    margin: 0,
+                                    lineHeight: 1.45,
+                                    display: "-webkit-box",
+                                    WebkitLineClamp: 2,
+                                    WebkitBoxOrient: "vertical" as const,
+                                    overflow: "hidden",
+                                    minHeight: "38px",
+                                  }}
+                                >
+                                  {repo.description || "No description"}
+                                </p>
+                                {repo.topics && repo.topics.length > 0 && (
+                                  <div
+                                    style={{
+                                      display: "flex",
+                                      flexWrap: "wrap",
+                                      gap: "4px",
+                                      marginTop: "8px",
+                                    }}
+                                  >
+                                    {repo.topics.slice(0, 3).map((topic) => (
+                                      <span
+                                        key={topic}
+                                        style={{
+                                          fontSize: "11px",
+                                          padding: "2px 8px",
+                                          borderRadius: "9999px",
+                                          backgroundColor:
+                                            "var(--color-canvas-soft)",
+                                          color: "var(--color-ink-mute)",
+                                          border:
+                                            "1px solid var(--color-hairline)",
+                                        }}
+                                      >
+                                        {topic}
+                                      </span>
+                                    ))}
+                                    {repo.topics.length > 3 && (
+                                      <span
+                                        style={{
+                                          fontSize: "11px",
+                                          padding: "2px 6px",
+                                          color: "var(--color-ink-mute)",
+                                        }}
+                                      >
+                                        +{repo.topics.length - 3} more
+                                      </span>
+                                    )}
+                                  </div>
+                                )}
                                 <div
                                   style={{
                                     display: "flex",
-                                    flexWrap: "wrap",
-                                    gap: "4px",
-                                    marginTop: "8px",
+                                    alignItems: "center",
+                                    gap: "16px",
+                                    marginTop: "auto",
+                                    paddingTop: "8px",
                                   }}
                                 >
-                                  {repo.topics.slice(0, 3).map((topic) => (
-                                    <span
-                                      key={topic}
-                                      style={{
-                                        fontSize: "11px",
-                                        padding: "2px 8px",
-                                        borderRadius: "9999px",
-                                        backgroundColor:
-                                          "var(--color-canvas-soft)",
-                                        color: "var(--color-ink-mute)",
-                                        border:
-                                          "1px solid var(--color-hairline)",
-                                      }}
-                                    >
-                                      {topic}
-                                    </span>
-                                  ))}
-                                  {repo.topics.length > 3 && (
+                                  {repo.language && (
                                     <span
                                       style={{
-                                        fontSize: "11px",
-                                        padding: "2px 6px",
+                                        display: "flex",
+                                        alignItems: "center",
+                                        gap: "5px",
+                                        fontSize: "12px",
                                         color: "var(--color-ink-mute)",
                                       }}
                                     >
-                                      +{repo.topics.length - 3} more
+                                      <span
+                                        style={{
+                                          width: "10px",
+                                          height: "10px",
+                                          borderRadius: "9999px",
+                                          backgroundColor:
+                                            LANG_COLORS[repo.language] ??
+                                            "#9a9a9a",
+                                          flexShrink: 0,
+                                        }}
+                                      />
+                                      {repo.language}
                                     </span>
                                   )}
-                                </div>
-                              )}
-                              <div
-                                style={{
-                                  display: "flex",
-                                  alignItems: "center",
-                                  gap: "16px",
-                                  marginTop: "auto",
-                                  paddingTop: "8px",
-                                }}
-                              >
-                                {repo.language && (
                                   <span
                                     style={{
                                       display: "flex",
                                       alignItems: "center",
-                                      gap: "5px",
+                                      gap: "4px",
                                       fontSize: "12px",
                                       color: "var(--color-ink-mute)",
                                     }}
                                   >
-                                    <span
-                                      style={{
-                                        width: "10px",
-                                        height: "10px",
-                                        borderRadius: "9999px",
-                                        backgroundColor:
-                                          LANG_COLORS[repo.language] ??
-                                          "#9a9a9a",
-                                        flexShrink: 0,
-                                      }}
-                                    />
-                                    {repo.language}
+                                    <svg
+                                      width="13"
+                                      height="13"
+                                      viewBox="0 0 24 24"
+                                      fill="none"
+                                      stroke="currentColor"
+                                      strokeWidth="2"
+                                    >
+                                      <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                                    </svg>
+                                    {repo.stargazers_count.toLocaleString(
+                                      "en-US",
+                                    )}
                                   </span>
-                                )}
-                                <span
-                                  style={{
-                                    display: "flex",
-                                    alignItems: "center",
-                                    gap: "4px",
-                                    fontSize: "12px",
-                                    color: "var(--color-ink-mute)",
-                                  }}
-                                >
-                                  <svg
-                                    width="13"
-                                    height="13"
-                                    viewBox="0 0 24 24"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    strokeWidth="2"
+                                  <span
+                                    style={{
+                                      display: "flex",
+                                      alignItems: "center",
+                                      gap: "4px",
+                                      fontSize: "12px",
+                                      color: "var(--color-ink-mute)",
+                                    }}
                                   >
-                                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
-                                  </svg>
-                                  {repo.stargazers_count.toLocaleString(
-                                    "en-US",
-                                  )}
-                                </span>
-                                <span
+                                    <svg
+                                      width="12"
+                                      height="12"
+                                      viewBox="0 0 24 24"
+                                      fill="none"
+                                      stroke="currentColor"
+                                      strokeWidth="2"
+                                    >
+                                      <circle cx="12" cy="18" r="3" />
+                                      <circle cx="6" cy="6" r="3" />
+                                      <circle cx="18" cy="6" r="3" />
+                                      <path d="M18 9a9 9 0 0 1-9 9M6 9a9 9 0 0 0 9 9" />
+                                    </svg>
+                                    {repo.forks_count.toLocaleString("en-US")}
+                                  </span>
+                                </div>
+                              </a>
+                              {isOwner && (
+                                <button
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    handleTogglePin(repo.name);
+                                  }}
+                                  disabled={pinningRepo !== null}
+                                  aria-pressed={isPinnedRepo}
+                                  aria-label={
+                                    isPinnedRepo
+                                      ? `Unpin ${repo.name}`
+                                      : `Pin ${repo.name}`
+                                  }
+                                  title={
+                                    isPinnedRepo
+                                      ? "Unpin from profile"
+                                      : "Pin to profile"
+                                  }
                                   style={{
+                                    position: "absolute",
+                                    top: "12px",
+                                    right: "12px",
                                     display: "flex",
                                     alignItems: "center",
                                     gap: "4px",
+                                    padding: "4px 10px",
                                     fontSize: "12px",
-                                    color: "var(--color-ink-mute)",
+                                    fontWeight: 600,
+                                    color: isPinnedRepo
+                                      ? "var(--color-on-primary)"
+                                      : "var(--color-ink-mute)",
+                                    backgroundColor: isPinnedRepo
+                                      ? "var(--color-primary)"
+                                      : "var(--color-canvas)",
+                                    border: isPinnedRepo
+                                      ? "none"
+                                      : "1px solid var(--color-hairline)",
+                                    borderRadius: "9999px",
+                                    cursor:
+                                      pinningRepo !== null
+                                        ? "default"
+                                        : "pointer",
+                                    opacity: pinningRepo !== null ? 0.6 : 1,
+                                    zIndex: 1,
                                   }}
                                 >
                                   <svg
                                     width="12"
                                     height="12"
                                     viewBox="0 0 24 24"
-                                    fill="none"
+                                    fill={isPinnedRepo ? "currentColor" : "none"}
                                     stroke="currentColor"
                                     strokeWidth="2"
                                   >
-                                    <circle cx="12" cy="18" r="3" />
-                                    <circle cx="6" cy="6" r="3" />
-                                    <circle cx="18" cy="6" r="3" />
-                                    <path d="M18 9a9 9 0 0 1-9 9M6 9a9 9 0 0 0 9 9" />
+                                    <line x1="12" y1="17" x2="12" y2="22" />
+                                    <path d="M5 17h14l-1.5-4.5a2 2 0 0 1 .5-2L20 8a2 2 0 0 0-1.4-3.4H5.4A2 2 0 0 0 4 8l1.9 2.5a2 2 0 0 1 .5 2z" />
                                   </svg>
-                                  {repo.forks_count.toLocaleString("en-US")}
-                                </span>
-                              </div>
-                            </a>
-                            {isOwner && (
-                              <button
-                                type="button"
-                                onClick={(e) => {
-                                  e.preventDefault();
-                                  e.stopPropagation();
-                                  handleTogglePin(repo.name);
-                                }}
-                                disabled={pinningRepo !== null}
-                                aria-pressed={isPinnedRepo}
-                                aria-label={
-                                  isPinnedRepo
-                                    ? `Unpin ${repo.name}`
-                                    : `Pin ${repo.name}`
-                                }
-                                title={
-                                  isPinnedRepo
-                                    ? "Unpin from profile"
-                                    : "Pin to profile"
-                                }
-                                style={{
-                                  position: "absolute",
-                                  top: "12px",
-                                  right: "12px",
-                                  display: "flex",
-                                  alignItems: "center",
-                                  gap: "4px",
-                                  padding: "4px 10px",
-                                  fontSize: "12px",
-                                  fontWeight: 600,
-                                  color: isPinnedRepo
-                                    ? "var(--color-on-primary)"
-                                    : "var(--color-ink-mute)",
-                                  backgroundColor: isPinnedRepo
-                                    ? "var(--color-primary)"
-                                    : "var(--color-canvas)",
-                                  border: isPinnedRepo
-                                    ? "none"
-                                    : "1px solid var(--color-hairline)",
-                                  borderRadius: "9999px",
-                                  cursor:
-                                    pinningRepo !== null
-                                      ? "default"
-                                      : "pointer",
-                                  opacity: pinningRepo !== null ? 0.6 : 1,
-                                  zIndex: 1,
-                                }}
-                              >
-                                <svg
-                                  width="12"
-                                  height="12"
-                                  viewBox="0 0 24 24"
-                                  fill={isPinnedRepo ? "currentColor" : "none"}
-                                  stroke="currentColor"
-                                  strokeWidth="2"
-                                >
-                                  <line x1="12" y1="17" x2="12" y2="22" />
-                                  <path d="M5 17h14l-1.5-4.5a2 2 0 0 1 .5-2L20 8a2 2 0 0 0-1.4-3.4H5.4A2 2 0 0 0 4 8l1.9 2.5a2 2 0 0 1 .5 2z" />
-                                </svg>
-                                {isPinnedRepo ? "Pinned" : "Pin"}
-                              </button>
-                            )}
-                          </div>
-                        );
-                      })}
+                                  {isPinnedRepo ? "Pinned" : "Pin"}
+                                </button>
+                              )}
+                            </motion.div>
+                          );
+                        })}
+                      </AnimatePresence>
                     </div>
                   )}
 
