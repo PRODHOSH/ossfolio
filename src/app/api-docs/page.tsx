@@ -1,10 +1,10 @@
-import type { Metadata } from "next";
+import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: "API Documentation - OSSfolio",
+  title: 'API Documentation - OSSfolio',
   description:
-    "Interactive reference for the OSSfolio public read API, including rate " +
-    "limiting and conditional request behaviour.",
+    'Interactive reference for the OSSfolio public read API, including rate ' +
+    'limiting and conditional request behaviour.',
 };
 
 /**
@@ -17,7 +17,7 @@ export const metadata: Metadata = {
  */
 export default function ApiDocsPage() {
   return (
-    <main style={{ minHeight: "100vh" }}>
+    <main style={{ minHeight: '100vh' }}>
       <script
         id="api-reference"
         data-url="/api/openapi.json"
@@ -25,12 +25,9 @@ export default function ApiDocsPage() {
         // defaulting to the renderer's dark theme.
         data-configuration='{"theme":"default","darkMode":false,"hideDownloadButton":false}'
       />
-      <script
-        src="https://cdn.jsdelivr.net/npm/@scalar/api-reference"
-        async
-      />
+      <script src="https://cdn.jsdelivr.net/npm/@scalar/api-reference" async />
       <noscript>
-        <div style={{ padding: "24px" }}>
+        <div style={{ padding: '24px' }}>
           <h1>API Documentation</h1>
           <p>
             The interactive viewer needs JavaScript. The specification itself is

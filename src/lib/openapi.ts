@@ -1,9 +1,9 @@
-import { z } from "zod";
+import { z } from 'zod';
 import {
   OpenAPIRegistry,
   OpenApiGeneratorV31,
   extendZodWithOpenApi,
-} from "@asteasolutions/zod-to-openapi";
+} from '@asteasolutions/zod-to-openapi';
 
 extendZodWithOpenApi(z);
 
@@ -45,7 +45,7 @@ export const ApiErrorSchema = z
     timestamp: z.string(),
     retryAfterSeconds: z.number().optional(),
   })
-  .openapi("ApiError");
+  .openapi('ApiError');
 
 export const UserProfileSchema = z
   .object({
@@ -67,7 +67,7 @@ export const UserProfileSchema = z
     badges: z.unknown(),
     last_refreshed_at: z.string().nullable(),
   })
-  .openapi("UserProfile");
+  .openapi('UserProfile');
 
 export const DiscoverPageSchema = z
   .object({
@@ -76,7 +76,7 @@ export const DiscoverPageSchema = z
     hasNext: z.boolean(),
     hasPrev: z.boolean(),
   })
-  .openapi("DiscoverPage");
+  .openapi('DiscoverPage');
 
 export const SponsorshipSchema = z
   .object({
@@ -84,7 +84,7 @@ export const SponsorshipSchema = z
     fundingLinks: z.array(z.object({ platform: z.string(), url: z.string() })),
     sponsors: z.array(z.unknown()),
   })
-  .openapi("Sponsorship");
+  .openapi('Sponsorship');
 
 export const AnalyticsSchema = z
   .object({
@@ -97,55 +97,55 @@ export const AnalyticsSchema = z
     topCountries: z.array(z.unknown()),
     deviceBreakdown: z.array(z.unknown()),
   })
-  .openapi("Analytics");
+  .openapi('Analytics');
 
 const usernameParam = z.object({
-  username: z.string().openapi({ example: "e2e-alice" }),
+  username: z.string().openapi({ example: 'e2e-alice' }),
 });
 
 const jsonError = (description: string) => ({
   description,
-  content: { "application/json": { schema: ApiErrorSchema } },
+  content: { 'application/json': { schema: ApiErrorSchema } },
 });
 
 export function buildOpenApiDocument() {
   const registry = new OpenAPIRegistry();
 
   registry.registerPath({
-    method: "get",
-    path: "/api/v1/users/{username}",
-    tags: ["Profiles"],
-    summary: "Fetch a contributor profile",
+    method: 'get',
+    path: '/api/v1/users/{username}',
+    tags: ['Profiles'],
+    summary: 'Fetch a contributor profile',
     description:
       "Returns a contributor's score, statistics and badge metadata. Supports " +
-      "conditional requests: send the ETag from a previous response as " +
-      "If-None-Match and a 304 is returned with no body when nothing has changed.",
+      'conditional requests: send the ETag from a previous response as ' +
+      'If-None-Match and a 304 is returned with no body when nothing has changed.',
     request: { params: usernameParam },
     responses: {
       200: {
-        description: "The contributor profile.",
+        description: 'The contributor profile.',
         content: {
-          "application/json": { schema: successEnvelope(UserProfileSchema) },
+          'application/json': { schema: successEnvelope(UserProfileSchema) },
         },
         headers: z.object({
           ETag: z
             .string()
-            .openapi({ description: "Validator for conditional requests." }),
-          "Cache-Control": z.string(),
+            .openapi({ description: 'Validator for conditional requests.' }),
+          'Cache-Control': z.string(),
         }),
       },
       304: {
         description:
-          "The If-None-Match validator matched. No body is returned; reuse the " +
-          "cached representation.",
+          'The If-None-Match validator matched. No body is returned; reuse the ' +
+          'cached representation.',
       },
-      400: jsonError("The username failed validation."),
-      404: jsonError("No profile exists for that username."),
+      400: jsonError('The username failed validation.'),
+      404: jsonError('No profile exists for that username.'),
       429: {
-        ...jsonError("Rate limit exceeded."),
+        ...jsonError('Rate limit exceeded.'),
         headers: z.object({
-          "Retry-After": z.string().openapi({
-            description: "Seconds to wait before retrying.",
+          'Retry-After': z.string().openapi({
+            description: 'Seconds to wait before retrying.',
           }),
         }),
       },
@@ -153,58 +153,58 @@ export function buildOpenApiDocument() {
   });
 
   registry.registerPath({
-    method: "get",
-    path: "/api/analytics/{username}",
-    tags: ["Profiles"],
-    summary: "Fetch profile analytics",
+    method: 'get',
+    path: '/api/analytics/{username}',
+    tags: ['Profiles'],
+    summary: 'Fetch profile analytics',
     request: { params: usernameParam },
     responses: {
       200: {
-        description: "View counts and traffic breakdown.",
+        description: 'View counts and traffic breakdown.',
         content: {
-          "application/json": { schema: successEnvelope(AnalyticsSchema) },
+          'application/json': { schema: successEnvelope(AnalyticsSchema) },
         },
       },
-      400: jsonError("The username failed validation."),
-      401: jsonError("Analytics are only readable by the profile owner."),
+      400: jsonError('The username failed validation.'),
+      401: jsonError('Analytics are only readable by the profile owner.'),
     },
   });
 
   registry.registerPath({
-    method: "get",
-    path: "/api/sponsors/{username}",
-    tags: ["Profiles"],
-    summary: "Fetch sponsorship links",
+    method: 'get',
+    path: '/api/sponsors/{username}',
+    tags: ['Profiles'],
+    summary: 'Fetch sponsorship links',
     request: { params: usernameParam },
     responses: {
       200: {
-        description: "Funding links and sponsors.",
+        description: 'Funding links and sponsors.',
         content: {
-          "application/json": { schema: successEnvelope(SponsorshipSchema) },
+          'application/json': { schema: successEnvelope(SponsorshipSchema) },
         },
       },
-      400: jsonError("The username failed validation."),
+      400: jsonError('The username failed validation.'),
     },
   });
 
   registry.registerPath({
-    method: "get",
-    path: "/api/discover",
-    tags: ["Discovery"],
-    summary: "Browse contributor profiles",
+    method: 'get',
+    path: '/api/discover',
+    tags: ['Discovery'],
+    summary: 'Browse contributor profiles',
     request: {
       query: z.object({
-        page: z.string().optional().openapi({ example: "1" }),
+        page: z.string().optional().openapi({ example: '1' }),
       }),
     },
     responses: {
       200: {
-        description: "A page of profiles.",
+        description: 'A page of profiles.',
         content: {
-          "application/json": { schema: successEnvelope(DiscoverPageSchema) },
+          'application/json': { schema: successEnvelope(DiscoverPageSchema) },
         },
       },
-      500: jsonError("The profile query failed."),
+      500: jsonError('The profile query failed.'),
     },
   });
 
@@ -212,79 +212,79 @@ export function buildOpenApiDocument() {
   // derive. Documenting it with its real media type is more useful to an
   // integrator than omitting it.
   registry.registerPath({
-    method: "get",
-    path: "/api/badge/{username}",
-    tags: ["Badges"],
-    summary: "Render a contributor score badge",
+    method: 'get',
+    path: '/api/badge/{username}',
+    tags: ['Badges'],
+    summary: 'Render a contributor score badge',
     description:
-      "Returns an SVG badge suitable for embedding in a README. This endpoint " +
-      "does not return JSON.",
+      'Returns an SVG badge suitable for embedding in a README. This endpoint ' +
+      'does not return JSON.',
     request: { params: usernameParam },
     responses: {
       200: {
-        description: "The badge.",
-        content: { "image/svg+xml": { schema: z.string() } },
+        description: 'The badge.',
+        content: { 'image/svg+xml': { schema: z.string() } },
       },
       400: {
-        description: "The username parameter was missing.",
-        content: { "text/plain": { schema: z.string() } },
+        description: 'The username parameter was missing.',
+        content: { 'text/plain': { schema: z.string() } },
       },
       500: {
-        description: "Badge generation failed.",
-        content: { "text/plain": { schema: z.string() } },
+        description: 'Badge generation failed.',
+        content: { 'text/plain': { schema: z.string() } },
       },
     },
   });
 
   // Also hand-described: a file download rather than a JSON body.
   registry.registerPath({
-    method: "get",
-    path: "/api/export/{username}",
-    tags: ["Profiles"],
-    summary: "Export a profile",
+    method: 'get',
+    path: '/api/export/{username}',
+    tags: ['Profiles'],
+    summary: 'Export a profile',
     description:
-      "Returns the profile as a downloadable document rather than a JSON API " +
-      "response.",
+      'Returns the profile as a downloadable document rather than a JSON API ' +
+      'response.',
     request: { params: usernameParam },
     responses: {
       200: {
-        description: "The exported profile.",
-        content: { "application/octet-stream": { schema: z.string() } },
+        description: 'The exported profile.',
+        content: { 'application/octet-stream': { schema: z.string() } },
       },
       400: {
-        description: "The username parameter was missing.",
-        content: { "text/plain": { schema: z.string() } },
+        description: 'The username parameter was missing.',
+        content: { 'text/plain': { schema: z.string() } },
       },
       500: {
-        description: "Export failed.",
-        content: { "text/plain": { schema: z.string() } },
+        description: 'Export failed.',
+        content: { 'text/plain': { schema: z.string() } },
       },
     },
   });
 
   return new OpenApiGeneratorV31(registry.definitions).generateDocument({
-    openapi: "3.1.0",
+    openapi: '3.1.0',
     info: {
-      title: "OSSfolio Public API",
-      version: "1.0.0",
+      title: 'OSSfolio Public API',
+      version: '1.0.0',
       description:
-        "Read-only endpoints for consuming OSSfolio contributor scores and " +
-        "badge metadata.\n\n" +
-        "**Rate limiting.** Requests are limited per client. A 429 carries a " +
+        'Read-only endpoints for consuming OSSfolio contributor scores and ' +
+        'badge metadata.\n\n' +
+        '**Rate limiting.** Requests are limited per client. A 429 carries a ' +
         "`Retry-After` header giving the seconds to wait, and the body's " +
-        "`retryAfterSeconds` field repeats it.\n\n" +
-        "**Conditional requests.** Endpoints that return an `ETag` accept " +
-        "`If-None-Match`. Sending back the validator you already hold returns " +
-        "304 with no body, which saves bandwidth and does not count against " +
-        "your rate limit budget any differently from a 200.\n\n" +
-        "Authentication, webhook and internal mutation endpoints are " +
-        "intentionally not documented here.",
+        '`retryAfterSeconds` field repeats it.\n\n' +
+        '**Conditional requests.** Endpoints that return an `ETag` accept ' +
+        '`If-None-Match`. Sending back the validator you already hold returns ' +
+        '304 with no body, which saves bandwidth and does not count against ' +
+        'your rate limit budget any differently from a 200.\n\n' +
+        'Authentication, webhook and internal mutation endpoints are ' +
+        'intentionally not documented here.',
     },
-    servers: [{ url: "https://ossfolio.dev" }],
+    servers: [{ url: 'https://ossfolio.dev' }],
     tags: [
-      { name: "Profiles", description: "Contributor profile data." },
-      { name: "Discovery", description: "Browsing and search." },
-      { name: "Badges", description: "Embeddable SVG badges." },
+      { name: 'Profiles', description: 'Contributor profile data.' },
+      { name: 'Discovery', description: 'Browsing and search.' },
+      { name: 'Badges', description: 'Embeddable SVG badges.' },
     ],
   });
 }

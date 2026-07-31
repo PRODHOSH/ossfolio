@@ -1,5 +1,5 @@
-import { NextResponse } from "next/server";
-import { buildOpenApiDocument } from "@/lib/openapi";
+import { NextResponse } from 'next/server';
+import { buildOpenApiDocument } from '@/lib/openapi';
 
 /**
  * Serves the OpenAPI 3.1 description of the public read API.
@@ -11,13 +11,13 @@ import { buildOpenApiDocument } from "@/lib/openapi";
  * CORS is open because the document is public by definition and integrators
  * fetch it from their own tooling.
  */
-export const dynamic = "force-dynamic";
+export const dynamic = 'force-dynamic';
 
 export async function GET() {
   return NextResponse.json(buildOpenApiDocument(), {
     headers: {
-      "Cache-Control": "public, s-maxage=3600, stale-while-revalidate=86400",
-      "Access-Control-Allow-Origin": "*",
+      'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=86400',
+      'Access-Control-Allow-Origin': '*',
     },
   });
 }
