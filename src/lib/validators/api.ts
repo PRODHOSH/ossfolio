@@ -41,7 +41,8 @@ export function sanitizeUrl(value: unknown): string | null {
   try {
     const url = new URL(trimmed);
     if (!["http:", "https:"].includes(url.protocol)) return null;
-    if (url.hostname === "localhost" || url.hostname === "127.0.0.1")
+    // Added [::1] to block IPv6 localhost loopback bypasses
+    if (url.hostname === "localhost" || url.hostname === "127.0.0.1" || url.hostname === "[::1]")
       return null;
     return url.toString();
   } catch {
@@ -77,8 +78,8 @@ export function validatePagination(
         ? pageSize
         : 20;
   return {
-    page: Math.max(1, Math.min(maxPage, isNaN(p) ? 1 : p)),
-    pageSize: Math.max(1, Math.min(maxSize, isNaN(s) ? 20 : s)),
+    page: Math.max(1, Math.min(maxPage, Number.isNaN(p) ? 1 : p)),
+    pageSize: Math.max(1, Math.min(maxSize, Number.isNaN(s) ? 20 : s)),
   };
 }
 
