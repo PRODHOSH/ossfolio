@@ -44,13 +44,13 @@ export default defineConfig({
   webServer: [
     {
       command: "node e2e/mock-supabase.mjs",
-      port: 54321,
+      url: "http://127.0.0.1:54321/health",
       reuseExistingServer: !process.env.CI,
       stdout: "pipe",
     },
     {
-      command: "npm run build && npm run start",
-      port: 3000,
+      command: process.env.CI ? "npm run start" : "npm run build && npm run start",
+      url: "http://127.0.0.1:3000",
       // A cold Next build is slow; the default 60s is not enough on a CI runner.
       timeout: 240_000,
       reuseExistingServer: !process.env.CI,
@@ -60,6 +60,7 @@ export default defineConfig({
         // They exist only because the client refuses to construct without a key.
         NEXT_PUBLIC_SUPABASE_ANON_KEY: "e2e-anon-key",
         SUPABASE_SERVICE_ROLE_KEY: "e2e-service-role-key",
+        NEXT_TELEMETRY_DISABLED: "1",
       },
     },
   ],
