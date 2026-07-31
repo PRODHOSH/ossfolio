@@ -132,6 +132,13 @@ export function SettingsClient() {
         const body = await resp.json().catch(() => ({}));
         setSaveError(body.error || "Failed to save. Please try again.");
       }
+    } catch {
+      // A request that never produces a response — offline, DNS failure, an
+      // aborted connection — rejects rather than resolving, so it took neither
+      // branch above. Without this the spinner cleared in `finally` and nothing
+      // else changed: the entered values were still on screen, unsaved, with no
+      // indication that anything had gone wrong.
+      setSaveError("Network error. Your changes were not saved.");
     } finally {
       setSaving(false);
     }
