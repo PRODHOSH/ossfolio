@@ -1,9 +1,9 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
+import { POST } from "@/app/api/webhooks/github/route";
 import {
   verifySignature,
   timingSafeEqualBuffer,
-  POST,
-} from "@/app/api/webhooks/github/route";
+} from "@/lib/webhook-signature";
 import { NextRequest } from "next/server";
 import { enqueueDeadLetterPayload } from "../webhook-dead-letter";
 import { refreshProfile } from "../refresh-profile";
@@ -123,7 +123,8 @@ describe("GitHub Webhook HMAC-SHA256 Verification & Endpoint", () => {
       const res = await POST(req);
       expect(res.status).toBe(503);
       const json = await res.json();
-      expect(json.error).toBe("Webhook not configured");
+      // The API returns a structured error object, not a bare string.
+      expect(json.error.message).toBe("Webhook not configured");
     });
 
     it("should return 401 for an invalid signature", async () => {
@@ -138,7 +139,7 @@ describe("GitHub Webhook HMAC-SHA256 Verification & Endpoint", () => {
       const res = await POST(req);
       expect(res.status).toBe(401);
       const json = await res.json();
-      expect(json.error).toBe("Invalid signature");
+      expect(json.error.message).toBe("Invalid signature");
     });
 
     it("should return 200 pong for ping event", async () => {
@@ -155,7 +156,9 @@ describe("GitHub Webhook HMAC-SHA256 Verification & Endpoint", () => {
       const res = await POST(req);
       expect(res.status).toBe(200);
       const json = await res.json();
-      expect(json).toEqual({ ok: true, message: "pong" });
+      // Success bodies travel inside the { success, data } envelope that
+      // createApiResponse applies.
+      expect(json).toEqual({ success: true, data: { ok: true, message: "pong" } });
     });
 
     it("should return 200 accepted for valid push event and trigger background refresh", async () => {
@@ -177,7 +180,10 @@ describe("GitHub Webhook HMAC-SHA256 Verification & Endpoint", () => {
       const res = await POST(req);
       expect(res.status).toBe(200);
       const json = await res.json();
-      expect(json).toEqual({ ok: true, accepted: "octocat" });
+      expect(json).toEqual({
+        success: true,
+        data: { ok: true, accepted: "octocat" },
+      });
     });
 
     it("should enqueue to dead-letter queue when background refresh encounters error", async () => {
