@@ -66,10 +66,12 @@ async function githubGraphQL<T>(
       const json = await res.json();
       if (json.errors?.length) {
         const firstErr = json.errors[0];
-        // GitHub GraphQL signals quota exhaustion with a structured type field.
-        if (firstErr.type === "RATE_LIMITED") {
+        
+        // 1. GraphQL Error Interception: Catch structured AND string-based rate limits
+        if (firstErr.type === "RATE_LIMITED" || /rate limit/i.test(firstErr.message)) {
           throw new GitHubRateLimitError(firstErr.message);
         }
+        
         lastError = new Error(firstErr.message);
         // Some GitHub errors are retryable (e.g. secondary rate limit)
         if (attempt < RETRY_CONFIG.maxRetries) {
@@ -232,7 +234,6 @@ export async function fetchContributorProfile(
   const cacheKey = `github:profile:${login.toLowerCase()}`;
 
   try {
-    // 1. Check Redis Cache
     const cachedData = await redis.get<GitHubContributor>(cacheKey);
     if (cachedData) {
       return cachedData;
@@ -241,7 +242,6 @@ export async function fetchContributorProfile(
     console.error("Redis read error gracefully bypassed:", err);
   }
 
-  // 2. Cache Miss - Query live GraphQL API
   const data = await githubGraphQL<{ user: GitHubContributor }>(
     CONTRIBUTOR_QUERY,
     { login },
@@ -250,7 +250,6 @@ export async function fetchContributorProfile(
 
   if (data?.user) {
     try {
-      // 3. Save response to Redis with 2 hours TTL (7200 seconds)
       await redis.set(cacheKey, data.user, { ex: 7200 });
     } catch (err) {
       console.error("Redis write error gracefully bypassed:", err);
@@ -321,7 +320,6 @@ export async function fetchContributionCalendar(
   const cacheKey = `github:calendar:${username.toLowerCase()}${from ? `:${from}` : ""}`;
 
   try {
-    // 1. Try Cache-aside Strategy on Scraper endpoint
     const cachedCalendar = await redis.get<ContributionCalendar>(cacheKey);
     if (cachedCalendar) return cachedCalendar;
   } catch (err) {
@@ -349,35 +347,47 @@ export async function fetchContributionCalendar(
 
     const html = await res.text();
     const countById = new Map<string, number>();
-    const tipRe =
-      /<tool-tip[^>]*\bfor="(contribution-day-component-\d+-\d+)"[^>]*>([^<]*)<\/tool-tip>/g;
+    
+    // 2. Scraper Regex Parsing: Robust tooltip matching independent of specific ID structures
+    const tipRe = /<tool-tip[^>]*\bfor="([^"]+)"[^>]*>([\s\S]*?)<\/tool-tip>/gi;
     let tip: RegExpExecArray | null;
     while ((tip = tipRe.exec(html)) !== null) {
       const id = tip[1];
       const label = tip[2].trim();
-      const numMatch = label.match(/^([\d,]+)\s+contribution/);
+      const numMatch = label.match(/^([\d,]+)\s+contribution/i);
       const count = numMatch ? parseInt(numMatch[1].replace(/,/g, ""), 10) : 0;
       countById.set(id, count);
     }
 
     const weekMap = new Map<number, { row: number; day: ContributionDay }[]>();
-    const cellRe = /<td\b[^>]*class="ContributionCalendar-day"[^>]*>/g;
+    
+    // Robust cell parsing: Matches ANY table data cell that has a data-date attribute 
+    // instead of relying on a fragile CSS class name
+    const cellRe = /<td\b[^>]*data-date="([0-9-]+)"[^>]*>/gi;
     let cell: RegExpExecArray | null;
+    
     while ((cell = cellRe.exec(html)) !== null) {
       const tag = cell[0];
       const dateMatch = tag.match(/data-date="([0-9-]+)"/);
-      const idMatch = tag.match(/id="contribution-day-component-(\d+)-(\d+)"/);
+      const idMatch = tag.match(/id="([^"]+)"/);
+      
       if (!dateMatch || !idMatch) continue;
 
-      const row = parseInt(idMatch[1], 10);
-      const col = parseInt(idMatch[2], 10);
-      const id = `contribution-day-component-${row}-${col}`;
+      const date = dateMatch[1];
+      const id = idMatch[1];
       const count = countById.get(id) ?? 0;
+
+      // Extract row/col safely, fallback to epoch calculation if id shifts
+      const coordMatch = id.match(/-(\d+)-(\d+)$/);
+      const row = coordMatch ? parseInt(coordMatch[1], 10) : new Date(date).getUTCDay();
+      const col = coordMatch 
+        ? parseInt(coordMatch[2], 10) 
+        : Math.floor(new Date(date).getTime() / (7 * 24 * 3600 * 1000));
 
       if (!weekMap.has(col)) weekMap.set(col, []);
       weekMap.get(col)!.push({
         row,
-        day: { date: dateMatch[1], count, color: colorForCount(count) },
+        day: { date, count, color: colorForCount(count) },
       });
     }
 
@@ -400,7 +410,6 @@ export async function fetchContributionCalendar(
     const result: ContributionCalendar = { weeks, totalContributions };
 
     try {
-      // 2. Cache calendar results as well for 2 hours (7200s)
       await redis.set(cacheKey, result, { ex: 7200 });
     } catch (err) {
       console.error("Redis calendar write error gracefully bypassed:", err);
@@ -503,4 +512,3 @@ export async function fetchCoContributors(
     return [];
   }
 }
-
