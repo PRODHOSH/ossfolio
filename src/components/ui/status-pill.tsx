@@ -40,6 +40,7 @@ export interface StatusPillProps
 function StatusPill({ className, variant, size, ...props }: StatusPillProps) {
   return (
     <span
+      role="status"
       className={cn(statusPillVariants({ variant, size }), className)}
       {...props}
     />

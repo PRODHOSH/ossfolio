@@ -22,7 +22,7 @@ If you are here through EluSoC, welcome! Read through this README and then check
 
 GitHub shows your repos. OSSfolio shows **you**.
 
-OSSfolio is a free, open-source platform where every contributor gets a public profile page at `https://ossfolio.qzz.io//username` — showcasing the full picture of their open-source journey. The PRs you merged into other projects, the issues you filed, the orgs you contributed to, the programs you participated in like GSoC or GSSoC — all in one shareable link.
+OSSfolio is a free, open-source platform where every contributor gets a public profile page at `https://ossfolio.qzz.io/username` — showcasing the full picture of their open-source journey. The PRs you merged into other projects, the issues you filed, the orgs you contributed to, the programs you participated in like GSoC or GSSoC — all in one shareable link.
 
 No manual input. Just sign in with GitHub and your profile is ready.
 
@@ -45,7 +45,7 @@ OSSfolio is built to fix that — for students applying to GSoC, for developers 
 
 ## Features
 
-- **Shareable profile** at `https://ossfolio.qzz.io//username`
+- **Shareable profile** at `https://ossfolio.qzz.io/username`
 - **Contribution stats** — merged PRs, issues opened, commits, reviews
 - **Heatmap and streak** — visualise your activity across the year
 - **Tech stack** — auto-detected from your repos, no tagging needed

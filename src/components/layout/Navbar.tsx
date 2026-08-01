@@ -297,6 +297,8 @@ export function Navbar({ onSignIn, onGetStarted }: NavbarProps) {
               <button
                 type="button"
                 onClick={() => setMenuOpen((v) => !v)}
+                aria-haspopup="menu"
+                aria-expanded={menuOpen}
                 style={{
                   display: "flex",
                   alignItems: "center",
