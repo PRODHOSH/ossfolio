@@ -1,5 +1,5 @@
-import { supabase } from "@/lib/supabase";
-import type { Achievement } from "@/lib/achievements";
+import { supabase } from '@/lib/supabase';
+import type { Achievement } from '@/lib/achievements';
 
 export interface AchievementUnlockRecord {
   id?: string;
@@ -13,15 +13,15 @@ export interface AchievementUnlockRecord {
  * Fetch all recorded achievement unlocks for a user from Supabase.
  */
 export async function fetchUserUnlockedMilestones(
-  username: string
+  username: string,
 ): Promise<Record<string, string>> {
   if (!username) return {};
 
   try {
     const { data, error } = await supabase
-      .from("achievement_unlocks")
-      .select("achievement_id, unlocked_at")
-      .eq("username", username.toLowerCase());
+      .from('achievement_unlocks')
+      .select('achievement_id, unlocked_at')
+      .eq('username', username.toLowerCase());
 
     if (error || !data) {
       return {};
@@ -33,7 +33,7 @@ export async function fetchUserUnlockedMilestones(
     });
     return map;
   } catch (err) {
-    console.error("Failed to fetch achievement unlocks:", err);
+    console.error('Failed to fetch achievement unlocks:', err);
     return {};
   }
 }
@@ -44,7 +44,7 @@ export async function fetchUserUnlockedMilestones(
  */
 export async function syncUnlockedAchievements(
   username: string,
-  achievements: Achievement[]
+  achievements: Achievement[],
 ): Promise<Record<string, string>> {
   if (!username || achievements.length === 0) return {};
 
@@ -70,8 +70,8 @@ export async function syncUnlockedAchievements(
       }));
 
       await supabase
-        .from("achievement_unlocks")
-        .upsert(recordsToInsert, { onConflict: "username, achievement_id" });
+        .from('achievement_unlocks')
+        .upsert(recordsToInsert, { onConflict: 'username, achievement_id' });
 
       // Merge newly inserted timestamps into result
       newUnlocks.forEach((a) => {
@@ -81,7 +81,7 @@ export async function syncUnlockedAchievements(
 
     return existing;
   } catch (err) {
-    console.error("Failed to sync achievement unlocks:", err);
+    console.error('Failed to sync achievement unlocks:', err);
     return {};
   }
 }

@@ -1,4 +1,4 @@
-import { POPULAR_LANGUAGES } from "./languages";
+import { POPULAR_LANGUAGES } from './languages';
 
 /**
  * Filter parsing and URL construction for the Explore leaderboard.
@@ -17,11 +17,11 @@ import { POPULAR_LANGUAGES } from "./languages";
 
 /** Minimum-score buckets offered alongside the language filter. */
 export const SCORE_TIERS = [
-  { label: "Any score", value: 0 },
-  { label: "100+", value: 100 },
-  { label: "500+", value: 500 },
-  { label: "1000+", value: 1000 },
-  { label: "2500+", value: 2500 },
+  { label: 'Any score', value: 0 },
+  { label: '100+', value: 100 },
+  { label: '500+', value: 500 },
+  { label: '1000+', value: 1000 },
+  { label: '2500+', value: 2500 },
 ] as const;
 
 const VALID_SCORES = new Set<number>(SCORE_TIERS.map((tier) => tier.value));
@@ -39,9 +39,9 @@ const VALID_SCORES = new Set<number>(SCORE_TIERS.map((tier) => tier.value));
  * `?lang=typescript` should still work.
  */
 export const normalizeLanguage = (raw: unknown): string | null => {
-  if (typeof raw !== "string") return null;
+  if (typeof raw !== 'string') return null;
   const trimmed = raw.trim();
-  if (trimmed === "") return null;
+  if (trimmed === '') return null;
   const match = POPULAR_LANGUAGES.find(
     (lang) => lang.toLowerCase() === trimmed.toLowerCase(),
   );
@@ -55,7 +55,7 @@ export const normalizeLanguage = (raw: unknown): string | null => {
  * keeps an invalid URL showing the full leaderboard rather than an error.
  */
 export const normalizeScoreTier = (raw: unknown): number => {
-  if (typeof raw !== "string") return 0;
+  if (typeof raw !== 'string') return 0;
   const parsed = Number.parseInt(raw.trim(), 10);
   if (!Number.isFinite(parsed)) return 0;
   return VALID_SCORES.has(parsed) ? parsed : 0;
@@ -85,15 +85,17 @@ export type ExploreQuery = Record<string, string>;
  */
 export const buildExploreQuery = (
   current: ExploreFilters,
-  patch: Partial<Pick<ExploreFilters, "lang" | "minScore" | "type" | "sortBy" | "q">> = {},
+  patch: Partial<
+    Pick<ExploreFilters, 'lang' | 'minScore' | 'type' | 'sortBy' | 'q'>
+  > = {},
 ): ExploreQuery => {
   const merged = { ...current, ...patch };
   const query: ExploreQuery = {};
 
   // `users` is the default view, so it does not need to appear in the URL.
-  if (merged.type && merged.type !== "users") query.type = merged.type;
+  if (merged.type && merged.type !== 'users') query.type = merged.type;
   if (merged.q) query.q = merged.q;
-  if (merged.sortBy && merged.sortBy !== "score") query.sortBy = merged.sortBy;
+  if (merged.sortBy && merged.sortBy !== 'score') query.sortBy = merged.sortBy;
   if (merged.lang) query.lang = merged.lang;
   if (merged.minScore > 0) query.minScore = String(merged.minScore);
 
@@ -116,6 +118,6 @@ export const describeFilters = (filters: ExploreFilters): string => {
   if (filters.lang) parts.push(filters.lang);
   if (filters.minScore > 0) parts.push(`score ${filters.minScore}+`);
   if (filters.q) parts.push(`matching “${filters.q}”`);
-  if (parts.length === 0) return "";
-  return parts.join(" · ");
+  if (parts.length === 0) return '';
+  return parts.join(' · ');
 };

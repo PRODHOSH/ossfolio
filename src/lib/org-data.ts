@@ -1,11 +1,11 @@
-import { supabase } from "@/lib/supabase";
-import { fetchWithTimeout } from "@/lib/fetch-with-timeout";
+import { supabase } from '@/lib/supabase';
+import { fetchWithTimeout } from '@/lib/fetch-with-timeout';
 import { GITHUB_API_BASE } from './constants';
 
 export interface OrgMember {
   login: string;
   avatarUrl: string;
-  role: "owner" | "admin" | "member";
+  role: 'owner' | 'admin' | 'member';
   score: number;
   contributions: number;
 }
@@ -48,9 +48,13 @@ export interface OrgDashboardData {
 /**
  * Calculates aggregate team contributor score from member list and repo stats
  */
-export function calculateTeamScore(members: OrgMember[], totalStars: number): number {
+export function calculateTeamScore(
+  members: OrgMember[],
+  totalStars: number,
+): number {
   if (members.length === 0) return 60;
-  const avgMemberScore = members.reduce((sum, m) => sum + m.score, 0) / members.length;
+  const avgMemberScore =
+    members.reduce((sum, m) => sum + m.score, 0) / members.length;
   const starBonus = Math.min(25, Math.floor(totalStars / 50));
   return Math.min(99, Math.max(40, Math.floor(avgMemberScore + starBonus)));
 }
@@ -59,20 +63,22 @@ export function calculateTeamScore(members: OrgMember[], totalStars: number): nu
  * Fetch and aggregate organization dashboard data
  */
 export async function getOrganizationData(
-  orgSlug: string
+  orgSlug: string,
 ): Promise<OrgDashboardData> {
   const cleanSlug = orgSlug.trim().toLowerCase();
 
   // Try checking Supabase DB cache first
   try {
     const { data: dbOrg } = await supabase
-      .from("organizations")
-      .select("*")
-      .eq("slug", cleanSlug)
+      .from('organizations')
+      .select('*')
+      .eq('slug', cleanSlug)
       .maybeSingle();
 
     if (dbOrg && dbOrg.stats && dbOrg.stats.memberCount) {
-      const updatedAt = new Date(dbOrg.updated_at || dbOrg.created_at || 0).getTime();
+      const updatedAt = new Date(
+        dbOrg.updated_at || dbOrg.created_at || 0,
+      ).getTime();
       const ageMs = Date.now() - updatedAt;
       // 12 hour cache freshness
       if (ageMs < 12 * 60 * 60 * 1000) {
@@ -95,7 +101,7 @@ export async function getOrganizationData(
       }
     }
   } catch (err) {
-    console.warn("Error checking organization cache:", err);
+    console.warn('Error checking organization cache:', err);
   }
 
   // Fetch live from GitHub API
@@ -106,7 +112,7 @@ export async function getOrganizationData(
  * Re-fetch live GitHub organization data and update DB cache
  */
 export async function refreshOrganizationStats(
-  orgSlug: string
+  orgSlug: string,
 ): Promise<OrgDashboardData> {
   const cleanSlug = orgSlug.trim().toLowerCase();
 
@@ -124,18 +130,27 @@ export async function refreshOrganizationStats(
 
   try {
     const [orgRes, reposRes, membersRes] = await Promise.allSettled([
-      fetchWithTimeout(`${GITHUB_API_BASE}/orgs/${encodeURIComponent(cleanSlug)}`, {
-        headers: { Accept: "application/vnd.github.v3+json" },
-      }),
-      fetchWithTimeout(`${GITHUB_API_BASE}/orgs/${encodeURIComponent(cleanSlug)}/repos?per_page=30&sort=updated`, {
-        headers: { Accept: "application/vnd.github.v3+json" },
-      }),
-      fetchWithTimeout(`${GITHUB_API_BASE}/orgs/${encodeURIComponent(cleanSlug)}/public_members?per_page=30`, {
-        headers: { Accept: "application/vnd.github.v3+json" },
-      }),
+      fetchWithTimeout(
+        `${GITHUB_API_BASE}/orgs/${encodeURIComponent(cleanSlug)}`,
+        {
+          headers: { Accept: 'application/vnd.github.v3+json' },
+        },
+      ),
+      fetchWithTimeout(
+        `${GITHUB_API_BASE}/orgs/${encodeURIComponent(cleanSlug)}/repos?per_page=30&sort=updated`,
+        {
+          headers: { Accept: 'application/vnd.github.v3+json' },
+        },
+      ),
+      fetchWithTimeout(
+        `${GITHUB_API_BASE}/orgs/${encodeURIComponent(cleanSlug)}/public_members?per_page=30`,
+        {
+          headers: { Accept: 'application/vnd.github.v3+json' },
+        },
+      ),
     ]);
 
-    if (orgRes.status === "fulfilled" && orgRes.value.ok) {
+    if (orgRes.status === 'fulfilled' && orgRes.value.ok) {
       const orgJson = await orgRes.value.json();
       name = orgJson.name || orgJson.login || name;
       avatarUrl = orgJson.avatar_url || avatarUrl;
@@ -144,7 +159,7 @@ export async function refreshOrganizationStats(
       publicReposCount = orgJson.public_repos || 0;
     }
 
-    if (reposRes.status === "fulfilled" && reposRes.value.ok) {
+    if (reposRes.status === 'fulfilled' && reposRes.value.ok) {
       const reposJson = await reposRes.value.json();
       if (Array.isArray(reposJson)) {
         repos = reposJson.map((r: any) => {
@@ -167,20 +182,20 @@ export async function refreshOrganizationStats(
       }
     }
 
-    if (membersRes.status === "fulfilled" && membersRes.value.ok) {
+    if (membersRes.status === 'fulfilled' && membersRes.value.ok) {
       const membersJson = await membersRes.value.json();
       if (Array.isArray(membersJson)) {
         members = membersJson.map((m: any, idx: number) => ({
           login: m.login,
           avatarUrl: m.avatar_url,
-          role: idx === 0 ? "owner" : "member",
+          role: idx === 0 ? 'owner' : 'member',
           score: Math.min(99, Math.max(50, 85 - idx * 3)),
           contributions: Math.max(10, 150 - idx * 12),
         }));
       }
     }
   } catch (err) {
-    console.error("Error refreshing live organization data:", err);
+    console.error('Error refreshing live organization data:', err);
   }
 
   // Fallback demo member if none returned
@@ -189,7 +204,7 @@ export async function refreshOrganizationStats(
       {
         login: cleanSlug,
         avatarUrl,
-        role: "owner",
+        role: 'owner',
         score: 85,
         contributions: 120,
       },
@@ -209,7 +224,8 @@ export async function refreshOrganizationStats(
     totalStars,
     totalForks,
     teamScore,
-    topLanguages: topLanguages.length > 0 ? topLanguages : ["TypeScript", "JavaScript"],
+    topLanguages:
+      topLanguages.length > 0 ? topLanguages : ['TypeScript', 'JavaScript'],
   };
 
   const dashboardData: OrgDashboardData = {
@@ -229,7 +245,7 @@ export async function refreshOrganizationStats(
   // Upsert to Supabase
   try {
     const { data: updatedDb } = await supabase
-      .from("organizations")
+      .from('organizations')
       .upsert(
         {
           name,
@@ -245,9 +261,9 @@ export async function refreshOrganizationStats(
           },
           updated_at: new Date().toISOString(),
         },
-        { onConflict: "slug" }
+        { onConflict: 'slug' },
       )
-      .select("*")
+      .select('*')
       .maybeSingle();
 
     if (updatedDb) {
@@ -257,7 +273,7 @@ export async function refreshOrganizationStats(
       dashboardData.claimedAt = updatedDb.claimed_at || null;
     }
   } catch (err) {
-    console.warn("Failed to persist organization data to Supabase:", err);
+    console.warn('Failed to persist organization data to Supabase:', err);
   }
 
   return dashboardData;
@@ -268,23 +284,23 @@ export async function refreshOrganizationStats(
  */
 export async function claimOrganization(
   orgSlug: string,
-  userId: string
+  userId: string,
 ): Promise<boolean> {
   const cleanSlug = orgSlug.trim().toLowerCase();
 
   try {
     const { error } = await supabase
-      .from("organizations")
+      .from('organizations')
       .update({
         claimed_by: userId,
         claimed_at: new Date().toISOString(),
       })
-      .eq("slug", cleanSlug)
-      .is("claimed_by", null);
+      .eq('slug', cleanSlug)
+      .is('claimed_by', null);
 
     if (!error) return true;
   } catch (err) {
-    console.error("Error claiming organization:", err);
+    console.error('Error claiming organization:', err);
   }
 
   return false;

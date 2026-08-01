@@ -1,7 +1,7 @@
-"use client";
+'use client';
 
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import type { HeatmapWeek } from "@/types";
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import type { HeatmapWeek } from '@/types';
 
 interface ContributionHeatmapProps {
   weeks: HeatmapWeek[];

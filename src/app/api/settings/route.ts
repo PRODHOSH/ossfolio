@@ -1,20 +1,20 @@
-import { NextRequest } from "next/server";
-import { createClient } from "@supabase/supabase-js";
-import { sanitizeString } from "@/lib/sanitizer";
+import { NextRequest } from 'next/server';
+import { createClient } from '@supabase/supabase-js';
+import { sanitizeString } from '@/lib/sanitizer';
 import {
   sanitizeUrl,
   createApiResponse,
   createErrorResponse,
-} from "@/lib/validators/api";
+} from '@/lib/validators/api';
 
-import { sanitizeFundingLinks, sanitizeSponsors } from "@/lib/sponsors";
+import { sanitizeFundingLinks, sanitizeSponsors } from '@/lib/sponsors';
 
 // Runtime managed by @opennextjs/cloudflare
 
 function getSupabaseEnv() {
   return {
-    url: process.env.NEXT_PUBLIC_SUPABASE_URL ?? "",
-    anonKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? "",
+    url: process.env.NEXT_PUBLIC_SUPABASE_URL ?? '',
+    anonKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? '',
   };
 }
 
@@ -26,15 +26,15 @@ function createAuthClient(accessToken: string) {
 }
 
 function extractToken(request: NextRequest): string | null {
-  const auth = request.headers.get("authorization");
-  if (!auth || !auth.startsWith("Bearer ")) return null;
+  const auth = request.headers.get('authorization');
+  if (!auth || !auth.startsWith('Bearer ')) return null;
   return auth.slice(7).trim();
 }
 
 export async function GET(request: NextRequest) {
   const token = extractToken(request);
   if (!token) {
-    return createErrorResponse("Unauthorized", 401);
+    return createErrorResponse('Unauthorized', 401);
   }
 
   const supabase = createAuthClient(token);
@@ -42,17 +42,19 @@ export async function GET(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) {
-    return createErrorResponse("Unauthorized", 401);
+    return createErrorResponse('Unauthorized', 401);
   }
 
   const { data, error } = await supabase
-    .from("profiles")
-    .select("headline, pinned_repos, custom_links, badges, visibility, funding_links, sponsors")
-    .eq("id", user.id)
+    .from('profiles')
+    .select(
+      'headline, pinned_repos, custom_links, badges, visibility, funding_links, sponsors',
+    )
+    .eq('id', user.id)
     .single();
 
   if (error) {
-    return createErrorResponse("Profile not found", 404);
+    return createErrorResponse('Profile not found', 404);
   }
 
   return createApiResponse(data);
@@ -61,7 +63,7 @@ export async function GET(request: NextRequest) {
 export async function PUT(request: NextRequest) {
   const token = extractToken(request);
   if (!token) {
-    return createErrorResponse("Unauthorized", 401);
+    return createErrorResponse('Unauthorized', 401);
   }
 
   const supabase = createAuthClient(token);
@@ -69,17 +71,17 @@ export async function PUT(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) {
-    return createErrorResponse("Unauthorized", 401);
+    return createErrorResponse('Unauthorized', 401);
   }
 
   let body: Record<string, unknown>;
   try {
     body = await request.json();
-    if (!body || typeof body !== "object" || Array.isArray(body)) {
-      return createErrorResponse("Invalid JSON body", 400);
+    if (!body || typeof body !== 'object' || Array.isArray(body)) {
+      return createErrorResponse('Invalid JSON body', 400);
     }
   } catch {
-    return createErrorResponse("Invalid JSON body", 400);
+    return createErrorResponse('Invalid JSON body', 400);
   }
 
   const updates: Record<string, unknown> = {};
@@ -100,7 +102,7 @@ export async function PUT(request: NextRequest) {
     updates.custom_links = body.custom_links
       .slice(0, 5)
       .map((link: unknown) => {
-        if (!link || typeof link !== "object") return null;
+        if (!link || typeof link !== 'object') return null;
         const l = link as Record<string, unknown>;
         const url = sanitizeUrl(l.url);
         if (!url) return null;
@@ -116,7 +118,7 @@ export async function PUT(request: NextRequest) {
     updates.badges = body.badges
       .slice(0, 10)
       .map((b: unknown) => {
-        if (!b || typeof b !== "object") return null;
+        if (!b || typeof b !== 'object') return null;
         const badge = b as Record<string, unknown>;
         return {
           program: sanitizeString(badge.program, 50),
@@ -124,7 +126,7 @@ export async function PUT(request: NextRequest) {
             ? badge.years
                 .filter(
                   (y: unknown) =>
-                    typeof y === "number" && y >= 2000 && y <= 2100,
+                    typeof y === 'number' && y >= 2000 && y <= 2100,
                 )
                 .slice(0, 5)
             : [],
@@ -142,15 +144,15 @@ export async function PUT(request: NextRequest) {
   }
 
   if (
-    body.visibility === "public" ||
-    body.visibility === "unlisted" ||
-    body.visibility === "private"
+    body.visibility === 'public' ||
+    body.visibility === 'unlisted' ||
+    body.visibility === 'private'
   ) {
     updates.visibility = body.visibility;
   }
 
   if (Object.keys(updates).length === 0) {
-    return createErrorResponse("No valid fields to update", 400);
+    return createErrorResponse('No valid fields to update', 400);
   }
 
   // `updated_at` is maintained by the `profiles_set_updated_at` trigger. The client is not
@@ -158,12 +160,12 @@ export async function PUT(request: NextRequest) {
   // writing it here would now fail with `permission denied`.
 
   const { error } = await supabase
-    .from("profiles")
+    .from('profiles')
     .update(updates)
-    .eq("id", user.id);
+    .eq('id', user.id);
 
   if (error) {
-    return createErrorResponse("Failed to update profile", 500);
+    return createErrorResponse('Failed to update profile', 500);
   }
 
   return createApiResponse({ success: true });
@@ -195,7 +197,7 @@ export async function PUT(request: NextRequest) {
 export async function DELETE(request: NextRequest) {
   const token = extractToken(request);
   if (!token) {
-    return createErrorResponse("Unauthorized", 401);
+    return createErrorResponse('Unauthorized', 401);
   }
 
   const authed = createAuthClient(token);
@@ -205,7 +207,7 @@ export async function DELETE(request: NextRequest) {
   } = await authed.auth.getUser();
 
   if (authError || !user) {
-    return createErrorResponse("Unauthorized", 401);
+    return createErrorResponse('Unauthorized', 401);
   }
 
   // Checked rather than assumed: without the service key the admin call below fails in a way that
@@ -213,7 +215,7 @@ export async function DELETE(request: NextRequest) {
   // 503 says "this deployment can't do that", which is the truth.
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!serviceKey) {
-    return createErrorResponse("Account deletion is not configured", 503);
+    return createErrorResponse('Account deletion is not configured', 503);
   }
 
   const { url } = getSupabaseEnv();
@@ -221,7 +223,7 @@ export async function DELETE(request: NextRequest) {
   const { error } = await admin.auth.admin.deleteUser(user.id);
 
   if (error) {
-    return createErrorResponse("Failed to delete account", 500);
+    return createErrorResponse('Failed to delete account', 500);
   }
 
   return createApiResponse({ deleted: true });

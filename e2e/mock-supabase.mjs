@@ -23,67 +23,67 @@
  * authentication state": nothing here talks to GitHub or to a real auth provider.
  */
 
-import { createServer } from "node:http";
+import { createServer } from 'node:http';
 
 const PORT = Number(process.env.MOCK_SUPABASE_PORT ?? 54321);
 
 /** Two profiles, so the leaderboard has something to rank. */
 const PROFILES = [
   {
-    id: "11111111-1111-1111-1111-111111111111",
-    username: "e2e-alice",
-    name: "E2E Alice",
-    avatar_url: "https://avatars.githubusercontent.com/u/1?v=4",
-    github_url: "https://github.com/e2e-alice",
+    id: '11111111-1111-1111-1111-111111111111',
+    username: 'e2e-alice',
+    name: 'E2E Alice',
+    avatar_url: 'https://avatars.githubusercontent.com/u/1?v=4',
+    github_url: 'https://github.com/e2e-alice',
     score: 1240,
     total_commits: 820,
     total_prs: 143,
     total_issues: 61,
     total_reviews: 77,
     followers: 210,
-    top_languages: ["TypeScript", "Go"],
+    top_languages: ['TypeScript', 'Go'],
     badges: [],
-    headline: "Alice builds things",
+    headline: 'Alice builds things',
     pinned_repos: [],
     custom_links: [],
-    visibility: "public",
+    visibility: 'public',
     flagged: false,
     flag_reason: null,
     score_delta_30_days: 40,
     view_count: 12,
-    updated_at: "2026-07-01T00:00:00.000Z",
-    last_refreshed_at: "2026-07-01T00:00:00.000Z",
-    created_at: "2025-01-01T00:00:00.000Z",
+    updated_at: '2026-07-01T00:00:00.000Z',
+    last_refreshed_at: '2026-07-01T00:00:00.000Z',
+    created_at: '2025-01-01T00:00:00.000Z',
     bio: null,
-    search_text: "e2e-alice",
+    search_text: 'e2e-alice',
   },
   {
-    id: "22222222-2222-2222-2222-222222222222",
-    username: "e2e-bob",
-    name: "E2E Bob",
-    avatar_url: "https://avatars.githubusercontent.com/u/2?v=4",
-    github_url: "https://github.com/e2e-bob",
+    id: '22222222-2222-2222-2222-222222222222',
+    username: 'e2e-bob',
+    name: 'E2E Bob',
+    avatar_url: 'https://avatars.githubusercontent.com/u/2?v=4',
+    github_url: 'https://github.com/e2e-bob',
     score: 610,
     total_commits: 300,
     total_prs: 44,
     total_issues: 12,
     total_reviews: 9,
     followers: 30,
-    top_languages: ["Python"],
+    top_languages: ['Python'],
     badges: [],
     headline: null,
     pinned_repos: [],
     custom_links: [],
-    visibility: "public",
+    visibility: 'public',
     flagged: false,
     flag_reason: null,
     score_delta_30_days: 5,
     view_count: 3,
-    updated_at: "2026-06-01T00:00:00.000Z",
-    last_refreshed_at: "2026-06-01T00:00:00.000Z",
-    created_at: "2025-03-01T00:00:00.000Z",
+    updated_at: '2026-06-01T00:00:00.000Z',
+    last_refreshed_at: '2026-06-01T00:00:00.000Z',
+    created_at: '2025-03-01T00:00:00.000Z',
     bio: null,
-    search_text: "e2e-bob",
+    search_text: 'e2e-bob',
   },
 ];
 
@@ -94,34 +94,34 @@ const PROFILES = [
  */
 const SNAPSHOTS = [
   {
-    username: "e2e-alice",
+    username: 'e2e-alice',
     synced_at: new Date().toISOString(),
     sync_started_at: new Date().toISOString(),
     snapshot: {
       user: {
-        login: "e2e-alice",
-        name: "E2E Alice",
-        bio: "Alice builds things",
-        avatar_url: "https://avatars.githubusercontent.com/u/1?v=4",
-        html_url: "https://github.com/e2e-alice",
+        login: 'e2e-alice',
+        name: 'E2E Alice',
+        bio: 'Alice builds things',
+        avatar_url: 'https://avatars.githubusercontent.com/u/1?v=4',
+        html_url: 'https://github.com/e2e-alice',
         public_repos: 24,
         followers: 210,
         following: 12,
         blog: null,
-        location: "Testville",
+        location: 'Testville',
         twitter_username: null,
       },
       repos: [
         {
           id: 1,
-          name: "alice-cli",
-          description: "A command line tool",
-          html_url: "https://github.com/e2e-alice/alice-cli",
+          name: 'alice-cli',
+          description: 'A command line tool',
+          html_url: 'https://github.com/e2e-alice/alice-cli',
           stargazers_count: 412,
           forks_count: 33,
-          language: "TypeScript",
-          topics: ["cli"],
-          pushed_at: "2026-06-20T00:00:00.000Z",
+          language: 'TypeScript',
+          topics: ['cli'],
+          pushed_at: '2026-06-20T00:00:00.000Z',
         },
       ],
       liveStats: {
@@ -143,18 +143,18 @@ const SNAPSHOTS = [
 function eqValue(params, column) {
   const raw = params.get(column);
   if (!raw) return null;
-  return raw.startsWith("eq.") ? decodeURIComponent(raw.slice(3)) : null;
+  return raw.startsWith('eq.') ? decodeURIComponent(raw.slice(3)) : null;
 }
 
 const server = createServer((req, res) => {
-  const url = new URL(req.url ?? "/", `http://localhost:${PORT}`);
+  const url = new URL(req.url ?? '/', `http://localhost:${PORT}`);
 
-  res.setHeader("Content-Type", "application/json");
-  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader('Content-Type', 'application/json');
+  res.setHeader('Access-Control-Allow-Origin', '*');
 
   // supabase-js asks for a single object (rather than an array) via this header.
-  const wantsSingle = (req.headers["accept"] ?? "").includes(
-    "vnd.pgrst.object",
+  const wantsSingle = (req.headers['accept'] ?? '').includes(
+    'vnd.pgrst.object',
   );
 
   const respond = (rows) => {
@@ -162,7 +162,7 @@ const server = createServer((req, res) => {
       // `.maybeSingle()` expects one object, or 406 when there's nothing.
       if (rows.length === 0) {
         res.statusCode = 406;
-        res.end(JSON.stringify({ message: "no rows" }));
+        res.end(JSON.stringify({ message: 'no rows' }));
         return;
       }
       res.statusCode = 200;
@@ -173,15 +173,15 @@ const server = createServer((req, res) => {
     res.end(JSON.stringify(rows));
   };
 
-  if (url.pathname === "/" || url.pathname === "/health") {
+  if (url.pathname === '/' || url.pathname === '/health') {
     res.statusCode = 200;
-    res.end(JSON.stringify({ status: "ok" }));
+    res.end(JSON.stringify({ status: 'ok' }));
     return;
   }
 
-  if (url.pathname.startsWith("/rest/v1/profiles")) {
-    const username = eqValue(url.searchParams, "username");
-    const id = eqValue(url.searchParams, "id");
+  if (url.pathname.startsWith('/rest/v1/profiles')) {
+    const username = eqValue(url.searchParams, 'username');
+    const id = eqValue(url.searchParams, 'id');
     let rows = PROFILES;
     if (username) rows = rows.filter((p) => p.username === username);
     if (id) rows = rows.filter((p) => p.id === id);
@@ -189,8 +189,8 @@ const server = createServer((req, res) => {
     return;
   }
 
-  if (url.pathname.startsWith("/rest/v1/profile_snapshots")) {
-    const username = eqValue(url.searchParams, "username");
+  if (url.pathname.startsWith('/rest/v1/profile_snapshots')) {
+    const username = eqValue(url.searchParams, 'username');
     const rows = username
       ? SNAPSHOTS.filter((s) => s.username === username)
       : SNAPSHOTS;
@@ -203,7 +203,7 @@ const server = createServer((req, res) => {
   respond([]);
 });
 
-server.listen(PORT, "0.0.0.0", () => {
+server.listen(PORT, '0.0.0.0', () => {
   // Playwright's `webServer` waits for this port, so the message is only for humans.
   console.log(`[mock-supabase] listening on http://127.0.0.1:${PORT}`);
 });

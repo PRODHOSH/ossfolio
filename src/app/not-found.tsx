@@ -9,43 +9,43 @@
  * Rules: inline styles only, no Tailwind, no TypeScript errors. (Issue #41)
  */
 
-import Link from "next/link";
-import type { CSSProperties } from "react";
+import Link from 'next/link';
+import type { CSSProperties } from 'react';
 
 const primaryButton: CSSProperties = {
-  display: "inline-flex",
-  alignItems: "center",
-  justifyContent: "center",
-  minWidth: "130px",
-  padding: "10px 28px",
-  borderRadius: "8px",
-  backgroundColor: "var(--color-primary)",
-  color: "var(--color-on-primary)",
-  fontSize: "16px",
+  display: 'inline-flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  minWidth: '130px',
+  padding: '10px 28px',
+  borderRadius: '8px',
+  backgroundColor: 'var(--color-primary)',
+  color: 'var(--color-on-primary)',
+  fontSize: '16px',
   fontWeight: 600,
-  textDecoration: "none",
+  textDecoration: 'none',
 };
 
 export default function NotFound() {
   return (
     <main
       style={{
-        backgroundColor: "var(--color-canvas)",
-        minHeight: "100vh",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        padding: "24px",
+        backgroundColor: 'var(--color-canvas)',
+        minHeight: '100vh',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '24px',
       }}
     >
-      <div style={{ textAlign: "center", maxWidth: "28rem" }}>
+      <div style={{ textAlign: 'center', maxWidth: '28rem' }}>
         {/* Illustration: astronaut floating in space */}
         <div
           aria-hidden="true"
           style={{
-            display: "flex",
-            justifyContent: "center",
-            marginBottom: "8px",
+            display: 'flex',
+            justifyContent: 'center',
+            marginBottom: '8px',
           }}
         >
           <svg
@@ -156,32 +156,38 @@ export default function NotFound() {
 
         <p
           style={{
-            fontSize: "72px",
+            fontSize: '72px',
             fontWeight: 700,
             lineHeight: 1,
-            color: "var(--color-primary)",
+            color: 'var(--color-primary)',
           }}
         >
           404
         </p>
         <h1
           style={{
-            marginTop: "16px",
-            fontSize: "24px",
+            marginTop: '16px',
+            fontSize: '24px',
             fontWeight: 600,
-            color: "var(--color-ink)",
+            color: 'var(--color-ink)',
           }}
         >
           Page not found
         </h1>
-        <p style={{ marginTop: "12px", fontSize: "16px",color: "var(--color-ink-mute)" }}>
+        <p
+          style={{
+            marginTop: '12px',
+            fontSize: '16px',
+            color: 'var(--color-ink-mute)',
+          }}
+        >
           The page you are looking for does not exist or may have moved.
         </p>
         <div
           style={{
-            display: "flex",
-            justifyContent: "center",
-            marginTop: "28px",
+            display: 'flex',
+            justifyContent: 'center',
+            marginTop: '28px',
           }}
         >
           <Link href="/" style={primaryButton}>

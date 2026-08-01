@@ -1,8 +1,8 @@
-"use client";
+'use client';
 
-import React, { createContext, useContext, useEffect, useState } from "react";
+import React, { createContext, useContext, useEffect, useState } from 'react';
 
-type Theme = "light" | "dark" | "high-contrast";
+type Theme = 'light' | 'dark' | 'high-contrast';
 
 interface ThemeContextType {
   theme: Theme;
@@ -13,21 +13,23 @@ interface ThemeContextType {
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setTheme] = useState<Theme>("light");
+  const [theme, setTheme] = useState<Theme>('light');
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
     setTimeout(() => {
       setMounted(true);
-      const savedTheme = localStorage.getItem("theme") as Theme | null;
-      const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+      const savedTheme = localStorage.getItem('theme') as Theme | null;
+      const prefersDark = window.matchMedia(
+        '(prefers-color-scheme: dark)',
+      ).matches;
 
       const initialTheme =
-        savedTheme && ["light", "dark", "high-contrast"].includes(savedTheme)
+        savedTheme && ['light', 'dark', 'high-contrast'].includes(savedTheme)
           ? savedTheme
           : prefersDark
-          ? "dark"
-          : "light";
+            ? 'dark'
+            : 'light';
 
       setTheme(initialTheme);
     }, 0);
@@ -37,22 +39,22 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     if (!mounted) return;
 
     // Remove existing theme classes from HTML element
-    document.documentElement.classList.remove("dark", "high-contrast");
+    document.documentElement.classList.remove('dark', 'high-contrast');
 
-    if (theme === "dark") {
-      document.documentElement.classList.add("dark");
-    } else if (theme === "high-contrast") {
-      document.documentElement.classList.add("high-contrast");
+    if (theme === 'dark') {
+      document.documentElement.classList.add('dark');
+    } else if (theme === 'high-contrast') {
+      document.documentElement.classList.add('high-contrast');
     }
 
-    localStorage.setItem("theme", theme);
+    localStorage.setItem('theme', theme);
   }, [theme, mounted]);
 
   const toggleTheme = () => {
     setTheme((prev) => {
-      if (prev === "light") return "dark";
-      if (prev === "dark") return "high-contrast";
-      return "light";
+      if (prev === 'light') return 'dark';
+      if (prev === 'dark') return 'high-contrast';
+      return 'light';
     });
   };
 
@@ -66,7 +68,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 export function useThemeContext() {
   const context = useContext(ThemeContext);
   if (!context) {
-    throw new Error("useThemeContext must be used within a ThemeProvider");
+    throw new Error('useThemeContext must be used within a ThemeProvider');
   }
   return context;
 }

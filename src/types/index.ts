@@ -1,5 +1,10 @@
 export interface FundingLink {
-  platform: "GitHub Sponsors" | "Patreon" | "Open Collective" | "Buy Me a Coffee" | "Custom";
+  platform:
+    | 'GitHub Sponsors'
+    | 'Patreon'
+    | 'Open Collective'
+    | 'Buy Me a Coffee'
+    | 'Custom';
   url: string;
 }
 
@@ -118,7 +123,7 @@ export interface MergedPR {
   url: string;
   repoName: string;
   mergedAt: string;
-  state?: "open" | "closed" | "merged";
+  state?: 'open' | 'closed' | 'merged';
   createdAt?: string;
 }
 
@@ -133,7 +138,7 @@ export interface CoContributor {
 export interface NetworkNode {
   id: string;
   label: string;
-  type: "contributor" | "repo" | "org" | "collaborator";
+  type: 'contributor' | 'repo' | 'org' | 'collaborator';
   avatarUrl?: string;
   url?: string;
   val: number;
@@ -159,4 +164,3 @@ export interface ImpactNetworkData {
   nodes: NetworkNode[];
   edges: NetworkEdge[];
 }
-

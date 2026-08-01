@@ -1,7 +1,7 @@
-"use client";
+'use client';
 
-import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useRouter } from 'next/navigation';
+import { useState } from 'react';
 
 interface CompareFormProps {
   defaultA?: string;
@@ -11,20 +11,20 @@ interface CompareFormProps {
 const inputStyle: React.CSSProperties = {
   flex: 1,
   minWidth: 0,
-  padding: "10px 12px",
-  fontSize: "14px",
+  padding: '10px 12px',
+  fontSize: '14px',
   fontWeight: 400,
-  color: "var(--color-ink)",
-  backgroundColor: "var(--color-canvas)",
-  border: "1px solid var(--color-hairline)",
-  borderRadius: "6px",
-  outline: "none",
-  transition: "border-color 0.2s ease",
+  color: 'var(--color-ink)',
+  backgroundColor: 'var(--color-canvas)',
+  border: '1px solid var(--color-hairline)',
+  borderRadius: '6px',
+  outline: 'none',
+  transition: 'border-color 0.2s ease',
 };
 
 export function CompareForm({
-  defaultA = "",
-  defaultB = "",
+  defaultA = '',
+  defaultB = '',
 }: CompareFormProps) {
   const router = useRouter();
   const [a, setA] = useState(defaultA);
@@ -46,10 +46,10 @@ export function CompareForm({
         handleSubmit();
       }}
       style={{
-        display: "flex",
-        flexWrap: "wrap",
-        gap: "12px",
-        alignItems: "center",
+        display: 'flex',
+        flexWrap: 'wrap',
+        gap: '12px',
+        alignItems: 'center',
       }}
     >
       <input
@@ -61,17 +61,17 @@ export function CompareForm({
         autoComplete="off"
         style={inputStyle}
         onFocus={(e) =>
-          (e.currentTarget.style.borderColor = "var(--color-primary)")
+          (e.currentTarget.style.borderColor = 'var(--color-primary)')
         }
         onBlur={(e) =>
-          (e.currentTarget.style.borderColor = "var(--color-hairline)")
+          (e.currentTarget.style.borderColor = 'var(--color-hairline)')
         }
       />
       <span
         style={{
-          fontSize: "14px",
+          fontSize: '14px',
           fontWeight: 500,
-          color: "var(--color-ink-mute)",
+          color: 'var(--color-ink-mute)',
         }}
       >
         vs
@@ -85,38 +85,38 @@ export function CompareForm({
         autoComplete="off"
         style={inputStyle}
         onFocus={(e) =>
-          (e.currentTarget.style.borderColor = "var(--color-primary)")
+          (e.currentTarget.style.borderColor = 'var(--color-primary)')
         }
         onBlur={(e) =>
-          (e.currentTarget.style.borderColor = "var(--color-hairline)")
+          (e.currentTarget.style.borderColor = 'var(--color-hairline)')
         }
       />
       <button
         type="submit"
         style={{
-          fontSize: "14px",
+          fontSize: '14px',
           fontWeight: 500,
-          backgroundColor: "var(--color-primary)",
-          color: "var(--color-on-primary)",
-          border: "none",
-          borderRadius: "6px",
-          padding: "10px 20px",
-          cursor: "pointer",
+          backgroundColor: 'var(--color-primary)',
+          color: 'var(--color-on-primary)',
+          border: 'none',
+          borderRadius: '6px',
+          padding: '10px 20px',
+          cursor: 'pointer',
           flexShrink: 0,
-          transition: "background-color 0.2s ease, outline-color 0.2s ease",
-          outline: "2px solid transparent",
-          outlineOffset: "2px",
+          transition: 'background-color 0.2s ease, outline-color 0.2s ease',
+          outline: '2px solid transparent',
+          outlineOffset: '2px',
         }}
         onMouseEnter={(e) =>
-          (e.currentTarget.style.backgroundColor = "var(--color-primary-deep)")
+          (e.currentTarget.style.backgroundColor = 'var(--color-primary-deep)')
         }
         onMouseLeave={(e) =>
-          (e.currentTarget.style.backgroundColor = "var(--color-primary)")
+          (e.currentTarget.style.backgroundColor = 'var(--color-primary)')
         }
         onFocus={(e) =>
-          (e.currentTarget.style.outlineColor = "var(--color-primary)")
+          (e.currentTarget.style.outlineColor = 'var(--color-primary)')
         }
-        onBlur={(e) => (e.currentTarget.style.outlineColor = "transparent")}
+        onBlur={(e) => (e.currentTarget.style.outlineColor = 'transparent')}
       >
         Compare
       </button>

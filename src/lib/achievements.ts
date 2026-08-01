@@ -1,4 +1,4 @@
-import type { ContributorStats } from "@/types";
+import type { ContributorStats } from '@/types';
 
 /**
  * Achievements — automatically earned milestones, derived from a profile's GitHub stats.
@@ -39,7 +39,7 @@ export interface Achievement {
   target: number;
   /** 0–1, for the progress bar. */
   progress: number;
-  category: "streak" | "contributions" | "community" | "funding";
+  category: 'streak' | 'contributions' | 'community' | 'funding';
   icon: string;
   unlockedAt?: string;
 }
@@ -57,7 +57,7 @@ export interface AchievementDefinition {
   name: string;
   tagline: string;
   target: number;
-  category: "streak" | "contributions" | "community" | "funding";
+  category: 'streak' | 'contributions' | 'community' | 'funding';
   icon: string;
   measure: (input: AchievementInput) => number;
 }
@@ -67,75 +67,78 @@ export interface AchievementDefinition {
  */
 export const DEFINITIONS: readonly AchievementDefinition[] = [
   {
-    id: "daily_grind",
-    name: "Daily Grind",
-    tagline: "A 7-day active contribution streak",
+    id: 'daily_grind',
+    name: 'Daily Grind',
+    tagline: 'A 7-day active contribution streak',
     target: 7,
-    category: "streak",
-    icon: "🔥",
-    measure: ({ longestStreak, currentStreak = 0 }) => Math.max(longestStreak, currentStreak),
+    category: 'streak',
+    icon: '🔥',
+    measure: ({ longestStreak, currentStreak = 0 }) =>
+      Math.max(longestStreak, currentStreak),
   },
   {
-    id: "marathon",
-    name: "Marathon",
-    tagline: "A 30-day contribution streak",
+    id: 'marathon',
+    name: 'Marathon',
+    tagline: 'A 30-day contribution streak',
     target: 30,
-    category: "streak",
-    icon: "⚡",
-    measure: ({ longestStreak, currentStreak = 0 }) => Math.max(longestStreak, currentStreak),
+    category: 'streak',
+    icon: '⚡',
+    measure: ({ longestStreak, currentStreak = 0 }) =>
+      Math.max(longestStreak, currentStreak),
   },
   {
-    id: "iron_will",
-    name: "Iron Will",
-    tagline: "A 100-day contribution streak",
+    id: 'iron_will',
+    name: 'Iron Will',
+    tagline: 'A 100-day contribution streak',
     target: 100,
-    category: "streak",
-    icon: "🛡️",
-    measure: ({ longestStreak, currentStreak = 0 }) => Math.max(longestStreak, currentStreak),
+    category: 'streak',
+    icon: '🛡️',
+    measure: ({ longestStreak, currentStreak = 0 }) =>
+      Math.max(longestStreak, currentStreak),
   },
   {
-    id: "first_step",
-    name: "First Step",
-    tagline: "First merged pull request in open source",
+    id: 'first_step',
+    name: 'First Step',
+    tagline: 'First merged pull request in open source',
     target: 1,
-    category: "contributions",
-    icon: "🌱",
+    category: 'contributions',
+    icon: '🌱',
     measure: ({ stats }) => stats.totalPRs,
   },
   {
-    id: "century",
-    name: "Century",
-    tagline: "100 merged pull requests",
+    id: 'century',
+    name: 'Century',
+    tagline: '100 merged pull requests',
     target: 100,
-    category: "contributions",
-    icon: "🏆",
+    category: 'contributions',
+    icon: '🏆',
     measure: ({ stats }) => stats.totalPRs,
   },
   {
-    id: "reviewer",
-    name: "Reviewer",
-    tagline: "50 code reviews for other people",
+    id: 'reviewer',
+    name: 'Reviewer',
+    tagline: '50 code reviews for other people',
     target: 50,
-    category: "community",
-    icon: "👀",
+    category: 'community',
+    icon: '👀',
     measure: ({ stats }) => stats.totalReviews,
   },
   {
-    id: "bug_hunter",
-    name: "Bug Hunter",
-    tagline: "10 closed issues or contributions",
+    id: 'bug_hunter',
+    name: 'Bug Hunter',
+    tagline: '10 closed issues or contributions',
     target: 10,
-    category: "contributions",
-    icon: "🎯",
+    category: 'contributions',
+    icon: '🎯',
     measure: ({ stats }) => stats.totalIssues,
   },
   {
-    id: "sponsored_creator",
-    name: "Sponsored Creator",
-    tagline: "Configured sponsorship and open-source funding options",
+    id: 'sponsored_creator',
+    name: 'Sponsored Creator',
+    tagline: 'Configured sponsorship and open-source funding options',
     target: 1,
-    category: "funding",
-    icon: "💖",
+    category: 'funding',
+    icon: '💖',
     measure: ({ hasFunding }) => (hasFunding ? 1 : 0),
   },
 ];

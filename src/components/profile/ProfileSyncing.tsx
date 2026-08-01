@@ -1,10 +1,10 @@
-"use client";
+'use client';
 
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 
-import { Navbar } from "@/components/layout/Navbar";
-import { Footer } from "@/components/layout/Footer";
+import { Navbar } from '@/components/layout/Navbar';
+import { Footer } from '@/components/layout/Footer';
 
 /**
  * Shown the first time a profile is viewed, while its snapshot is being built in
@@ -43,45 +43,45 @@ export function ProfileSyncing({ username }: { username: string }) {
       <Navbar />
       <main
         style={{
-          backgroundColor: "var(--color-canvas)",
-          color: "var(--color-ink)",
-          minHeight: "100vh",
-          transition: "background-color 0.2s ease, color 0.2s ease",
+          backgroundColor: 'var(--color-canvas)',
+          color: 'var(--color-ink)',
+          minHeight: '100vh',
+          transition: 'background-color 0.2s ease, color 0.2s ease',
         }}
       >
         <div
           style={{
-            maxWidth: "640px",
-            margin: "0 auto",
-            padding: "96px 20px",
-            textAlign: "center",
+            maxWidth: '640px',
+            margin: '0 auto',
+            padding: '96px 20px',
+            textAlign: 'center',
           }}
         >
           {!gaveUp && (
             <div
               aria-hidden="true"
               style={{
-                width: "28px",
-                height: "28px",
-                margin: "0 auto 20px auto",
-                borderRadius: "50%",
-                border: "2px solid var(--color-hairline-strong)",
-                borderTopColor: "var(--color-primary)",
-                animation: "ossfolio-spin 0.8s linear infinite",
+                width: '28px',
+                height: '28px',
+                margin: '0 auto 20px auto',
+                borderRadius: '50%',
+                border: '2px solid var(--color-hairline-strong)',
+                borderTopColor: 'var(--color-primary)',
+                animation: 'ossfolio-spin 0.8s linear infinite',
               }}
             />
           )}
 
           <h1
-            style={{ fontSize: "22px", fontWeight: 500, margin: "0 0 12px 0" }}
+            style={{ fontSize: '22px', fontWeight: 500, margin: '0 0 12px 0' }}
           >
-            {gaveUp ? "Still working on it" : "Building this profile"}
+            {gaveUp ? 'Still working on it' : 'Building this profile'}
           </h1>
 
           <p
             style={{
-              fontSize: "15px",
-              color: "var(--color-ink-mute)",
+              fontSize: '15px',
+              color: 'var(--color-ink-mute)',
               margin: 0,
             }}
             role="status"
@@ -89,7 +89,7 @@ export function ProfileSyncing({ username }: { username: string }) {
           >
             {gaveUp ? (
               <>
-                We haven&apos;t been able to finish fetching{" "}
+                We haven&apos;t been able to finish fetching{' '}
                 <strong>@{username}</strong> from GitHub yet. This usually means
                 GitHub is rate-limiting us — please try again in a few minutes.
               </>
@@ -110,15 +110,15 @@ export function ProfileSyncing({ username }: { username: string }) {
                 router.refresh();
               }}
               style={{
-                marginTop: "20px",
-                padding: "10px 18px",
-                fontSize: "14px",
+                marginTop: '20px',
+                padding: '10px 18px',
+                fontSize: '14px',
                 fontWeight: 500,
-                borderRadius: "8px",
-                cursor: "pointer",
-                color: "var(--color-on-primary)",
-                backgroundColor: "var(--color-primary)",
-                border: "1px solid var(--color-primary-deep)",
+                borderRadius: '8px',
+                cursor: 'pointer',
+                color: 'var(--color-on-primary)',
+                backgroundColor: 'var(--color-primary)',
+                border: '1px solid var(--color-primary-deep)',
               }}
             >
               Try again

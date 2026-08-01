@@ -14,12 +14,12 @@
 // and teach contributors to skip it. Syntax is validated separately by
 // `sqlfluff parse`, which passes on all 20 today.
 
-import { readFile, readdir } from "node:fs/promises";
-import path from "node:path";
-import { fileURLToPath } from "node:url";
+import { readFile, readdir } from 'node:fs/promises';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
-export const MIGRATIONS_DIR = "supabase/migrations";
-export const SCHEMA_FILE = "supabase/schema.sql";
+export const MIGRATIONS_DIR = 'supabase/migrations';
+export const SCHEMA_FILE = 'supabase/schema.sql';
 
 /**
  * Remove SQL comments before pattern matching.
@@ -28,7 +28,7 @@ export const SCHEMA_FILE = "supabase/schema.sql";
  * read as a real table definition and demand an RLS policy that should not exist.
  */
 export const stripComments = (sql) =>
-  sql.replace(/\/\*[\s\S]*?\*\//g, " ").replace(/--[^\n]*/g, " ");
+  sql.replace(/\/\*[\s\S]*?\*\//g, ' ').replace(/--[^\n]*/g, ' ');
 
 /**
  * Pull the ordering prefix out of a migration filename.
@@ -98,9 +98,9 @@ export const tablesMissingRls = (sql) => {
  * so that `schema.sql` stays a truthful picture of the database.
  */
 export const schemaSnapshotUpdated = (changedFiles) => {
-  const normalised = changedFiles.map((file) => file.replace(/\\/g, "/"));
+  const normalised = changedFiles.map((file) => file.replace(/\\/g, '/'));
   const touchedMigration = normalised.some(
-    (file) => file.startsWith(`${MIGRATIONS_DIR}/`) && file.endsWith(".sql"),
+    (file) => file.startsWith(`${MIGRATIONS_DIR}/`) && file.endsWith('.sql'),
   );
   if (!touchedMigration) return { required: false, satisfied: true };
 
@@ -126,9 +126,9 @@ export const lintMigrations = ({
   const warnings = [];
 
   const changedMigrations = changedFiles
-    .map((file) => file.replace(/\\/g, "/"))
+    .map((file) => file.replace(/\\/g, '/'))
     .filter(
-      (file) => file.startsWith(`${MIGRATIONS_DIR}/`) && file.endsWith(".sql"),
+      (file) => file.startsWith(`${MIGRATIONS_DIR}/`) && file.endsWith('.sql'),
     );
   const changedBasenames = new Set(
     changedMigrations.map((file) => path.basename(file)),
@@ -138,7 +138,7 @@ export const lintMigrations = ({
     const involvesThisPr = duplicate.files.some((file) =>
       changedBasenames.has(file),
     );
-    const message = `Migration version ${duplicate.version} is used by ${duplicate.files.length} files: ${duplicate.files.join(", ")}. Supabase orders migrations by this prefix, so their apply order is undefined.`;
+    const message = `Migration version ${duplicate.version} is used by ${duplicate.files.length} files: ${duplicate.files.join(', ')}. Supabase orders migrations by this prefix, so their apply order is undefined.`;
     (involvesThisPr ? errors : warnings).push(message);
   }
 
@@ -166,29 +166,29 @@ export const lintMigrations = ({
 
 /** Render findings as a GitHub step summary. */
 export const renderReport = ({ errors, warnings }) => {
-  const lines = ["## Migration checks", ""];
+  const lines = ['## Migration checks', ''];
 
   if (errors.length === 0 && warnings.length === 0) {
-    lines.push("No issues found.");
-    return lines.join("\n");
+    lines.push('No issues found.');
+    return lines.join('\n');
   }
 
   if (errors.length > 0) {
-    lines.push(`### Errors (${errors.length})`, "");
+    lines.push(`### Errors (${errors.length})`, '');
     for (const error of errors) lines.push(`- ${error}`);
-    lines.push("");
+    lines.push('');
   }
 
   if (warnings.length > 0) {
-    lines.push(`### Warnings (${warnings.length})`, "");
+    lines.push(`### Warnings (${warnings.length})`, '');
     lines.push(
-      "_Pre-existing, and not caused by this pull request. Reported so they stay visible._",
-      "",
+      '_Pre-existing, and not caused by this pull request. Reported so they stay visible._',
+      '',
     );
     for (const warning of warnings) lines.push(`- ${warning}`);
   }
 
-  return lines.join("\n").trimEnd();
+  return lines.join('\n').trimEnd();
 };
 
 const isDirectRun =
@@ -199,23 +199,29 @@ if (isDirectRun) {
   const changedFiles = process.argv.slice(2).filter(Boolean);
 
   const entries = await readdir(MIGRATIONS_DIR).catch(() => []);
-  const allMigrations = entries.filter((entry) => entry.endsWith(".sql")).sort();
+  const allMigrations = entries
+    .filter((entry) => entry.endsWith('.sql'))
+    .sort();
 
   const contentsByFile = {};
   for (const file of changedFiles) {
-    const normalised = file.replace(/\\/g, "/");
+    const normalised = file.replace(/\\/g, '/');
     if (
       !normalised.startsWith(`${MIGRATIONS_DIR}/`) ||
-      !normalised.endsWith(".sql")
+      !normalised.endsWith('.sql')
     ) {
       continue;
     }
-    contentsByFile[normalised] = await readFile(normalised, "utf8").catch(
+    contentsByFile[normalised] = await readFile(normalised, 'utf8').catch(
       () => undefined,
     );
   }
 
-  const result = lintMigrations({ allMigrations, changedFiles, contentsByFile });
+  const result = lintMigrations({
+    allMigrations,
+    changedFiles,
+    contentsByFile,
+  });
   const report = renderReport(result);
 
   console.log(report);

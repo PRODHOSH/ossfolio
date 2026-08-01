@@ -1,14 +1,14 @@
-import { NextRequest } from "next/server";
-import { createClient } from "@supabase/supabase-js";
+import { NextRequest } from 'next/server';
+import { createClient } from '@supabase/supabase-js';
 import {
   fetchContributorProfile,
   contributorToScoreInputs,
-} from "@/lib/github";
-import { mapRepos, fetchLiveStats } from "@/lib/profile-data";
-import { scoreWithAnomalyCheck } from "@/lib/anomaly";
-import { createApiResponse, createErrorResponse } from "@/lib/validators/api";
-import { fetchWithTimeout } from "@/lib/fetch-with-timeout";
-import type { ContributorStats, Repo } from "@/types";
+} from '@/lib/github';
+import { mapRepos, fetchLiveStats } from '@/lib/profile-data';
+import { scoreWithAnomalyCheck } from '@/lib/anomaly';
+import { createApiResponse, createErrorResponse } from '@/lib/validators/api';
+import { fetchWithTimeout } from '@/lib/fetch-with-timeout';
+import type { ContributorStats, Repo } from '@/types';
 import { GITHUB_API_BASE } from '@/lib/constants';
 
 // Runtime managed by @opennextjs/cloudflare
@@ -38,14 +38,14 @@ const GITHUB_TIMEOUT_MS = 8000;
 
 function getSupabaseEnv() {
   return {
-    url: process.env.NEXT_PUBLIC_SUPABASE_URL ?? "",
-    anonKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? "",
+    url: process.env.NEXT_PUBLIC_SUPABASE_URL ?? '',
+    anonKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? '',
   };
 }
 
 function extractToken(request: NextRequest): string | null {
-  const auth = request.headers.get("authorization");
-  if (!auth || !auth.startsWith("Bearer ")) return null;
+  const auth = request.headers.get('authorization');
+  if (!auth || !auth.startsWith('Bearer ')) return null;
   return auth.slice(7).trim();
 }
 
@@ -59,8 +59,8 @@ async function statsFromRest(
   const reposRes = await fetchWithTimeout(
     `${GITHUB_API_BASE}/users/${encodeURIComponent(username)}/repos?sort=stars&per_page=12&type=owner`,
     {
-      headers: { Accept: "application/vnd.github.v3+json" },
-      cache: "no-store",
+      headers: { Accept: 'application/vnd.github.v3+json' },
+      cache: 'no-store',
     },
     GITHUB_TIMEOUT_MS,
   );
@@ -73,7 +73,7 @@ async function statsFromRest(
 
 export async function POST(request: NextRequest) {
   const token = extractToken(request);
-  if (!token) return createErrorResponse("Unauthorized", 401);
+  if (!token) return createErrorResponse('Unauthorized', 401);
 
   // Verify the caller. `getUser()` validates the JWT against Supabase rather than trusting
   // it, so a forged or expired token cannot get past this point.
@@ -84,14 +84,14 @@ export async function POST(request: NextRequest) {
   const {
     data: { user },
   } = await authed.auth.getUser();
-  if (!user) return createErrorResponse("Unauthorized", 401);
+  if (!user) return createErrorResponse('Unauthorized', 401);
 
   // Identity comes from the verified session, never the request body. This is what stops a
   // caller writing to someone else's profile, or scoring a different account as their own.
   const userId = user.id;
   const username = user.user_metadata?.user_name as string | undefined;
   if (!username)
-    return createErrorResponse("No GitHub username on this account", 400);
+    return createErrorResponse('No GitHub username on this account', 400);
 
   // The GitHub OAuth token is only available to the client (Supabase does not persist
   // provider tokens server-side), so it is passed in. It only ever widens the rate limit for
@@ -100,7 +100,7 @@ export async function POST(request: NextRequest) {
   let providerToken: string | undefined;
   try {
     const body = await request.json();
-    if (typeof body?.providerToken === "string")
+    if (typeof body?.providerToken === 'string')
       providerToken = body.providerToken;
   } catch {
     // No body is fine — we fall back to the unauthenticated REST path.
@@ -123,7 +123,7 @@ export async function POST(request: NextRequest) {
       ({ stats, repos } = await statsFromRest(username));
     }
   } catch {
-    return createErrorResponse("Could not read this account from GitHub", 502);
+    return createErrorResponse('Could not read this account from GitHub', 502);
   }
 
   // Score the account and run the anti-gaming heuristic. A flagged account is persisted with
@@ -134,12 +134,12 @@ export async function POST(request: NextRequest) {
 
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!serviceKey) {
-    console.error("[profile/sync] service-role key missing");
-    return createErrorResponse("Server misconfigured", 500);
+    console.error('[profile/sync] service-role key missing');
+    return createErrorResponse('Server misconfigured', 500);
   }
 
   const admin = createClient(url, serviceKey);
-  const { error } = await admin.from("profiles").upsert(
+  const { error } = await admin.from('profiles').upsert(
     {
       id: userId,
       username,
@@ -153,12 +153,12 @@ export async function POST(request: NextRequest) {
       flagged_at: anomaly.flagged ? now : null,
       updated_at: now,
     },
-    { onConflict: "id" },
+    { onConflict: 'id' },
   );
 
   if (error) {
-    console.error("[profile/sync] upsert failed:", error.message);
-    return createErrorResponse("Could not save the profile", 500);
+    console.error('[profile/sync] upsert failed:', error.message);
+    return createErrorResponse('Could not save the profile', 500);
   }
 
   return createApiResponse({

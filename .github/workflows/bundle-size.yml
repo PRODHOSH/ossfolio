@@ -44,8 +44,8 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "22"
-          cache: "npm"
+          node-version: '22'
+          cache: 'npm'
           cache-dependency-path: head/package-lock.json
 
       - name: Build pull request

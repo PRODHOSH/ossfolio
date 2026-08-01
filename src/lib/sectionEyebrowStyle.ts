@@ -1,8 +1,8 @@
 export const sectionEyebrowStyle = {
-  fontSize: "13px",
+  fontSize: '13px',
   fontWeight: 500,
-  color: "#3ecf8e",
-  marginBottom: "10px",
+  color: '#3ecf8e',
+  marginBottom: '10px',
 } as const;
 
 export type SectionEyebrowStyle = typeof sectionEyebrowStyle;

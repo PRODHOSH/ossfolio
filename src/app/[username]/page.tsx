@@ -1,26 +1,26 @@
-import { notFound } from "next/navigation";
-import type { ContributorStats } from "@/types";
-import type { Metadata } from "next";
-import { Navbar } from "@/components/layout/Navbar";
-import { Footer } from "@/components/layout/Footer";
-import { TemporaryUnavailableFallback } from "@/components/layout/TemporaryUnavailableFallback";
+import { notFound } from 'next/navigation';
+import type { ContributorStats } from '@/types';
+import type { Metadata } from 'next';
+import { Navbar } from '@/components/layout/Navbar';
+import { Footer } from '@/components/layout/Footer';
+import { TemporaryUnavailableFallback } from '@/components/layout/TemporaryUnavailableFallback';
 
-import { ProfileView } from "@/components/profile/ProfileView";
-import { deriveTechStack, mapRepos, type GitHubUser } from "@/lib/profile-data";
+import { ProfileView } from '@/components/profile/ProfileView';
+import { deriveTechStack, mapRepos, type GitHubUser } from '@/lib/profile-data';
 import {
   getProfileSnapshot,
   isSnapshotStale,
   syncProfileSnapshot,
-} from "@/lib/profile-snapshot";
-import { ProfileSyncing } from "@/components/profile/ProfileSyncing";
-import { after } from "next/server";
-import { generateMockHeatmap, computeStreaks } from "@/lib/mock";
+} from '@/lib/profile-snapshot';
+import { ProfileSyncing } from '@/components/profile/ProfileSyncing';
+import { after } from 'next/server';
+import { generateMockHeatmap, computeStreaks } from '@/lib/mock';
 import {
   fetchContributionCalendar,
   fetchContributorProfile,
-} from "@/lib/github";
-import { calculateScore } from "@/lib/score";
-import { getProfileByUsername } from "@/lib/db";
+} from '@/lib/github';
+import { calculateScore } from '@/lib/score';
+import { getProfileByUsername } from '@/lib/db';
 
 // Runtime managed by @opennextjs/cloudflare
 
@@ -55,18 +55,18 @@ export async function generateMetadata({
       openGraph: {
         title: `${username} - OSSfolio`,
         description: fallbackDescription,
-        type: "profile",
-        siteName: "OSSfolio",
+        type: 'profile',
+        siteName: 'OSSfolio',
       },
       twitter: {
-        card: "summary_large_image",
+        card: 'summary_large_image',
         title: `${username} - OSSfolio`,
         description: fallbackDescription,
       },
     };
   }
   const displayName = user.name || user.login;
-  const bio = user.bio || "";
+  const bio = user.bio || '';
   const publicRepos = user.public_repos;
   const followers = user.followers;
 
@@ -80,11 +80,11 @@ export async function generateMetadata({
     openGraph: {
       title: `${displayName} - OSSfolio`,
       description,
-      type: "profile",
-      siteName: "OSSfolio",
+      type: 'profile',
+      siteName: 'OSSfolio',
     },
     twitter: {
-      card: "summary_large_image",
+      card: 'summary_large_image',
       title: `${displayName} - OSSfolio`,
       description,
     },
@@ -141,7 +141,7 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
         heading="Temporarily Unavailable"
         message={
           <>
-            GitHub API rate limit reached. Profile data for{" "}
+            GitHub API rate limit reached. Profile data for{' '}
             <strong>@{username}</strong> cannot be loaded right now. Please try
             again in a few minutes.
           </>
@@ -182,21 +182,33 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
   let pinnedReposRaw: PinnedRepo[] = [];
   try {
     const token =
-      process.env.GITHUB_TOKEN || process.env.GITHUB_API_TOKEN || "";
+      process.env.GITHUB_TOKEN || process.env.GITHUB_API_TOKEN || '';
     if (token) {
       const gqlProfile = await fetchContributorProfile(username, token);
       if (gqlProfile?.pinnedItems?.nodes?.length > 0) {
         // Map GraphQL shape to match REST API shape expected by ProfileView
-        pinnedReposRaw = gqlProfile.pinnedItems.nodes.map((n: { name: string; description: string | null; stargazerCount: number; forkCount: number; primaryLanguage: { name: string; color: string } | null; url: string }, index: number) => ({
-          id: -index - 1, // synthetic id for pinned repos to satisfy type
-          name: n.name,
-          description: n.description,
-          stargazers_count: n.stargazerCount,
-          forks_count: n.forkCount,
-          language: n.primaryLanguage?.name || null,
-          html_url: n.url,
-          topics: [],
-        }));
+        pinnedReposRaw = gqlProfile.pinnedItems.nodes.map(
+          (
+            n: {
+              name: string;
+              description: string | null;
+              stargazerCount: number;
+              forkCount: number;
+              primaryLanguage: { name: string; color: string } | null;
+              url: string;
+            },
+            index: number,
+          ) => ({
+            id: -index - 1, // synthetic id for pinned repos to satisfy type
+            name: n.name,
+            description: n.description,
+            stargazers_count: n.stargazerCount,
+            forks_count: n.forkCount,
+            language: n.primaryLanguage?.name || null,
+            html_url: n.url,
+            topics: [],
+          }),
+        );
       }
     }
   } catch (err) {
@@ -206,7 +218,7 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
   // Fallback Logic
   const displayRepos = pinnedReposRaw.length > 0 ? pinnedReposRaw : repos;
   const repoSectionTitle =
-    pinnedReposRaw.length > 0 ? "Pinned repositories" : "Popular repositories";
+    pinnedReposRaw.length > 0 ? 'Pinned repositories' : 'Popular repositories';
   // ----------------------------------------------------------------
 
   interface Badge {
@@ -235,7 +247,7 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
   try {
     const { data, error } = await getProfileByUsername(
       username,
-      "id, score, updated_at, badges, headline, pinned_repos, custom_links, visibility",
+      'id, score, updated_at, badges, headline, pinned_repos, custom_links, visibility',
     );
     customizationFetchSettled = true;
 
@@ -252,10 +264,10 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
 
     if (profileRow) {
       profileId = profileRow.id;
-      if (typeof profileRow.score === "number") {
+      if (typeof profileRow.score === 'number') {
         score = profileRow.score;
       }
-      if (typeof profileRow.updated_at === "string") {
+      if (typeof profileRow.updated_at === 'string') {
         updatedAt = profileRow.updated_at;
       }
       if (Array.isArray(profileRow.badges)) {
@@ -263,8 +275,8 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
           .filter(
             (b) =>
               b &&
-              typeof b.program === "string" &&
-              b.program.trim() !== "" &&
+              typeof b.program === 'string' &&
+              b.program.trim() !== '' &&
               Array.isArray(b.years),
           )
           .map((b) => ({
@@ -302,14 +314,14 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
   // the ordinary case. If RLS hid private rows, this code could not tell "private" from "never
   // signed up" — it would fall through and render the public GitHub data instead of 404ing, and the
   // setting would look like it worked while doing nothing.
-  if (profileRow?.visibility === "private") {
+  if (profileRow?.visibility === 'private') {
     return notFound();
   }
 
   const customization = profileRow
     ? {
         headline:
-          typeof profileRow.headline === "string" ? profileRow.headline : null,
+          typeof profileRow.headline === 'string' ? profileRow.headline : null,
         pinnedRepos: Array.isArray(profileRow.pinned_repos)
           ? (profileRow.pinned_repos as string[])
           : [],
@@ -331,10 +343,10 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
       {/* ProfileActions component within ProfileView handles GitHub profile sync/refresh state */}
       <main
         style={{
-          backgroundColor: "var(--color-canvas)",
-          color: "var(--color-ink)",
-          minHeight: "100vh",
-          transition: "background-color 0.2s ease, color 0.2s ease",
+          backgroundColor: 'var(--color-canvas)',
+          color: 'var(--color-ink)',
+          minHeight: '100vh',
+          transition: 'background-color 0.2s ease, color 0.2s ease',
         }}
       >
         <ProfileView

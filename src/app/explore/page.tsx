@@ -1,15 +1,15 @@
-import Link from "next/link";
-import Image from "next/image";
-import type { Metadata } from "next";
-import { Navbar } from "@/components/layout/Navbar";
-import { Footer } from "@/components/layout/Footer";
+import Link from 'next/link';
+import Image from 'next/image';
+import type { Metadata } from 'next';
+import { Navbar } from '@/components/layout/Navbar';
+import { Footer } from '@/components/layout/Footer';
 import {
   fetchExploreProfiles,
   fetchExploreOrganizations,
   type ExploreProfileSort,
-} from "@/lib/db";
-import { DiscoverPagination } from "@/components/discover/DiscoverPagination";
-import { POPULAR_LANGUAGES } from "@/lib/languages";
+} from '@/lib/db';
+import { DiscoverPagination } from '@/components/discover/DiscoverPagination';
+import { POPULAR_LANGUAGES } from '@/lib/languages';
 import {
   SCORE_TIERS,
   normalizeLanguage,
@@ -18,14 +18,14 @@ import {
   hasActiveFilters,
   describeFilters,
   type ExploreFilters,
-} from "@/lib/explore-filters";
+} from '@/lib/explore-filters';
 
 // Runtime managed by @opennextjs/cloudflare
 
 export const metadata: Metadata = {
-  title: "Explore Contributors",
+  title: 'Explore Contributors',
   description:
-    "Browse the OSSfolio leaderboard of top open-source contributors ranked by contribution score. Search, filter by language, and discover active open-source developers.",
+    'Browse the OSSfolio leaderboard of top open-source contributors ranked by contribution score. Search, filter by language, and discover active open-source developers.',
 };
 
 const PAGE_SIZE = 50;
@@ -36,23 +36,23 @@ const PAGE_SIZE = 50;
  * single point of colour.
  */
 const pillStyle: React.CSSProperties = {
-  fontSize: "13px",
+  fontSize: '13px',
   fontWeight: 500,
-  padding: "6px 12px",
-  borderRadius: "999px",
-  border: "1px solid var(--color-hairline)",
-  color: "var(--color-ink-mute)",
-  backgroundColor: "var(--color-canvas)",
-  textDecoration: "none",
+  padding: '6px 12px',
+  borderRadius: '999px',
+  border: '1px solid var(--color-hairline)',
+  color: 'var(--color-ink-mute)',
+  backgroundColor: 'var(--color-canvas)',
+  textDecoration: 'none',
   lineHeight: 1.4,
 };
 
 const activePillStyle: React.CSSProperties = {
   ...pillStyle,
   fontWeight: 600,
-  color: "var(--color-on-primary)",
-  backgroundColor: "var(--color-primary)",
-  borderColor: "var(--color-primary)",
+  color: 'var(--color-on-primary)',
+  backgroundColor: 'var(--color-primary)',
+  borderColor: 'var(--color-primary)',
 };
 
 interface LeaderboardRow {
@@ -96,7 +96,7 @@ async function fetchPage(
 ): Promise<{ rows: LeaderboardData[]; hasNext: boolean }> {
   const from = (page - 1) * PAGE_SIZE;
   const to = from + PAGE_SIZE;
-  const isOrg = type === "organizations";
+  const isOrg = type === 'organizations';
 
   try {
     const { data, error } = isOrg
@@ -127,28 +127,28 @@ export default async function ExplorePage({ searchParams }: ExplorePageProps) {
     minScore: minScoreParam,
   } = await searchParams;
   const page = Math.max(1, Math.floor(Number(pageParam)) || 1);
-  const searchQuery = typeof qParam === "string" ? qParam.trim() : "";
+  const searchQuery = typeof qParam === 'string' ? qParam.trim() : '';
   const VALID_SORT_OPTIONS = new Set([
-    "score",
-    "prs",
-    "commits",
-    "issues",
-    "improvement",
+    'score',
+    'prs',
+    'commits',
+    'issues',
+    'improvement',
   ]);
   const sortBy =
-    typeof sortByParam === "string" && VALID_SORT_OPTIONS.has(sortByParam)
+    typeof sortByParam === 'string' && VALID_SORT_OPTIONS.has(sortByParam)
       ? sortByParam
-      : "score";
-  const VALID_TYPES = new Set(["users", "organizations"]);
+      : 'score';
+  const VALID_TYPES = new Set(['users', 'organizations']);
   const type =
-    typeof typeParam === "string" && VALID_TYPES.has(typeParam)
+    typeof typeParam === 'string' && VALID_TYPES.has(typeParam)
       ? typeParam
-      : "users";
+      : 'users';
 
   // Organisations have no language or score-tier data, so those filters only
   // apply to the contributor listing.
-  const lang = type === "users" ? normalizeLanguage(langParam) : null;
-  const minScore = type === "users" ? normalizeScoreTier(minScoreParam) : 0;
+  const lang = type === 'users' ? normalizeLanguage(langParam) : null;
+  const minScore = type === 'users' ? normalizeScoreTier(minScoreParam) : 0;
 
   const activeFilters: ExploreFilters = {
     type,
@@ -176,56 +176,56 @@ export default async function ExplorePage({ searchParams }: ExplorePageProps) {
       <main
         id="main-content"
         style={{
-          backgroundColor: "var(--color-canvas)",
-          color: "var(--color-ink)",
-          minHeight: "100vh",
+          backgroundColor: 'var(--color-canvas)',
+          color: 'var(--color-ink)',
+          minHeight: '100vh',
         }}
       >
         <div
-          style={{ maxWidth: "56rem", margin: "0 auto", padding: "56px 20px" }}
+          style={{ maxWidth: '56rem', margin: '0 auto', padding: '56px 20px' }}
         >
-          <header style={{ marginBottom: "32px" }}>
+          <header style={{ marginBottom: '32px' }}>
             <h1
               style={{
-                fontSize: "28px",
+                fontSize: '28px',
                 fontWeight: 600,
-                color: "var(--color-ink)",
+                color: 'var(--color-ink)',
                 margin: 0,
               }}
             >
-              Explore{" "}
-              {type === "organizations" ? "Organizations" : "Contributors"}
+              Explore{' '}
+              {type === 'organizations' ? 'Organizations' : 'Contributors'}
             </h1>
           </header>
 
           {/* Toggle Tabs */}
           <div
             style={{
-              display: "flex",
-              gap: "24px",
-              borderBottom: "1px solid var(--color-hairline)",
-              marginBottom: "24px",
+              display: 'flex',
+              gap: '24px',
+              borderBottom: '1px solid var(--color-hairline)',
+              marginBottom: '24px',
             }}
           >
-            {["users", "organizations"].map((tab) => (
+            {['users', 'organizations'].map((tab) => (
               <Link
                 key={tab}
                 href={{
-                  pathname: "/explore",
+                  pathname: '/explore',
                   query: { type: tab, q: searchQuery, sortBy },
                 }}
                 style={{
-                  paddingBottom: "12px",
-                  fontSize: "14px",
+                  paddingBottom: '12px',
+                  fontSize: '14px',
                   fontWeight: type === tab ? 600 : 500,
                   color:
                     type === tab
-                      ? "var(--color-primary)"
-                      : "var(--color-ink-mute)",
+                      ? 'var(--color-primary)'
+                      : 'var(--color-ink-mute)',
                   borderBottom:
-                    type === tab ? "2px solid var(--color-primary)" : "none",
-                  textTransform: "capitalize",
-                  textDecoration: "none",
+                    type === tab ? '2px solid var(--color-primary)' : 'none',
+                  textTransform: 'capitalize',
+                  textDecoration: 'none',
                 }}
               >
                 {tab}
@@ -238,10 +238,10 @@ export default async function ExplorePage({ searchParams }: ExplorePageProps) {
             method="GET"
             action="/explore"
             style={{
-              display: "flex",
-              gap: "12px",
-              marginBottom: "24px",
-              flexWrap: "wrap",
+              display: 'flex',
+              gap: '12px',
+              marginBottom: '24px',
+              flexWrap: 'wrap',
             }}
           >
             <input type="hidden" name="type" value={type} />
@@ -257,24 +257,24 @@ export default async function ExplorePage({ searchParams }: ExplorePageProps) {
               defaultValue={searchQuery}
               placeholder="Search..."
               style={{
-                flex: "1",
-                padding: "10px 14px",
-                borderRadius: "6px",
-                border: "1px solid var(--color-hairline)",
-                background: "var(--color-canvas)",
-                color: "var(--color-ink)",
+                flex: '1',
+                padding: '10px 14px',
+                borderRadius: '6px',
+                border: '1px solid var(--color-hairline)',
+                background: 'var(--color-canvas)',
+                color: 'var(--color-ink)',
               }}
             />
-            {type === "users" && (
+            {type === 'users' && (
               <select
                 name="sortBy"
                 defaultValue={sortBy}
                 style={{
-                  padding: "10px 14px",
-                  borderRadius: "6px",
-                  border: "1px solid var(--color-hairline)",
-                  background: "var(--color-canvas)",
-                  color: "var(--color-ink)",
+                  padding: '10px 14px',
+                  borderRadius: '6px',
+                  border: '1px solid var(--color-hairline)',
+                  background: 'var(--color-canvas)',
+                  color: 'var(--color-ink)',
                 }}
               >
                 <option value="score">Sort by Score</option>
@@ -287,11 +287,11 @@ export default async function ExplorePage({ searchParams }: ExplorePageProps) {
             <button
               type="submit"
               style={{
-                backgroundColor: "var(--color-primary)",
-                color: "var(--color-on-primary)",
-                border: "none",
-                borderRadius: "6px",
-                padding: "10px 20px",
+                backgroundColor: 'var(--color-primary)',
+                color: 'var(--color-on-primary)',
+                border: 'none',
+                borderRadius: '6px',
+                padding: '10px 20px',
               }}
             >
               Apply
@@ -300,36 +300,36 @@ export default async function ExplorePage({ searchParams }: ExplorePageProps) {
 
           {/* Filter pills — server-rendered links so every filtered view has a
               shareable URL, rather than client state that vanishes on reload. */}
-          {type === "users" && (
-            <div style={{ marginBottom: "24px" }}>
+          {type === 'users' && (
+            <div style={{ marginBottom: '24px' }}>
               <div
                 style={{
-                  display: "flex",
-                  flexWrap: "wrap",
-                  gap: "8px",
-                  alignItems: "center",
-                  marginBottom: "12px",
+                  display: 'flex',
+                  flexWrap: 'wrap',
+                  gap: '8px',
+                  alignItems: 'center',
+                  marginBottom: '12px',
                 }}
               >
                 <span
                   style={{
-                    fontSize: "12px",
+                    fontSize: '12px',
                     fontWeight: 600,
-                    color: "var(--color-ink-mute)",
-                    textTransform: "uppercase",
-                    letterSpacing: "0.04em",
-                    marginRight: "4px",
+                    color: 'var(--color-ink-mute)',
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.04em',
+                    marginRight: '4px',
                   }}
                 >
                   Language
                 </span>
                 <Link
                   href={{
-                    pathname: "/explore",
+                    pathname: '/explore',
                     query: buildExploreQuery(activeFilters, { lang: null }),
                   }}
                   style={lang === null ? activePillStyle : pillStyle}
-                  aria-current={lang === null ? "true" : undefined}
+                  aria-current={lang === null ? 'true' : undefined}
                 >
                   All
                 </Link>
@@ -337,7 +337,7 @@ export default async function ExplorePage({ searchParams }: ExplorePageProps) {
                   <Link
                     key={option}
                     href={{
-                      pathname: "/explore",
+                      pathname: '/explore',
                       query: buildExploreQuery(activeFilters, {
                         // Clicking the active pill clears it, so a filter can
                         // always be undone without hunting for a reset button.
@@ -345,7 +345,7 @@ export default async function ExplorePage({ searchParams }: ExplorePageProps) {
                       }),
                     }}
                     style={lang === option ? activePillStyle : pillStyle}
-                    aria-current={lang === option ? "true" : undefined}
+                    aria-current={lang === option ? 'true' : undefined}
                   >
                     {option}
                   </Link>
@@ -354,20 +354,20 @@ export default async function ExplorePage({ searchParams }: ExplorePageProps) {
 
               <div
                 style={{
-                  display: "flex",
-                  flexWrap: "wrap",
-                  gap: "8px",
-                  alignItems: "center",
+                  display: 'flex',
+                  flexWrap: 'wrap',
+                  gap: '8px',
+                  alignItems: 'center',
                 }}
               >
                 <span
                   style={{
-                    fontSize: "12px",
+                    fontSize: '12px',
                     fontWeight: 600,
-                    color: "var(--color-ink-mute)",
-                    textTransform: "uppercase",
-                    letterSpacing: "0.04em",
-                    marginRight: "4px",
+                    color: 'var(--color-ink-mute)',
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.04em',
+                    marginRight: '4px',
                   }}
                 >
                   Score
@@ -376,7 +376,7 @@ export default async function ExplorePage({ searchParams }: ExplorePageProps) {
                   <Link
                     key={tier.value}
                     href={{
-                      pathname: "/explore",
+                      pathname: '/explore',
                       query: buildExploreQuery(activeFilters, {
                         minScore: tier.value,
                       }),
@@ -384,7 +384,7 @@ export default async function ExplorePage({ searchParams }: ExplorePageProps) {
                     style={
                       minScore === tier.value ? activePillStyle : pillStyle
                     }
-                    aria-current={minScore === tier.value ? "true" : undefined}
+                    aria-current={minScore === tier.value ? 'true' : undefined}
                   >
                     {tier.label}
                   </Link>
@@ -394,17 +394,17 @@ export default async function ExplorePage({ searchParams }: ExplorePageProps) {
               {hasActiveFilters(activeFilters) && (
                 <p
                   style={{
-                    fontSize: "13px",
-                    color: "var(--color-ink-mute)",
-                    margin: "16px 0 0 0",
+                    fontSize: '13px',
+                    color: 'var(--color-ink-mute)',
+                    margin: '16px 0 0 0',
                   }}
                 >
-                  Showing {describeFilters(activeFilters)}.{" "}
+                  Showing {describeFilters(activeFilters)}.{' '}
                   <Link
-                    href={{ pathname: "/explore", query: { type } }}
+                    href={{ pathname: '/explore', query: { type } }}
                     style={{
-                      color: "var(--color-primary)",
-                      textDecoration: "none",
+                      color: 'var(--color-primary)',
+                      textDecoration: 'none',
                     }}
                   >
                     Clear all
@@ -417,25 +417,25 @@ export default async function ExplorePage({ searchParams }: ExplorePageProps) {
           {rows.length === 0 ? (
             <div
               style={{
-                border: "1px solid var(--color-hairline)",
-                borderRadius: "12px",
-                padding: "48px 24px",
-                textAlign: "center",
+                border: '1px solid var(--color-hairline)',
+                borderRadius: '12px',
+                padding: '48px 24px',
+                textAlign: 'center',
               }}
             >
               <p>
                 {hasActiveFilters(activeFilters)
                   ? `No contributors match ${describeFilters(activeFilters)}.`
-                  : "No results found."}
+                  : 'No results found.'}
               </p>
             </div>
           ) : (
             <ol
               style={{
-                listStyle: "none",
-                display: "flex",
-                flexDirection: "column",
-                gap: "8px",
+                listStyle: 'none',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '8px',
                 margin: 0,
                 padding: 0,
               }}
@@ -443,16 +443,13 @@ export default async function ExplorePage({ searchParams }: ExplorePageProps) {
               {rows.map((row, index) => {
                 const rank = rankOffset + index + 1;
                 const isOrg = 'slug' in row;
-                const name = isOrg
-                  ? row.name
-                  : row.name || row.username;
+                const name = isOrg ? row.name : row.name || row.username;
                 const sub = isOrg ? `@${row.slug}` : `@${row.username}`;
                 const linkId = isOrg ? row.slug : row.username;
                 const avatar =
                   row.avatar_url ||
                   `https://github.com/${encodeURIComponent(linkId)}.png`;
-                const score =
-                  typeof row.score === "number" ? row.score : 0;
+                const score = typeof row.score === 'number' ? row.score : 0;
                 const isTop = rank <= 3;
 
                 return (
@@ -464,39 +461,39 @@ export default async function ExplorePage({ searchParams }: ExplorePageProps) {
                           : `/${encodeURIComponent(row.username)}`,
                       }}
                       style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "16px",
-                        padding: "14px 18px",
-                        border: "1px solid var(--color-hairline)",
-                        borderRadius: "12px",
-                        textDecoration: "none",
-                        background: "var(--color-canvas-soft)",
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '16px',
+                        padding: '14px 18px',
+                        border: '1px solid var(--color-hairline)',
+                        borderRadius: '12px',
+                        textDecoration: 'none',
+                        background: 'var(--color-canvas-soft)',
                       }}
                     >
                       {/* Rank Indicator */}
                       <span
                         aria-label={`Rank ${rank}`}
                         style={{
-                          minWidth: "32px",
-                          fontSize: "16px",
+                          minWidth: '32px',
+                          fontSize: '16px',
                           fontWeight: 600,
                           color: isTop
-                            ? "var(--color-primary)"
-                            : "var(--color-ink-mute)",
+                            ? 'var(--color-primary)'
+                            : 'var(--color-ink-mute)',
                           flexShrink: 0,
-                          display: "inline-flex",
-                          alignItems: "center",
-                          justifyContent: "center",
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
                           lineHeight: 1,
                         }}
                       >
                         {rank === 1
-                          ? "🥇"
+                          ? '🥇'
                           : rank === 2
-                            ? "🥈"
+                            ? '🥈'
                             : rank === 3
-                              ? "🥉"
+                              ? '🥉'
                               : rank}
                       </span>
 
@@ -507,8 +504,8 @@ export default async function ExplorePage({ searchParams }: ExplorePageProps) {
                         width={40}
                         height={40}
                         style={{
-                          borderRadius: "9999px",
-                          border: "1px solid var(--color-hairline)",
+                          borderRadius: '9999px',
+                          border: '1px solid var(--color-hairline)',
                           flexShrink: 0,
                         }}
                       />
@@ -516,8 +513,8 @@ export default async function ExplorePage({ searchParams }: ExplorePageProps) {
                       {/* Info Metadata */}
                       <span
                         style={{
-                          display: "flex",
-                          flexDirection: "column",
+                          display: 'flex',
+                          flexDirection: 'column',
                           flex: 1,
                           minWidth: 0,
                         }}
@@ -525,20 +522,20 @@ export default async function ExplorePage({ searchParams }: ExplorePageProps) {
                         <span
                           style={{
                             fontWeight: 600,
-                            overflow: "hidden",
-                            textOverflow: "ellipsis",
-                            whiteSpace: "nowrap",
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            whiteSpace: 'nowrap',
                           }}
                         >
                           {name}
                         </span>
                         <span
                           style={{
-                            fontSize: "13px",
-                            color: "var(--color-ink-mute)",
-                            overflow: "hidden",
-                            textOverflow: "ellipsis",
-                            whiteSpace: "nowrap",
+                            fontSize: '13px',
+                            color: 'var(--color-ink-mute)',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            whiteSpace: 'nowrap',
                           }}
                         >
                           {sub}
@@ -546,8 +543,8 @@ export default async function ExplorePage({ searchParams }: ExplorePageProps) {
                         {isOrg ? (
                           <span
                             style={{
-                              fontSize: "12px",
-                              color: "var(--color-primary)",
+                              fontSize: '12px',
+                              color: 'var(--color-primary)',
                               fontWeight: 500,
                             }}
                           >
@@ -556,13 +553,12 @@ export default async function ExplorePage({ searchParams }: ExplorePageProps) {
                         ) : (
                           <span
                             style={{
-                              fontSize: "12px",
-                              color: "var(--color-ink-mute-2)",
+                              fontSize: '12px',
+                              color: 'var(--color-ink-mute-2)',
                             }}
                           >
-                            {row.total_prs || 0} PRs,{" "}
-                            {row.total_issues || 0} issues,{" "}
-                            {row.total_commits || 0} commits
+                            {row.total_prs || 0} PRs, {row.total_issues || 0}{' '}
+                            issues, {row.total_commits || 0} commits
                           </span>
                         )}
                       </span>
@@ -570,37 +566,38 @@ export default async function ExplorePage({ searchParams }: ExplorePageProps) {
                       {/* Score Value Rendering */}
                       <span
                         style={{
-                          display: "flex",
-                          flexDirection: "column",
-                          alignItems: "flex-end",
-                          minWidth: "65px",
+                          display: 'flex',
+                          flexDirection: 'column',
+                          alignItems: 'flex-end',
+                          minWidth: '65px',
                           flexShrink: 0,
                         }}
                       >
                         <span
                           style={{
-                            fontSize: "24px",
+                            fontSize: '24px',
                             fontWeight: 600,
-                            color: "var(--color-primary)",
+                            color: 'var(--color-primary)',
                             lineHeight: 1,
                           }}
                         >
                           {score}
                         </span>
-                        {!isOrg && sortBy === "improvement" &&
-                        typeof row.score_delta_30_days === "number" ? (
+                        {!isOrg &&
+                        sortBy === 'improvement' &&
+                        typeof row.score_delta_30_days === 'number' ? (
                           <span
                             style={{
-                              fontSize: "11px",
+                              fontSize: '11px',
                               color:
                                 row.score_delta_30_days > 0
-                                  ? "#10b981"
-                                  : "var(--color-ink-mute)",
+                                  ? '#10b981'
+                                  : 'var(--color-ink-mute)',
                               fontWeight: 600,
-                              marginTop: "4px",
-                              display: "flex",
-                              alignItems: "center",
-                              gap: "2px",
+                              marginTop: '4px',
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '2px',
                             }}
                             title="Improvement over last 30 days"
                           >
@@ -611,9 +608,9 @@ export default async function ExplorePage({ searchParams }: ExplorePageProps) {
                         ) : (
                           <span
                             style={{
-                              fontSize: "11px",
-                              color: "var(--color-ink-mute)",
-                              marginTop: "3px",
+                              fontSize: '11px',
+                              color: 'var(--color-ink-mute)',
+                              marginTop: '3px',
                             }}
                           >
                             score

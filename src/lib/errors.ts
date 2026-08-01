@@ -12,7 +12,7 @@ export class AppError extends Error {
     retryAfterSeconds?: number,
   ) {
     super(message);
-    this.name = "AppError";
+    this.name = 'AppError';
     this.status = status;
     this.code = code;
     this.details = details;
@@ -22,49 +22,49 @@ export class AppError extends Error {
 
 export class ValidationError extends AppError {
   constructor(
-    message = "Validation failed",
+    message = 'Validation failed',
     details?: Record<string, unknown>,
   ) {
-    super(message, 400, "VALIDATION_ERROR", details);
-    this.name = "ValidationError";
+    super(message, 400, 'VALIDATION_ERROR', details);
+    this.name = 'ValidationError';
   }
 }
 
 export class AuthError extends AppError {
-  constructor(message = "Unauthorized", details?: Record<string, unknown>) {
-    super(message, 401, "AUTH_ERROR", details);
-    this.name = "AuthError";
+  constructor(message = 'Unauthorized', details?: Record<string, unknown>) {
+    super(message, 401, 'AUTH_ERROR', details);
+    this.name = 'AuthError';
   }
 }
 
 export class NotFoundError extends AppError {
   constructor(
-    message = "Resource not found",
+    message = 'Resource not found',
     details?: Record<string, unknown>,
   ) {
-    super(message, 404, "NOT_FOUND", details);
-    this.name = "NotFoundError";
+    super(message, 404, 'NOT_FOUND', details);
+    this.name = 'NotFoundError';
   }
 }
 
 export class RateLimitError extends AppError {
   constructor(
-    message = "Rate limit exceeded",
+    message = 'Rate limit exceeded',
     retryAfterSeconds: number,
     details?: Record<string, unknown>,
   ) {
-    super(message, 429, "RATE_LIMITED", details, retryAfterSeconds);
-    this.name = "RateLimitError";
+    super(message, 429, 'RATE_LIMITED', details, retryAfterSeconds);
+    this.name = 'RateLimitError';
   }
 }
 
 export class UpstreamError extends AppError {
   constructor(
-    message = "Upstream service unavailable",
+    message = 'Upstream service unavailable',
     details?: Record<string, unknown>,
   ) {
-    super(message, 502, "UPSTREAM_ERROR", details);
-    this.name = "UpstreamError";
+    super(message, 502, 'UPSTREAM_ERROR', details);
+    this.name = 'UpstreamError';
   }
 }
 
@@ -77,20 +77,20 @@ export class UpstreamError extends AppError {
  * simple `instanceof` check rather than fragile message-string comparisons.
  */
 export class GitHubRateLimitError extends Error {
-  readonly name = "GitHubRateLimitError";
-  constructor(message = "GitHub API rate limit exceeded") {
+  readonly name = 'GitHubRateLimitError';
+  constructor(message = 'GitHub API rate limit exceeded') {
     super(message);
   }
 }
 
 export type ErrorCode =
-  | "VALIDATION_ERROR"
-  | "AUTH_ERROR"
-  | "NOT_FOUND"
-  | "RATE_LIMITED"
-  | "UPSTREAM_ERROR"
-  | "SERVICE_UNAVAILABLE"
-  | "INTERNAL_ERROR";
+  | 'VALIDATION_ERROR'
+  | 'AUTH_ERROR'
+  | 'NOT_FOUND'
+  | 'RATE_LIMITED'
+  | 'UPSTREAM_ERROR'
+  | 'SERVICE_UNAVAILABLE'
+  | 'INTERNAL_ERROR';
 
 // A type alias rather than an interface, deliberately.
 //
@@ -113,7 +113,7 @@ export type ApiErrorBody = {
 };
 
 export function toApiErrorBody(error: AppError): ApiErrorBody {
-  const code = (error.code || "INTERNAL_ERROR") as ErrorCode;
+  const code = (error.code || 'INTERNAL_ERROR') as ErrorCode;
   return {
     success: false,
     error: {

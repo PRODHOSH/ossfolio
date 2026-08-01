@@ -1,5 +1,5 @@
-import { redis } from "@/lib/redis";
-import type { NextRequest } from "next/server";
+import { redis } from '@/lib/redis';
+import type { NextRequest } from 'next/server';
 
 /**
  * Per-IP rate limiting for the manual refresh endpoint.
@@ -48,10 +48,10 @@ export interface RateLimitResult {
 
 export interface RateLimitFailoverTelemetry {
   timestamp: string;
-  event: "REDIS_FAILOVER";
+  event: 'REDIS_FAILOVER';
   reason: string;
   key: string;
-  fallbackMode: "MEMORY_BUFFER";
+  fallbackMode: 'MEMORY_BUFFER';
   consecutiveFailures: number;
   nextRetryInMs: number;
   inBackoffWindow: boolean;
@@ -124,10 +124,10 @@ function logFailoverTelemetry(
   const nextRetryInMs = calculateBackoffMs(consecutiveFailures);
   const telemetry: RateLimitFailoverTelemetry = {
     timestamp: new Date().toISOString(),
-    event: "REDIS_FAILOVER",
+    event: 'REDIS_FAILOVER',
     reason,
     key,
-    fallbackMode: "MEMORY_BUFFER",
+    fallbackMode: 'MEMORY_BUFFER',
     consecutiveFailures,
     nextRetryInMs,
     inBackoffWindow: inBackoff,
@@ -135,7 +135,7 @@ function logFailoverTelemetry(
     retryAfterSeconds: result.retryAfterSeconds,
   };
   console.warn(
-    "[rate-limit-failover] Upstream Redis connection failure/bypass, failing over to sliding memory buffer:",
+    '[rate-limit-failover] Upstream Redis connection failure/bypass, failing over to sliding memory buffer:',
     JSON.stringify(telemetry),
   );
   return telemetry;
@@ -178,17 +178,17 @@ export function resetRateLimitFailoverState(): void {
  */
 function clientIp(request: NextRequest): string | null {
   // Cloudflare (this app deploys via @opennextjs/cloudflare) — set by the edge, not forgeable.
-  const cf = request.headers.get("cf-connecting-ip");
+  const cf = request.headers.get('cf-connecting-ip');
   if (cf) return cf.trim();
 
   // Vercel and most reverse proxies — also set by the edge.
-  const real = request.headers.get("x-real-ip");
+  const real = request.headers.get('x-real-ip');
   if (real) return real.trim();
 
-  const forwarded = request.headers.get("x-forwarded-for");
+  const forwarded = request.headers.get('x-forwarded-for');
   if (forwarded) {
     const hops = forwarded
-      .split(",")
+      .split(',')
       .map((hop) => hop.trim())
       .filter(Boolean);
     return hops.length > 0 ? hops[hops.length - 1] : null;
@@ -204,14 +204,17 @@ function clientIp(request: NextRequest): string | null {
  * ever needs to know whether it has seen *this* caller before, which a digest answers just
  * as well. Web Crypto is available in the edge runtime, so this costs nothing.
  */
-async function keyFor(identifier: string, namespace = "refresh"): Promise<string> {
+async function keyFor(
+  identifier: string,
+  namespace = 'refresh',
+): Promise<string> {
   const digest = await crypto.subtle.digest(
-    "SHA-256",
+    'SHA-256',
     new TextEncoder().encode(identifier),
   );
   const hex = Array.from(new Uint8Array(digest))
-    .map((b) => b.toString(16).padStart(2, "0"))
-    .join("");
+    .map((b) => b.toString(16).padStart(2, '0'))
+    .join('');
   // 16 bytes is far beyond enough to avoid collisions here, and keeps the key short.
   return `ratelimit:${namespace}:${hex.slice(0, 32)}`;
 }
@@ -220,18 +223,30 @@ async function checkNamedRateLimit(
   request: NextRequest,
   namespace: string,
 ): Promise<RateLimitResult> {
-  const identifier = clientIp(request) ?? "unidentified";
+  const identifier = clientIp(request) ?? 'unidentified';
   try {
     const key = await keyFor(identifier, namespace);
     const now = Date.now();
     const resetAt = now + WINDOW_SECONDS * 1000;
-    const acquired = await redis.set(key, resetAt, { nx: true, ex: WINDOW_SECONDS });
-    if (acquired === "OK") return { allowed: true, retryAfterSeconds: 0 };
+    const acquired = await redis.set(key, resetAt, {
+      nx: true,
+      ex: WINDOW_SECONDS,
+    });
+    if (acquired === 'OK') return { allowed: true, retryAfterSeconds: 0 };
     const storedResetAt = await redis.get<number>(key);
-    const remainingMs = typeof storedResetAt === "number" ? storedResetAt - now : WINDOW_SECONDS * 1000;
-    return { allowed: false, retryAfterSeconds: Math.max(1, Math.ceil(remainingMs / 1000)) };
+    const remainingMs =
+      typeof storedResetAt === 'number'
+        ? storedResetAt - now
+        : WINDOW_SECONDS * 1000;
+    return {
+      allowed: false,
+      retryAfterSeconds: Math.max(1, Math.ceil(remainingMs / 1000)),
+    };
   } catch (error) {
-    console.error(`[rate-limit] ${namespace} limiter unavailable, allowing request:`, error instanceof Error ? error.message : error);
+    console.error(
+      `[rate-limit] ${namespace} limiter unavailable, allowing request:`,
+      error instanceof Error ? error.message : error,
+    );
     return { allowed: true, retryAfterSeconds: 0 };
   }
 }
@@ -249,7 +264,7 @@ export async function checkRefreshRateLimit(
   // No usable address (local dev, an odd proxy) — everything unidentifiable shares one
   // bucket rather than being waved through, so the absence of a header can't become a way
   // around the limit.
-  const identifier = clientIp(request) ?? "unidentified";
+  const identifier = clientIp(request) ?? 'unidentified';
 
   const key = await keyFor(identifier);
   const now = Date.now();
@@ -262,7 +277,7 @@ export async function checkRefreshRateLimit(
   if (inBackoffWindow) {
     const memoryResult = checkMemoryBuffer(key, now);
     logFailoverTelemetry(
-      "Redis call bypassed due to active exponential backoff window",
+      'Redis call bypassed due to active exponential backoff window',
       key,
       memoryResult,
       true,
@@ -283,7 +298,7 @@ export async function checkRefreshRateLimit(
     consecutiveFailures = 0;
     lastFailureTime = 0;
 
-    if (acquired === "OK") {
+    if (acquired === 'OK') {
       return { allowed: true, retryAfterSeconds: 0 };
     }
 
@@ -291,7 +306,7 @@ export async function checkRefreshRateLimit(
     // number rather than a guess.
     const storedResetAt = await redis.get<number>(key);
     const remainingMs =
-      typeof storedResetAt === "number"
+      typeof storedResetAt === 'number'
         ? storedResetAt - now
         : WINDOW_SECONDS * 1000;
 
@@ -316,5 +331,5 @@ export async function checkRefreshRateLimit(
 export function checkDeveloperInsightsRateLimit(
   request: NextRequest,
 ): Promise<RateLimitResult> {
-  return checkNamedRateLimit(request, "developer-insights");
+  return checkNamedRateLimit(request, 'developer-insights');
 }

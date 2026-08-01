@@ -12,7 +12,7 @@ name: Bundle Size Comment
 
 on:
   workflow_run:
-    workflows: ["Bundle Size"]
+    workflows: ['Bundle Size']
     types: [completed]
 
 # Serialised per pull request. Several Bundle Size runs can finish close

@@ -1,4 +1,4 @@
-import type { ContributorStats, Repo } from "@/types";
+import type { ContributorStats, Repo } from '@/types';
 
 export const SCORE_WEIGHTS = {
   COMMIT: 1,

@@ -1,4 +1,4 @@
-import type { ContributorStats, Repo } from "@/types";
+import type { ContributorStats, Repo } from '@/types';
 
 /**
  * Normalisation for the contributor comparison radar chart.
@@ -45,16 +45,17 @@ export interface RadarAxis {
 export const sumRepoStars = (repos: Repo[] | null | undefined): number => {
   if (!Array.isArray(repos)) return 0;
   return repos.reduce((total, repo) => {
-    const stars = typeof repo?.stars === "number" && Number.isFinite(repo.stars)
-      ? repo.stars
-      : 0;
+    const stars =
+      typeof repo?.stars === 'number' && Number.isFinite(repo.stars)
+        ? repo.stars
+        : 0;
     return total + Math.max(0, stars);
   }, 0);
 };
 
 /** Guards against negatives and non-finite values arriving from the API. */
 const safeCount = (value: unknown): number => {
-  const parsed = typeof value === "number" ? value : Number(value);
+  const parsed = typeof value === 'number' ? value : Number(value);
   if (!Number.isFinite(parsed) || parsed < 0) return 0;
   return parsed;
 };
@@ -67,7 +68,10 @@ const safeCount = (value: unknown): number => {
  * treating "neither contributor has any reviews" as a full score on both sides
  * would be actively misleading.
  */
-export const normalizePair = (a: number, b: number): { a: number; b: number } => {
+export const normalizePair = (
+  a: number,
+  b: number,
+): { a: number; b: number } => {
   const safeA = safeCount(a);
   const safeB = safeCount(b);
   const max = Math.max(safeA, safeB);
@@ -79,12 +83,15 @@ export const normalizePair = (a: number, b: number): { a: number; b: number } =>
 };
 
 /** The five axes, in the order the issue specifies. */
-const AXES: Array<{ metric: string; read: (_input: RadarMetricInput) => number }> = [
-  { metric: "Commits", read: (i) => safeCount(i.stats?.totalCommits) },
-  { metric: "Pull Requests", read: (i) => safeCount(i.stats?.totalPRs) },
-  { metric: "Code Reviews", read: (i) => safeCount(i.stats?.totalReviews) },
-  { metric: "Issues Opened", read: (i) => safeCount(i.stats?.totalIssues) },
-  { metric: "Repo Stars", read: (i) => sumRepoStars(i.repos) },
+const AXES: Array<{
+  metric: string;
+  read: (_input: RadarMetricInput) => number;
+}> = [
+  { metric: 'Commits', read: (i) => safeCount(i.stats?.totalCommits) },
+  { metric: 'Pull Requests', read: (i) => safeCount(i.stats?.totalPRs) },
+  { metric: 'Code Reviews', read: (i) => safeCount(i.stats?.totalReviews) },
+  { metric: 'Issues Opened', read: (i) => safeCount(i.stats?.totalIssues) },
+  { metric: 'Repo Stars', read: (i) => sumRepoStars(i.repos) },
 ];
 
 /**

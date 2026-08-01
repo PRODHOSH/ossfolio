@@ -4,7 +4,7 @@ export function isSupabaseConfigured(): boolean {
   return !!(
     url &&
     key &&
-    !url.includes("placeholder") &&
-    !key.includes("placeholder")
+    !url.includes('placeholder') &&
+    !key.includes('placeholder')
   );
 }

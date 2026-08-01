@@ -1,37 +1,37 @@
-import { NextRequest } from "next/server";
-import { searchProfiles } from "@/lib/db";
-import { sanitizeString } from "@/lib/sanitizer";
+import { NextRequest } from 'next/server';
+import { searchProfiles } from '@/lib/db';
+import { sanitizeString } from '@/lib/sanitizer';
 import {
   validatePagination,
   validateSortBy,
   createApiResponse,
   createErrorResponse,
-} from "@/lib/validators/api";
+} from '@/lib/validators/api';
 
 // Runtime managed by @opennextjs/cloudflare
 
 const PAGE_SIZE = 20;
 const MAX_PAGE = 50;
 const VALID_SORT = [
-  "score",
-  "contributions",
-  "followers",
-  "improvement",
+  'score',
+  'contributions',
+  'followers',
+  'improvement',
 ] as const;
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
 
-  const query = sanitizeString(searchParams.get("q"), 100);
-  const lang = sanitizeString(searchParams.get("lang"), 50);
-  const rawMinScore = searchParams.get("min_score") || "0";
+  const query = sanitizeString(searchParams.get('q'), 100);
+  const lang = sanitizeString(searchParams.get('lang'), 50);
+  const rawMinScore = searchParams.get('min_score') || '0';
   const minScore = Math.min(
     2147483647,
     Math.max(0, parseInt(rawMinScore, 10) || 0),
   );
-  const sortBy = validateSortBy(searchParams.get("sort"), VALID_SORT, "score");
+  const sortBy = validateSortBy(searchParams.get('sort'), VALID_SORT, 'score');
 
-  const { page } = validatePagination(searchParams.get("page"), null, MAX_PAGE);
+  const { page } = validatePagination(searchParams.get('page'), null, MAX_PAGE);
   const offset = (page - 1) * PAGE_SIZE;
 
   try {
@@ -45,8 +45,8 @@ export async function GET(request: NextRequest) {
     });
 
     if (error) {
-      console.error("[discover] search_profiles RPC error:", error);
-      return createErrorResponse("Failed to fetch profiles", 500);
+      console.error('[discover] search_profiles RPC error:', error);
+      return createErrorResponse('Failed to fetch profiles', 500);
     }
 
     const results = (data || []) as Array<{
@@ -73,6 +73,6 @@ export async function GET(request: NextRequest) {
       hasPrev: page > 1,
     });
   } catch {
-    return createErrorResponse("Internal server error", 500);
+    return createErrorResponse('Internal server error', 500);
   }
 }

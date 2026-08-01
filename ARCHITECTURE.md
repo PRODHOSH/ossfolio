@@ -306,18 +306,18 @@ Current security mechanisms include:
 
 # Folder Responsibilities
 
-| Folder | Responsibility |
-|---------|----------------|
-| `src/app` | Next.js App Router pages and API routes |
-| `src/components` | Reusable UI components |
-| `src/components/home` | Landing page sections |
-| `src/components/layout` | Navigation and layout |
-| `src/components/profile` | Profile-related UI |
-| `src/lib` | API clients, utilities, helper functions |
-| `src/types` | TypeScript definitions |
-| `supabase/migrations` | Database migrations |
-| `supabase/schema.sql` | Database schema |
-| `public` | Static assets |
+| Folder                   | Responsibility                           |
+| ------------------------ | ---------------------------------------- |
+| `src/app`                | Next.js App Router pages and API routes  |
+| `src/components`         | Reusable UI components                   |
+| `src/components/home`    | Landing page sections                    |
+| `src/components/layout`  | Navigation and layout                    |
+| `src/components/profile` | Profile-related UI                       |
+| `src/lib`                | API clients, utilities, helper functions |
+| `src/types`              | TypeScript definitions                   |
+| `supabase/migrations`    | Database migrations                      |
+| `supabase/schema.sql`    | Database schema                          |
+| `public`                 | Static assets                            |
 
 ---
 
