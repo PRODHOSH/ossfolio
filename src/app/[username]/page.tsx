@@ -101,6 +101,14 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
   // show a syncing state; `after()` runs once this response has already been sent,
   // so it costs the user nothing. The claim inside syncProfileSnapshot() means the
   // client polling this page cannot stampede GitHub with repeat syncs.
+  //
+  // Loading skeletons: `ProfileSyncing` renders the section-level skeletons
+  // (ProfileHeaderSkeleton, StatsGridSkeleton, TopReposSkeleton via
+  // ProfileSkeleton) while the snapshot is being built. The client polls with
+  // `router.refresh()`, and once the snapshot lands this server component
+  // re-renders with the real <ProfileView />, replacing the skeletons. The
+  // initial navigation wait is covered by loading.tsx, which renders the same
+  // skeleton set.
   if (!stored?.snapshot) {
     after(() => syncProfileSnapshot(username));
     return <ProfileSyncing username={username} />;
