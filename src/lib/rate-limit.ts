@@ -39,6 +39,7 @@ import type { NextRequest } from "next/server";
 
 /** One refresh per IP per window, as the issue specifies. */
 const WINDOW_SECONDS = 5 * 60;
+const MAX_MEMORY_BUFFER_SIZE = 10000;
 
 export interface RateLimitResult {
   allowed: boolean;
@@ -88,11 +89,22 @@ function calculateBackoffMs(failCount: number): number {
  * Perform localized sliding memory buffer rate limit check when Redis is unreachable or bypassed.
  */
 function checkMemoryBuffer(key: string, now: number): RateLimitResult {
-  // Prune expired entries to prevent memory leaks
+  // Prune expired entries to prevent memory leaks.
+  // Map iterates in insertion order. Since all entries share the same TTL,
+  // the oldest entries are always at the start. We can safely break early 
+  // to turn this from an O(N) operation into O(1) amortized.
   for (const [k, resetTime] of memoryBuffer.entries()) {
     if (resetTime <= now) {
       memoryBuffer.delete(k);
+    } else {
+      break;
     }
+  }
+
+  // Hard cap to prevent Out-Of-Memory (OOM) during sustained Redis outages
+  if (memoryBuffer.size >= MAX_MEMORY_BUFFER_SIZE && !memoryBuffer.has(key)) {
+    const oldestKey = memoryBuffer.keys().next().value;
+    if (oldestKey) memoryBuffer.delete(oldestKey);
   }
 
   const storedResetAt = memoryBuffer.get(key);
@@ -105,7 +117,10 @@ function checkMemoryBuffer(key: string, now: number): RateLimitResult {
   }
 
   const resetAt = now + WINDOW_SECONDS * 1000;
+  // Delete before set to guarantee the key moves to the end of the insertion order
+  memoryBuffer.delete(key);
   memoryBuffer.set(key, resetAt);
+  
   return {
     allowed: true,
     retryAfterSeconds: 0,
@@ -216,42 +231,19 @@ async function keyFor(identifier: string, namespace = "refresh"): Promise<string
   return `ratelimit:${namespace}:${hex.slice(0, 32)}`;
 }
 
+/**
+ * Core rate limiting logic enforcing quotas with exponential backoff and localized 
+ * sliding memory buffer fallback when Redis is unavailable.
+ */
 async function checkNamedRateLimit(
   request: NextRequest,
   namespace: string,
-): Promise<RateLimitResult> {
-  const identifier = clientIp(request) ?? "unidentified";
-  try {
-    const key = await keyFor(identifier, namespace);
-    const now = Date.now();
-    const resetAt = now + WINDOW_SECONDS * 1000;
-    const acquired = await redis.set(key, resetAt, { nx: true, ex: WINDOW_SECONDS });
-    if (acquired === "OK") return { allowed: true, retryAfterSeconds: 0 };
-    const storedResetAt = await redis.get<number>(key);
-    const remainingMs = typeof storedResetAt === "number" ? storedResetAt - now : WINDOW_SECONDS * 1000;
-    return { allowed: false, retryAfterSeconds: Math.max(1, Math.ceil(remainingMs / 1000)) };
-  } catch (error) {
-    console.error(`[rate-limit] ${namespace} limiter unavailable, allowing request:`, error instanceof Error ? error.message : error);
-    return { allowed: true, retryAfterSeconds: 0 };
-  }
-}
-
-/**
- * Consume one unit of the caller's allowance.
- *
- * Returns `allowed: false` with the seconds remaining when the caller is over the limit.
- * Uses exponential backoff and localized sliding memory buffer fallback when Redis is unavailable,
- * preventing endpoint outage while generating structured telemetry alerts.
- */
-export async function checkRefreshRateLimit(
-  request: NextRequest,
 ): Promise<RateLimitResult> {
   // No usable address (local dev, an odd proxy) — everything unidentifiable shares one
   // bucket rather than being waved through, so the absence of a header can't become a way
   // around the limit.
   const identifier = clientIp(request) ?? "unidentified";
-
-  const key = await keyFor(identifier);
+  const key = await keyFor(identifier, namespace);
   const now = Date.now();
 
   // Check if we are in an exponential backoff window due to prior Redis failures
@@ -262,7 +254,7 @@ export async function checkRefreshRateLimit(
   if (inBackoffWindow) {
     const memoryResult = checkMemoryBuffer(key, now);
     logFailoverTelemetry(
-      "Redis call bypassed due to active exponential backoff window",
+      `Redis call bypassed due to active exponential backoff window (${namespace})`,
       key,
       memoryResult,
       true,
@@ -312,7 +304,18 @@ export async function checkRefreshRateLimit(
   }
 }
 
-/** Limits costly AI generation separately from manual profile refreshes. */
+/**
+ * Consume one unit of the caller's allowance for manual profile refreshes.
+ */
+export function checkRefreshRateLimit(
+  request: NextRequest,
+): Promise<RateLimitResult> {
+  return checkNamedRateLimit(request, "refresh");
+}
+
+/** 
+ * Consume one unit of the caller's allowance for AI generation requests. 
+ */
 export function checkDeveloperInsightsRateLimit(
   request: NextRequest,
 ): Promise<RateLimitResult> {
