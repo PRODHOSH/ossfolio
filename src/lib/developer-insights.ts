@@ -15,55 +15,122 @@ function number(value: unknown): number | null {
     : null;
 }
 
-function stringList(value: unknown, limit = MAX_LIST_ITEMS): string[] | null {
-  if (!Array.isArray(value) || value.length > limit) return null;
-  const items = value.map((item) => text(item, 120));
-  return items.every((item): item is string => item !== null) ? items : null;
+/** 
+ * Safely parses an array of strings, filtering out invalid entries and 
+ * truncating to the limit rather than rejecting the entire array. 
+ */
+function stringList(value: unknown, limit = MAX_LIST_ITEMS): string[] {
+  if (!Array.isArray(value)) return [];
+  return value
+    .map((item) => text(item, 120))
+    .filter((item): item is string => item !== null)
+    .slice(0, limit);
 }
 
 /** Validates and bounds browser input before it is included in an AI prompt. */
 export function parseDeveloperInsightsProfile(value: unknown): DeveloperInsightsProfile | null {
   if (!value || typeof value !== "object") return null;
   const input = value as Record<string, unknown>;
+
   const username = text(input.username, 39);
-  const name = input.name === null ? null : text(input.name, 120);
-  const bio = input.bio === null ? null : text(input.bio, MAX_TEXT_LENGTH);
-  const location = input.location === null ? null : text(input.location, 120);
+  if (!username) return null;
+
+  // Optional fields: strictly check for null/undefined before parsing
+  const name = input.name != null ? text(input.name, 120) : null;
+  const bio = input.bio != null ? text(input.bio, MAX_TEXT_LENGTH) : null;
+  const location = input.location != null ? text(input.location, 120) : null;
+
   const followers = number(input.followers);
   const following = number(input.following);
   const publicRepos = number(input.publicRepos);
   const score = number(input.score);
   const stats = input.stats as Record<string, unknown> | null;
-  const techStack = input.techStack;
-  const organizations = stringList(input.organizations);
-  const repositories = input.repositories;
-  if (!username || name === undefined || bio === undefined || location === undefined || followers === null || following === null || publicRepos === null || score === null || !stats || !Array.isArray(techStack) || techStack.length > MAX_LIST_ITEMS || !organizations || !Array.isArray(repositories) || repositories.length > MAX_LIST_ITEMS) return null;
 
-  const parsedStats = { totalCommits: number(stats.totalCommits), totalPRs: number(stats.totalPRs), totalIssues: number(stats.totalIssues), totalReviews: number(stats.totalReviews), totalContributions: number(stats.totalContributions) };
+  if (
+    followers === null ||
+    following === null ||
+    publicRepos === null ||
+    score === null ||
+    !stats
+  ) {
+    return null;
+  }
+
+  const parsedStats = {
+    totalCommits: number(stats.totalCommits),
+    totalPRs: number(stats.totalPRs),
+    totalIssues: number(stats.totalIssues),
+    totalReviews: number(stats.totalReviews),
+    totalContributions: number(stats.totalContributions),
+  };
+
   if (Object.values(parsedStats).some((item) => item === null)) return null;
-  const parsedTechStack = techStack.map((entry) => {
-    const item = entry as Record<string, unknown>;
-    return { language: text(item?.language, 80), repoCount: number(item?.repoCount) };
-  });
-  if (parsedTechStack.some((item) => !item.language || item.repoCount === null)) return null;
-  const parsedRepos = repositories.map((entry) => {
-    const item = entry as Record<string, unknown>;
-    return { name: text(item?.name, 120), description: item?.description === null ? null : text(item?.description), language: item?.language === null ? null : text(item?.language, 80), stars: number(item?.stars), forks: number(item?.forks), topics: stringList(item?.topics) };
-  });
-  if (parsedRepos.some((item) => !item.name || item.description === undefined || item.language === undefined || item.stars === null || item.forks === null || !item.topics)) return null;
-  return { username, name, bio, location, followers, following, publicRepos, score, stats: parsedStats as DeveloperInsightsProfile["stats"], techStack: parsedTechStack as DeveloperInsightsProfile["techStack"], organizations, repositories: parsedRepos as DeveloperInsightsProfile["repositories"] };
+
+  const organizations = stringList(input.organizations);
+
+  const techStack = Array.isArray(input.techStack) ? input.techStack : [];
+  const parsedTechStack = techStack
+    .slice(0, MAX_LIST_ITEMS)
+    .map((entry) => {
+      const item = entry as Record<string, unknown>;
+      return {
+        language: text(item?.language, 80),
+        repoCount: number(item?.repoCount),
+      };
+    })
+    .filter((item) => item.language !== null && item.repoCount !== null) as DeveloperInsightsProfile["techStack"];
+
+  const repositories = Array.isArray(input.repositories) ? input.repositories : [];
+  const parsedRepos = repositories
+    .slice(0, MAX_LIST_ITEMS)
+    .map((entry) => {
+      const item = entry as Record<string, unknown>;
+      return {
+        name: text(item?.name, 120),
+        description: item?.description != null ? text(item?.description) : null,
+        language: item?.language != null ? text(item?.language, 80) : null,
+        stars: number(item?.stars),
+        forks: number(item?.forks),
+        topics: stringList(item?.topics),
+      };
+    })
+    .filter((item) => item.name !== null && item.stars !== null && item.forks !== null) as DeveloperInsightsProfile["repositories"];
+
+  return {
+    username,
+    name,
+    bio,
+    location,
+    followers,
+    following,
+    publicRepos,
+    score,
+    stats: parsedStats as DeveloperInsightsProfile["stats"],
+    techStack: parsedTechStack,
+    organizations,
+    repositories: parsedRepos,
+  };
 }
 
+/** 
+ * Safely parses AI-generated insight lists.
+ * Truncates extra items rather than failing, but enforces a minimum of 1 item.
+ */
 function insightList(value: unknown): string[] | null {
-  if (!Array.isArray(value) || value.length < 1 || value.length > 5) return null;
-  const items = value.map((item) => text(item, 300));
-  return items.every((item): item is string => item !== null) ? items : null;
+  if (!Array.isArray(value)) return null;
+  const items = value
+    .map((item) => text(item, 300))
+    .filter((item): item is string => item !== null)
+    .slice(0, 5); // Enforce max 5 actionable items
+
+  return items.length >= 1 ? items : null; // Enforce min 1 actionable item
 }
 
 /** Reject malformed model output instead of rendering arbitrary provider text. */
 export function parseDeveloperInsights(value: unknown): DeveloperInsights | null {
   if (!value || typeof value !== "object") return null;
   const input = value as Record<string, unknown>;
+
   const overallAssessment = text(input.overallAssessment, 900);
   const recruiterPerspective = text(input.recruiterPerspective, 900);
   const strengths = insightList(input.strengths);
@@ -71,8 +138,28 @@ export function parseDeveloperInsights(value: unknown): DeveloperInsights | null
   const careerRecommendations = insightList(input.careerRecommendations);
   const openSourceSuggestions = insightList(input.openSourceSuggestions);
   const resumeRecommendations = insightList(input.resumeRecommendations);
-  if (!overallAssessment || !recruiterPerspective || !strengths || !areasForImprovement || !careerRecommendations || !openSourceSuggestions || !resumeRecommendations) return null;
-  return { overallAssessment, recruiterPerspective, strengths, areasForImprovement, careerRecommendations, openSourceSuggestions, resumeRecommendations };
+
+  if (
+    !overallAssessment ||
+    !recruiterPerspective ||
+    !strengths ||
+    !areasForImprovement ||
+    !careerRecommendations ||
+    !openSourceSuggestions ||
+    !resumeRecommendations
+  ) {
+    return null;
+  }
+
+  return {
+    overallAssessment,
+    recruiterPerspective,
+    strengths,
+    areasForImprovement,
+    careerRecommendations,
+    openSourceSuggestions,
+    resumeRecommendations,
+  };
 }
 
 export const DEVELOPER_INSIGHTS_SYSTEM_PROMPT =
