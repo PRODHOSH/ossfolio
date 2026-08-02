@@ -23,8 +23,9 @@ export async function refreshProfile(username: string): Promise<RefreshResult> {
   }
 
   const supabase = createClient(supabaseUrl, supabaseServiceKey);
+  let hasLock = false;
 
-  // Attempt PostgreSQL transactional advisory lock to prevent concurrent refresh races
+  // 1. Attempt PostgreSQL transactional advisory lock to prevent concurrent refresh races
   try {
     const { data: lockAcquired, error: rpcError } = await supabase.rpc(
       "try_acquire_profile_refresh_lock",
@@ -36,55 +37,67 @@ export async function refreshProfile(username: string): Promise<RefreshResult> {
         retryAfterSeconds: Math.ceil(RATE_LIMIT_MS / 1000),
       };
     }
+    if (!rpcError && lockAcquired === true) {
+      hasLock = true;
+    }
   } catch (err) {
     console.warn("[refresh-profile] RPC try_acquire_profile_refresh_lock error:", err);
   }
 
-  const now = new Date().toISOString();
-  const cutoff = new Date(Date.now() - RATE_LIMIT_MS).toISOString();
+  try {
+    const now = new Date().toISOString();
+    const cutoff = new Date(Date.now() - RATE_LIMIT_MS).toISOString();
 
-  const { data, error } = await supabase
-    .from("profiles")
-    .update({ last_refreshed_at: now, updated_at: now })
-    .eq("username", username)
-    .or(`last_refreshed_at.is.null,last_refreshed_at.lt.${cutoff}`)
-    .select("username")
-    .single();
-
-  // PGRST116 = no row matched the update (either the profile doesn't exist, or
-  // it exists but is still within the rate-limit window).
-  if (error && error.code === "PGRST116") {
-    const { data: exists, error: existsError } = await supabase
+    const { data, error } = await supabase
       .from("profiles")
-      .select("username, last_refreshed_at")
+      .update({ last_refreshed_at: now, updated_at: now })
       .eq("username", username)
+      .or(`last_refreshed_at.is.null,last_refreshed_at.lt.${cutoff}`)
+      .select("username")
       .single();
 
-    // A PGRST116 here means the row genuinely doesn't exist; any other error is
-    // an operational failure and must not be reported as "not found".
-    if (existsError && existsError.code !== "PGRST116") {
+    // 2. PGRST116 = no row matched the update (either the profile doesn't exist, or
+    // it exists but is still within the rate-limit window).
+    if (error && error.code === "PGRST116") {
+      const { data: exists, error: existsError } = await supabase
+        .from("profiles")
+        .select("username, last_refreshed_at")
+        .eq("username", username)
+        .single();
+
+      // A PGRST116 here means the row genuinely doesn't exist; any other error is
+      // an operational failure and must not be reported as "not found".
+      if (existsError && existsError.code !== "PGRST116") {
+        return { status: "error" };
+      }
+      if (!exists) {
+        return { status: "not_found" };
+      }
+
+      const lastRefresh = exists.last_refreshed_at
+        ? new Date(exists.last_refreshed_at).getTime()
+        : 0;
+      const retryAfter = Math.ceil(
+        (RATE_LIMIT_MS - (Date.now() - lastRefresh)) / 1000,
+      );
+      return {
+        status: "rate_limited",
+        retryAfterSeconds: Math.max(retryAfter, 1),
+      };
+    }
+
+    if (error) {
       return { status: "error" };
     }
-    if (!exists) {
-      return { status: "not_found" };
+
+    revalidatePath(`/${data.username}`);
+    return { status: "refreshed", username: data.username };
+    
+  } finally {
+    // 3. Robust Lock Release: Guarantee the lock is freed regardless of outcome
+    if (hasLock) {
+      await supabase.rpc("release_profile_refresh_lock", { p_username: username })
+        .catch(err => console.warn("[refresh-profile] Failed to release lock:", err));
     }
-
-    const lastRefresh = exists.last_refreshed_at
-      ? new Date(exists.last_refreshed_at).getTime()
-      : 0;
-    const retryAfter = Math.ceil(
-      (RATE_LIMIT_MS - (Date.now() - lastRefresh)) / 1000,
-    );
-    return {
-      status: "rate_limited",
-      retryAfterSeconds: Math.max(retryAfter, 1),
-    };
   }
-
-  if (error) {
-    return { status: "error" };
-  }
-
-  revalidatePath(`/${data.username}`);
-  return { status: "refreshed", username: data.username };
 }
