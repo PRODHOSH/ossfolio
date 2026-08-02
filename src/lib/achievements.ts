@@ -73,7 +73,7 @@ export const DEFINITIONS: readonly AchievementDefinition[] = [
     target: 7,
     category: "streak",
     icon: "🔥",
-    measure: ({ longestStreak, currentStreak = 0 }) => Math.max(longestStreak, currentStreak),
+    measure: ({ longestStreak = 0, currentStreak = 0 }) => Math.max(longestStreak, currentStreak),
   },
   {
     id: "marathon",
@@ -82,7 +82,7 @@ export const DEFINITIONS: readonly AchievementDefinition[] = [
     target: 30,
     category: "streak",
     icon: "⚡",
-    measure: ({ longestStreak, currentStreak = 0 }) => Math.max(longestStreak, currentStreak),
+    measure: ({ longestStreak = 0, currentStreak = 0 }) => Math.max(longestStreak, currentStreak),
   },
   {
     id: "iron_will",
@@ -91,7 +91,7 @@ export const DEFINITIONS: readonly AchievementDefinition[] = [
     target: 100,
     category: "streak",
     icon: "🛡️",
-    measure: ({ longestStreak, currentStreak = 0 }) => Math.max(longestStreak, currentStreak),
+    measure: ({ longestStreak = 0, currentStreak = 0 }) => Math.max(longestStreak, currentStreak),
   },
   {
     id: "first_step",
@@ -100,7 +100,7 @@ export const DEFINITIONS: readonly AchievementDefinition[] = [
     target: 1,
     category: "contributions",
     icon: "🌱",
-    measure: ({ stats }) => stats.totalPRs,
+    measure: ({ stats }) => stats?.totalPRs ?? 0,
   },
   {
     id: "century",
@@ -109,7 +109,7 @@ export const DEFINITIONS: readonly AchievementDefinition[] = [
     target: 100,
     category: "contributions",
     icon: "🏆",
-    measure: ({ stats }) => stats.totalPRs,
+    measure: ({ stats }) => stats?.totalPRs ?? 0,
   },
   {
     id: "reviewer",
@@ -118,7 +118,7 @@ export const DEFINITIONS: readonly AchievementDefinition[] = [
     target: 50,
     category: "community",
     icon: "👀",
-    measure: ({ stats }) => stats.totalReviews,
+    measure: ({ stats }) => stats?.totalReviews ?? 0,
   },
   {
     id: "bug_hunter",
@@ -127,7 +127,7 @@ export const DEFINITIONS: readonly AchievementDefinition[] = [
     target: 10,
     category: "contributions",
     icon: "🎯",
-    measure: ({ stats }) => stats.totalIssues,
+    measure: ({ stats }) => stats?.totalIssues ?? 0,
   },
   {
     id: "sponsored_creator",
@@ -156,6 +156,9 @@ export function evaluateAchievements(input: AchievementInput): Achievement[] {
 
     // Clamp so an over-achiever reads "100 / 100", not "412 / 100".
     const current = Math.min(measured, def.target);
+    
+    // Explicitly bound the progress ratio to [0, 1] for UI safety
+    const progress = def.target > 0 ? Math.max(0, Math.min(1, current / def.target)) : 0;
 
     return {
       id: def.id,
@@ -164,7 +167,7 @@ export function evaluateAchievements(input: AchievementInput): Achievement[] {
       target: def.target,
       current,
       unlocked: measured >= def.target,
-      progress: def.target > 0 ? current / def.target : 0,
+      progress,
       category: def.category,
       icon: def.icon,
     };
