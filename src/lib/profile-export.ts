@@ -24,6 +24,28 @@ export interface ProfileExportData {
 }
 
 /**
+ * Safely escape values for strict CSV formatting
+ */
+function escapeCsv(value: string | number | null | undefined): string {
+  if (value == null) return '""';
+  // Always wrap in quotes and escape internal double quotes to prevent delimiter collisions
+  return `"${String(value).replace(/"/g, '""')}"`;
+}
+
+/**
+ * Safely escape XML entities in text to prevent SVG rendering breaks or injections
+ */
+function escapeXml(unsafe: string): string {
+  if (!unsafe) return '';
+  return unsafe
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&apos;');
+}
+
+/**
  * Fetch and format full profile contribution data for download (JSON or CSV)
  */
 export async function exportProfileData(
@@ -84,7 +106,7 @@ export async function exportProfileData(
   if (format === 'csv') {
     const csvRows: string[] = [];
     csvRows.push('Metric,Value');
-    csvRows.push(`Username,${cleanUsername}`);
+    csvRows.push(`Username,${escapeCsv(cleanUsername)}`);
     csvRows.push(`Contributor Score,${score}`);
     csvRows.push(`Total Commits,${stats.totalCommits}`);
     csvRows.push(`Total PRs,${stats.totalPRs}`);
@@ -94,8 +116,10 @@ export async function exportProfileData(
     csvRows.push('PR Title,Repository,Merged At,URL');
 
     mergedPRs.forEach((pr) => {
-      const titleEscaped = `"${pr.title.replace(/"/g, '""')}"`;
-      csvRows.push(`${titleEscaped},${pr.repoName},${pr.mergedAt},${pr.url}`);
+      // Robustly escape all dynamic string fields
+      csvRows.push(
+        `${escapeCsv(pr.title)},${escapeCsv(pr.repoName)},${escapeCsv(pr.mergedAt)},${escapeCsv(pr.url)}`
+      );
     });
 
     return {
@@ -158,10 +182,13 @@ export async function generateBadgeSvg(
   providedStats?: ContributorStats,
 ): Promise<string> {
   const cleanUsername = username.trim().toLowerCase();
+  const safeUsername = escapeXml(cleanUsername); // Sanitize for SVG insertion
+  
   const type = options.type || 'score';
   const themeKey = options.theme || 'dark';
   const theme = THEME_STYLES[themeKey] || THEME_STYLES.dark;
 
+  // Safe fallback dummy stats if the API fails or rate-limits
   let stats: ContributorStats = providedStats || {
     totalCommits: 142,
     totalPRs: 28,
@@ -169,6 +196,7 @@ export async function generateBadgeSvg(
     totalReviews: 8,
     totalContributions: 190,
   };
+  
   let score = Math.min(
     99,
     Math.max(
@@ -216,7 +244,7 @@ export async function generateBadgeSvg(
     .metric-lbl { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size: 10px; fill: ${theme.mute}; }
   </style>
   <rect class="bg" x="0.5" y="0.5" width="459" height="89" />
-  <text class="title" x="16" y="28">@${cleanUsername}</text>
+  <text class="title" x="16" y="28">@${safeUsername}</text>
   <text class="subtitle" x="16" y="44">OSSfolio Contributor Profile</text>
 
   <g transform="translate(180, 20)">
@@ -265,7 +293,7 @@ export async function generateBadgeSvg(
     .sub { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size: 10px; fill: ${theme.mute}; }
   </style>
   <rect class="bg" x="0.5" y="0.5" width="239" height="79" />
-  <text class="label" x="16" y="24">@${cleanUsername}</text>
+  <text class="label" x="16" y="24">@${safeUsername}</text>
   <text class="sub" x="150" y="24">Activity</text>
   ${rects.join('\n  ')}
 </svg>`;
