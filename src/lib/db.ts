@@ -43,12 +43,17 @@ export async function getProfileByUsername(
   username: string,
   columns: string,
 ): Promise<QueryResult<ProfileRow>> {
-  const { data, error } = await supabase
-    .from("profiles")
-    .select(columns)
-    .eq("username", username)
-    .maybeSingle();
-  return { data: (data as unknown as ProfileRow) ?? null, error };
+  try {
+    const { data, error } = await supabase
+      .from("profiles")
+      .select(columns)
+      .eq("username", username)
+      .maybeSingle();
+    return { data: (data as unknown as ProfileRow) ?? null, error };
+  } catch (err) {
+    // Catch hard network exceptions (e.g. "Failed to fetch") that bypass Supabase's structured return
+    return { data: null, error: err as PostgrestError };
+  }
 }
 
 /**
@@ -61,13 +66,17 @@ export async function getPublicProfileByUsername(
   username: string,
   columns: string,
 ): Promise<QueryResult<ProfileRow>> {
-  const { data, error } = await supabase
-    .from("profiles")
-    .select(columns)
-    .eq("username", username)
-    .eq("visibility", "public")
-    .maybeSingle();
-  return { data: (data as unknown as ProfileRow) ?? null, error };
+  try {
+    const { data, error } = await supabase
+      .from("profiles")
+      .select(columns)
+      .eq("username", username)
+      .eq("visibility", "public")
+      .maybeSingle();
+    return { data: (data as unknown as ProfileRow) ?? null, error };
+  } catch (err) {
+    return { data: null, error: err as PostgrestError };
+  }
 }
 
 /**
@@ -82,14 +91,18 @@ export async function updateProfileBadges(params: {
   username: string;
   badges: unknown;
 }): Promise<{ error: PostgrestError | null }> {
-  const { error } = await supabase.from("profiles").upsert({
-    id: params.id,
-    username: params.username,
-    badges: params.badges,
-    // `updated_at` is set server-side by the profiles_set_updated_at trigger; setting it here would
-    // let a client forge the timestamp (e.g. to pin itself to the top of "recently updated").
-  });
-  return { error };
+  try {
+    const { error } = await supabase.from("profiles").upsert({
+      id: params.id,
+      username: params.username,
+      badges: params.badges,
+      // `updated_at` is set server-side by the profiles_set_updated_at trigger; setting it here would
+      // let a client forge the timestamp (e.g. to pin itself to the top of "recently updated").
+    });
+    return { error };
+  } catch (err) {
+    return { error: err as PostgrestError };
+  }
 }
 
 /** Parameters for the discover full-text search RPC (`search_profiles`). */
@@ -111,15 +124,19 @@ export interface SearchProfilesParams {
 export async function searchProfiles(
   params: SearchProfilesParams,
 ): Promise<QueryResult<unknown[]>> {
-  const { data, error } = await supabase.rpc("search_profiles", {
-    query: params.query,
-    lang: params.lang,
-    min_score: params.minScore,
-    sort_by: params.sortBy,
-    page_size: params.pageSize,
-    page_offset: params.pageOffset,
-  });
-  return { data: (data as unknown[]) ?? null, error };
+  try {
+    const { data, error } = await supabase.rpc("search_profiles", {
+      query: params.query,
+      lang: params.lang,
+      min_score: params.minScore,
+      sort_by: params.sortBy,
+      page_size: params.pageSize,
+      page_offset: params.pageOffset,
+    });
+    return { data: (data as unknown[]) ?? null, error };
+  } catch (err) {
+    return { data: null, error: err as PostgrestError };
+  }
 }
 
 /** Sort keys accepted by the Explore profile listing. */
@@ -144,46 +161,50 @@ export async function fetchExploreProfiles(opts: {
   /** Minimum score, or 0 for no score filter. */
   minScore?: number;
 }): Promise<QueryResult<unknown[]>> {
-  let query = supabase
-    .from("profiles")
-    .select(
-      "username, name, avatar_url, score, total_prs, total_issues, total_commits, score_delta_30_days, top_languages",
-    )
-    // Explore is a listing, so only public profiles belong in it. `unlisted` and `private` have
-    // both opted out of being found.
-    .eq("visibility", "public");
+  try {
+    let query = supabase
+      .from("profiles")
+      .select(
+        "username, name, avatar_url, score, total_prs, total_issues, total_commits, score_delta_30_days, top_languages",
+      )
+      // Explore is a listing, so only public profiles belong in it. `unlisted` and `private` have
+      // both opted out of being found.
+      .eq("visibility", "public");
 
-  if (opts.searchQuery) {
-    query = query.or(
-      `username.ilike.%${opts.searchQuery}%,name.ilike.%${opts.searchQuery}%`,
-    );
+    if (opts.searchQuery) {
+      query = query.or(
+        `username.ilike.%${opts.searchQuery}%,name.ilike.%${opts.searchQuery}%`,
+      );
+    }
+
+    if (opts.lang) {
+      // Array containment, matching the `top_languages @> array[lang]` predicate
+      // the `search_profiles` RPC uses for Discover, so both listings filter
+      // identically. The comparison is case-sensitive, which is why the caller
+      // normalises to GitHub's capitalisation first.
+      query = query.contains("top_languages", [opts.lang]);
+    }
+
+    if (opts.minScore && opts.minScore > 0) {
+      query = query.gte("score", opts.minScore);
+    }
+
+    let orderColumn = "score";
+    if (opts.sortBy === "prs") orderColumn = "total_prs";
+    else if (opts.sortBy === "commits") orderColumn = "total_commits";
+    else if (opts.sortBy === "issues") orderColumn = "total_issues";
+    else if (opts.sortBy === "improvement") orderColumn = "score_delta_30_days";
+
+    const { data, error } = await query
+      .order(orderColumn, { ascending: false })
+      .order("updated_at", { ascending: false })
+      .order("username", { ascending: true })
+      .range(opts.from, opts.to);
+
+    return { data: (data as unknown[]) ?? null, error };
+  } catch (err) {
+    return { data: null, error: err as PostgrestError };
   }
-
-  if (opts.lang) {
-    // Array containment, matching the `top_languages @> array[lang]` predicate
-    // the `search_profiles` RPC uses for Discover, so both listings filter
-    // identically. The comparison is case-sensitive, which is why the caller
-    // normalises to GitHub's capitalisation first.
-    query = query.contains("top_languages", [opts.lang]);
-  }
-
-  if (opts.minScore && opts.minScore > 0) {
-    query = query.gte("score", opts.minScore);
-  }
-
-  let orderColumn = "score";
-  if (opts.sortBy === "prs") orderColumn = "total_prs";
-  else if (opts.sortBy === "commits") orderColumn = "total_commits";
-  else if (opts.sortBy === "issues") orderColumn = "total_issues";
-  else if (opts.sortBy === "improvement") orderColumn = "score_delta_30_days";
-
-  const { data, error } = await query
-    .order(orderColumn, { ascending: false })
-    .order("updated_at", { ascending: false })
-    .order("username", { ascending: true })
-    .range(opts.from, opts.to);
-
-  return { data: (data as unknown[]) ?? null, error };
 }
 
 /**
@@ -197,18 +218,22 @@ export async function fetchExploreOrganizations(opts: {
   from: number;
   to: number;
 }): Promise<QueryResult<unknown[]>> {
-  let query = supabase
-    .from("organizations")
-    .select("name, slug, avatar_url, score");
+  try {
+    let query = supabase
+      .from("organizations")
+      .select("name, slug, avatar_url, score");
 
-  if (opts.searchQuery) {
-    query = query.ilike("name", `%${opts.searchQuery}%`);
+    if (opts.searchQuery) {
+      query = query.ilike("name", `%${opts.searchQuery}%`);
+    }
+
+    const { data, error } = await query
+      .order("score", { ascending: false })
+      .order("slug", { ascending: true })
+      .range(opts.from, opts.to);
+
+    return { data: (data as unknown[]) ?? null, error };
+  } catch (err) {
+    return { data: null, error: err as PostgrestError };
   }
-
-  const { data, error } = await query
-    .order("score", { ascending: false })
-    .order("slug", { ascending: true })
-    .range(opts.from, opts.to);
-
-  return { data: (data as unknown[]) ?? null, error };
 }
