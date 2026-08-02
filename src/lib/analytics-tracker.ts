@@ -18,18 +18,20 @@ export function parseReferrer(referrerHeader?: string | null): string {
 
   let hostname = "";
   try {
-    const url = new URL(referrerHeader);
+    const trimmed = referrerHeader.trim();
+    // Ensure the URL has a protocol so the native URL constructor can parse the hostname
+    const urlString = trimmed.toLowerCase().startsWith("http")
+      ? trimmed
+      : `https://${trimmed}`;
+      
+    const url = new URL(urlString);
     hostname = url.hostname.toLowerCase();
   } catch {
-    try {
-      const url = new URL(`https://${referrerHeader.trim()}`);
-      hostname = url.hostname.toLowerCase();
-    } catch {
-      return "Other";
-    }
+    // Gracefully fallback to Direct for completely malformed/unparseable strings
+    return "Direct";
   }
 
-  if (!hostname) return "Other";
+  if (!hostname) return "Direct";
 
   if (isDomain(hostname, "github.com")) return "GitHub";
   if (
@@ -75,15 +77,26 @@ export function parseDeviceType(userAgent?: string | null): "desktop" | "mobile"
   return "desktop";
 }
 
-export function hashVisitorIp(ip: string): string {
+export async function hashVisitorIp(ip: string): Promise<string> {
   if (!ip) return "anon";
-  let hash = 0;
-  for (let i = 0; i < ip.length; i++) {
-    const char = ip.charCodeAt(i);
-    hash = (hash << 5) - hash + char;
-    hash |= 0;
+  
+  try {
+    // 1. Uniqueness Guarantee: Use Web Crypto SHA-256 for collision resistance
+    const data = new TextEncoder().encode(ip);
+    const hashBuffer = await crypto.subtle.digest("SHA-256", data);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    const hashHex = hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
+    return `ip_${hashHex.slice(0, 16)}`;
+  } catch {
+    // Fallback for older runtime environments lacking crypto.subtle
+    let hash = 0;
+    for (let i = 0; i < ip.length; i++) {
+      const char = ip.charCodeAt(i);
+      hash = (hash << 5) - hash + char;
+      hash |= 0;
+    }
+    return `ip_${Math.abs(hash).toString(36)}`;
   }
-  return `ip_${Math.abs(hash).toString(36)}`;
 }
 
 export interface TrackViewParams {
@@ -110,7 +123,9 @@ export async function recordProfileView({
   const country = (countryHeader && countryHeader !== "XX" ? countryHeader : "Unknown").toUpperCase();
   const city = cityHeader || "Unknown";
   const device_type = parseDeviceType(userAgent);
-  const ip_hash = hashVisitorIp(visitorIp || "127.0.0.1");
+  
+  // Await the new async crypto hashing function
+  const ip_hash = await hashVisitorIp(visitorIp || "127.0.0.1");
 
   try {
     // Deduplicate / rate-limit: Check if same ip_hash viewed this username within 10 minutes (600s)
