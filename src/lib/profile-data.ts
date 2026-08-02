@@ -65,8 +65,11 @@ const LANGUAGE_DISPLAY_NAMES: Record<string, string> = {
 };
 
 export function normalizeLanguageName(language: string): string {
-  return LANGUAGE_DISPLAY_NAMES[language.toLowerCase()] ?? language;
+  if (!language) return "";
+  const clean = language.trim();
+  return LANGUAGE_DISPLAY_NAMES[clean.toLowerCase()] ?? clean;
 }
+
 /** Return the hex colour for a programming language name, or null if the language is not in the built-in map. */
 export function languageColor(language: string | null): string | null {
   if (!language) return null;
@@ -82,6 +85,7 @@ export interface GitHubRepoLike {
   language: string | null;
   topics?: string[];
 }
+
 /**
  * A raw GitHub repo as the REST API returns it, carrying every field this app reads.
  * A superset of `GitHubRepoLike` (what mapRepos/deriveTechStack need) and of the shape
@@ -136,10 +140,15 @@ async function searchCount(query: string, accept?: string): Promise<number> {
       10_000,
     );
 
-    if (!res.ok) return 0;
+    if (!res.ok) {
+      await throwIfRateLimited(res);
+      return 0;
+    }
     const json = await res.json();
     return typeof json.total_count === "number" ? json.total_count : 0;
-  } catch {
+  } catch (e) {
+    // 1. Explicitly throw rate limits so they aren't cached as "0 contributions"
+    if (e instanceof GitHubRateLimitError) throw e;
     return 0;
   }
 }
@@ -247,8 +256,6 @@ export async function fetchMergedPRs(
       };
     });
   } catch (e) {
-    // A rate limit must not be flattened into "this user has none" — the result is
-    // persisted now, so that would cache an empty list as fresh for a full hour.
     if (e instanceof GitHubRateLimitError) throw e;
     return [];
   }
@@ -276,53 +283,51 @@ export interface GitHubUser {
 export async function fetchGitHubUser(
   username: string,
 ): Promise<GitHubUser | null> {
-  const res = await fetchWithTimeout(
-    `${GITHUB_API_BASE}/users/${username}`,
-    {
-      headers: { Accept: "application/vnd.github.v3+json" },
-      // The snapshot TTL in the DB is now the single source of freshness. A second,
-      // independent Next Data Cache in front of it would let a "stale" sync be served
-      // an hour-old response, so it is deliberately disabled here.
-      cache: "no-store",
-    },
-    10_000,
-  );
-  if (!res.ok) {
-    try {
-      const err = await res.json();
-      if (err.message && err.message.toLowerCase().includes("rate limit")) {
-        throw new GitHubRateLimitError(err.message);
-      }
-    } catch (e) {
-      if (e instanceof GitHubRateLimitError) throw e;
+  try {
+    const res = await fetchWithTimeout(
+      `${GITHUB_API_BASE}/users/${username}`,
+      {
+        headers: { Accept: "application/vnd.github.v3+json" },
+        cache: "no-store",
+      },
+      10_000,
+    );
+    
+    if (!res.ok) {
+      await throwIfRateLimited(res);
+      return null;
     }
+    
+    return (await res.json()) as GitHubUser;
+  } catch (e) {
+    // Gracefully handle network timeouts while strictly re-throwing rate limits
+    if (e instanceof GitHubRateLimitError) throw e;
     return null;
   }
-
-  return res.json() as Promise<GitHubUser>;
 }
 
 export async function fetchGitHubRepos(
   username: string,
 ): Promise<GitHubRepoPayload[]> {
-  const res = await fetchWithTimeout(
-    `${GITHUB_API_BASE}/users/${username}/repos?sort=stars&per_page=100&type=owner`,
-    {
-      headers: { Accept: "application/vnd.github.mercy-preview+json" },
-      cache: "no-store",
-    },
-    10_000,
-  );
-  if (!res.ok) {
-    // Previously this swallowed every non-OK response into an empty list. That was
-    // survivable when the page re-fetched on each render, but the result is now
-    // persisted, so a rate-limited response would cache an empty repo list as
-    // "fresh" for an hour. Surface it instead, so the sync declines to store it.
-    await throwIfRateLimited(res);
+  try {
+    const res = await fetchWithTimeout(
+      `${GITHUB_API_BASE}/users/${username}/repos?sort=stars&per_page=100&type=owner`,
+      {
+        headers: { Accept: "application/vnd.github.mercy-preview+json" },
+        cache: "no-store",
+      },
+      10_000,
+    );
+    
+    if (!res.ok) {
+      await throwIfRateLimited(res);
+      return [];
+    }
+    
+    const repos = (await res.json()) as (GitHubRepoPayload & { fork: boolean })[];
+    return repos.filter((r) => !r.fork).slice(0, 6);
+  } catch (e) {
+    if (e instanceof GitHubRateLimitError) throw e;
     return [];
   }
-  // Untyped JSON from the API boundary — assert the shape once, here, rather than
-  // leaking `any` into every consumer.
-  const repos = (await res.json()) as (GitHubRepoPayload & { fork: boolean })[];
-  return repos.filter((r) => !r.fork).slice(0, 6);
 }
