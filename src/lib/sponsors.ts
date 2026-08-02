@@ -80,16 +80,23 @@ export function sanitizeSponsors(rawSponsors: unknown): SponsorItem[] {
 export async function getSponsorshipData(
   username: string
 ): Promise<SponsorshipData> {
-  const cleanUsername = username.trim().toLowerCase();
+  const cleanUsername = username ? username.trim().toLowerCase() : "";
+  if (!cleanUsername) {
+    return {
+      username: "",
+      fundingLinks: [],
+      sponsors: [],
+    };
+  }
 
   try {
-    const { data: profile } = await supabase
+    const { data: profile, error } = await supabase
       .from("profiles")
       .select("funding_links, sponsors")
       .eq("username", cleanUsername)
       .maybeSingle();
 
-    if (profile) {
+    if (!error && profile) {
       return {
         username: cleanUsername,
         fundingLinks: sanitizeFundingLinks(profile.funding_links),
