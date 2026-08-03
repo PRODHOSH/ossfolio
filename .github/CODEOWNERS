@@ -1,0 +1,69 @@
+# ------------------------------------------------------------------------------
+# GitHub CODEOWNERS for ossfolio
+#
+# This file specifies which teams or individuals own certain files/paths in 
+# the repository. GitHub uses this to automatically request reviews.
+# 
+# Format:
+# [pattern] [owners]
+# 
+# Precedence:
+# - Order matters: the *last* matching pattern takes the most precedence.
+# - If you want an overarching rule to be overwritten by a specific file,
+#   put the specific file rule at the bottom.
+# ------------------------------------------------------------------------------
+
+# ------------------------------------------------------------------------------
+# Global Default
+# ------------------------------------------------------------------------------
+# These owners will be the default owners for everything in the repo. 
+# Unless a later match takes precedence, @PRODHOSH will be requested for 
+# review when someone opens a pull request.
+* @PRODHOSH
+
+# ------------------------------------------------------------------------------
+# Source Code & Frontend (React/Next.js)
+# ------------------------------------------------------------------------------
+/src/       @PRODHOSH
+/public/    @PRODHOSH
+*.ts        @PRODHOSH
+*.tsx       @PRODHOSH
+
+# ------------------------------------------------------------------------------
+# Backend & Database (Supabase)
+# ------------------------------------------------------------------------------
+# Any changes to database migrations, edge functions, or local configs
+/supabase/  @PRODHOSH
+
+# ------------------------------------------------------------------------------
+# Testing & QA
+# ------------------------------------------------------------------------------
+# End-to-end tests and unit tests configurations
+/e2e/                   @PRODHOSH
+playwright.config.ts    @PRODHOSH
+vitest.config.ts        @PRODHOSH
+vitest.setup.ts         @PRODHOSH
+
+# ------------------------------------------------------------------------------
+# CI/CD, Workflows & Infrastructure
+# ------------------------------------------------------------------------------
+/.github/               @PRODHOSH
+/Dockerfile             @PRODHOSH
+/docker-compose.yml     @PRODHOSH
+
+# ------------------------------------------------------------------------------
+# Configuration & Package Management
+# ------------------------------------------------------------------------------
+/package.json           @PRODHOSH
+/package-lock.json      @PRODHOSH
+/next.config.ts         @PRODHOSH
+/open-next.config.ts    @PRODHOSH
+/eslint.config.mjs      @PRODHOSH
+/lint-staged.config.mjs @PRODHOSH
+/postcss.config.mjs     @PRODHOSH
+
+# ------------------------------------------------------------------------------
+# Documentation
+# ------------------------------------------------------------------------------
+/docs/                  @PRODHOSH
+*.md                    @PRODHOSH
