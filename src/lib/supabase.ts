@@ -1,16 +1,12 @@
-import { createClient, SupabaseClient } from "@supabase/supabase-js";
+import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { isSupabaseConfigured } from "@/lib/env";
 
 function getSupabaseUrl(): string {
-  return (
-    process.env.NEXT_PUBLIC_SUPABASE_URL || "https://placeholder.supabase.co"
-  );
+  return process.env.NEXT_PUBLIC_SUPABASE_URL || "https://placeholder.supabase.co";
 }
 
 function getSupabaseAnonKey(): string {
-  return (
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "placeholder-anon-key"
-  );
+  return process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "placeholder-anon-key";
 }
 
 function warningMissingEnv() {
@@ -41,7 +37,11 @@ export function resetSupabaseClientForTesting() {
 // Cloudflare's workerd on boot). The client is created on first property access.
 export const supabase = new Proxy({} as SupabaseClient, {
   get(_target, prop) {
-    return (getSupabase() as any)[prop];
+    const client = getSupabase();
+    const value = (client as any)[prop];
+    
+    // Crucial fix: Bind methods back to the client instance so they don't lose 'this' context
+    return typeof value === "function" ? value.bind(client) : value;
   },
 });
 
