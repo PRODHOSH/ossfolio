@@ -211,6 +211,7 @@ export async function syncProfileSnapshot(rawUsername: string): Promise<void> {
   // to the rate-limit case would let a single transient blip persist `user: null` with a
   // fresh `synced_at` — caching a false 404 for a real account for a full TTL hour.
   if (user.status === "rejected") {
+    console.error(`[snapshot] primary user fetch failed for ${username}, aborting sync to prevent caching a false 404.`);
     return;
   }
 
@@ -220,6 +221,7 @@ export async function syncProfileSnapshot(rawUsername: string): Promise<void> {
   // a limit hit by any of them means the whole snapshot is untrustworthy. Leaving the row
   // unwritten keeps the page in its syncing state, which then retries — the honest outcome.
   if (rateLimited) {
+    console.warn(`[snapshot] rate limit hit during sync for ${username}, aborting snapshot save to prevent cache corruption.`);
     return;
   }
 
