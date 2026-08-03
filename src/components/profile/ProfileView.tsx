@@ -40,6 +40,7 @@ import { ProfileReposSection } from "@/components/profile/ProfileReposSection";
 import { ProfileBadgeModal } from "@/components/profile/ProfileBadgeModal";
 import { DeveloperInsightsCard } from "@/components/profile/DeveloperInsightsCard";
 import { SponsorshipSection } from "@/components/profile/SponsorshipSection";
+import { SkillEndorsements } from "@/components/profile/SkillEndorsements";
 import { getSponsorshipData, type SponsorshipData } from "@/lib/sponsors";
 
 // Code-split the contribution heatmap out of the initial ProfileView bundle.
@@ -2589,6 +2590,12 @@ export function ProfileView({
               </span>
             ))}
           </div>
+
+          <SkillEndorsements
+            username={user.login}
+            profileUserId={profileId}
+            techStack={techStack}
+          />
         </div>
       )}
 
