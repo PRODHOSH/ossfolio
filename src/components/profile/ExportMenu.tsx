@@ -1,8 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { Download, Code, FileJson, FileSpreadsheet, ChevronDown } from "lucide-react";
+import { Download, Code, FileJson, FileSpreadsheet, QrCode, ChevronDown } from "lucide-react";
 import { EmbedModal } from "./EmbedModal";
+import { QRCodeModal } from "./QRCodeModal";
 
 interface ExportMenuProps {
   username: string;
@@ -11,6 +12,7 @@ interface ExportMenuProps {
 export function ExportMenu({ username }: ExportMenuProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [isEmbedOpen, setIsEmbedOpen] = useState(false);
+  const [isQROpen, setIsQROpen] = useState(false);
 
   const btnStyle: React.CSSProperties = {
     display: "inline-flex",
@@ -105,6 +107,18 @@ export function ExportMenu({ username }: ExportMenuProps) {
             <Code size={14} color="#fbbf24" />
             <span>Embed / Get Badges</span>
           </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              setIsOpen(false);
+              setIsQROpen(true);
+            }}
+            style={itemStyle}
+          >
+            <QrCode size={14} color="#ec4899" />
+            <span>QR Code</span>
+          </button>
         </div>
       )}
 
@@ -112,6 +126,12 @@ export function ExportMenu({ username }: ExportMenuProps) {
         username={username}
         isOpen={isEmbedOpen}
         onClose={() => setIsEmbedOpen(false)}
+      />
+
+      <QRCodeModal
+        username={username}
+        isOpen={isQROpen}
+        onClose={() => setIsQROpen(false)}
       />
     </div>
   );
