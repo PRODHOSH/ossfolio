@@ -40,6 +40,7 @@ export function buildImpactNetwork({
   const nodes: NetworkNode[] = [];
   const edges: NetworkEdge[] = [];
   const nodeMap = new Set<string>();
+  const edgeMap = new Set<string>(); // Tracks unique source->target edges to prevent duplicates
 
   const centralId = `user:${user.login.toLowerCase()}`;
   const centralLabel = user.name || user.login;
@@ -91,12 +92,17 @@ export function buildImpactNetwork({
 
     // Edge thickness based on PR count and stars
     const weight = Math.max(1, Math.min(7, 1 + prCount * 1.5 + Math.min(3, stars / 10)));
-    edges.push({
-      source: centralId,
-      target: repoId,
-      weight,
-      label: prCount > 0 ? `${prCount} PRs` : "Repository",
-    });
+    const edgeKey = `${centralId}->${repoId}`;
+    
+    if (!edgeMap.has(edgeKey)) {
+      edges.push({
+        source: centralId,
+        target: repoId,
+        weight,
+        label: prCount > 0 ? `${prCount} PRs` : "Repository",
+      });
+      edgeMap.add(edgeKey);
+    }
   }
 
   // 3. Organization Nodes
@@ -117,12 +123,16 @@ export function buildImpactNetwork({
     });
     nodeMap.add(orgId);
 
-    edges.push({
-      source: centralId,
-      target: orgId,
-      weight: 3,
-      label: "Member",
-    });
+    const edgeKey = `${centralId}->${orgId}`;
+    if (!edgeMap.has(edgeKey)) {
+      edges.push({
+        source: centralId,
+        target: orgId,
+        weight: 3,
+        label: "Member",
+      });
+      edgeMap.add(edgeKey);
+    }
   }
 
   // 4. Collaborator Nodes (Co-contributors)
@@ -132,9 +142,11 @@ export function buildImpactNetwork({
   if (allCollaborators.length === 0 && mergedPRs.length > 0) {
     const repoNames = Array.from(new Set(mergedPRs.map((p) => p.repoName).filter(Boolean)));
     repoNames.slice(0, 5).forEach((rName, idx) => {
-      if (rName.includes("/")) {
-        const owner = rName.split("/")[0];
-        if (owner.toLowerCase() !== user.login.toLowerCase()) {
+      // Robust owner parsing
+      const parts = rName.split("/");
+      if (parts.length >= 2) {
+        const owner = parts[0];
+        if (owner && owner.toLowerCase() !== user.login.toLowerCase()) {
           allCollaborators.push({
             login: owner,
             avatarUrl: `https://github.com/${owner}.png`,
@@ -167,12 +179,16 @@ export function buildImpactNetwork({
     const targetRepoId = collab.repoName ? `repo:${collab.repoName.toLowerCase()}` : null;
     const targetId = targetRepoId && nodeMap.has(targetRepoId) ? targetRepoId : centralId;
 
-    edges.push({
-      source: collabId,
-      target: targetId,
-      weight: Math.max(1, Math.min(5, collab.contributionsCount || 2)),
-      label: "Co-contributor",
-    });
+    const edgeKey = `${collabId}->${targetId}`;
+    if (!edgeMap.has(edgeKey)) {
+      edges.push({
+        source: collabId,
+        target: targetId,
+        weight: Math.max(1, Math.min(5, collab.contributionsCount || 2)),
+        label: "Co-contributor",
+      });
+      edgeMap.add(edgeKey);
+    }
   }
 
   return { nodes, edges };
