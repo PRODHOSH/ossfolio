@@ -1,4 +1,4 @@
-import type { ContributorStats, Repo, CoContributor } from "@/types";
+import type { ContributorStats, Repo, CoContributor, ContributionImpactContext } from "@/types";
 import { redis } from "./redis";
 import { fetchWithTimeout, FetchTimeoutError } from "@/lib/fetch-with-timeout";
 import { GitHubRateLimitError } from "@/lib/errors";
@@ -140,6 +140,32 @@ export const CONTRIBUTOR_QUERY = `
           url
         }
       }
+      pullRequests(first: 30, orderBy: {field: CREATED_AT, direction: DESC}) {
+        nodes {
+          title
+          comments { totalCount }
+          labels(first: 5) {
+            nodes { name }
+          }
+          repository {
+            name
+            stargazerCount
+          }
+        }
+      }
+      issues(first: 30, orderBy: {field: CREATED_AT, direction: DESC}) {
+        nodes {
+          title
+          comments { totalCount }
+          labels(first: 5) {
+            nodes { name }
+          }
+          repository {
+            name
+            stargazerCount
+          }
+        }
+      }
       contributionsCollection {
         totalCommitContributions
         totalPullRequestContributions
@@ -198,6 +224,22 @@ export interface GitHubContributor {
       forkCount: number;
       primaryLanguage: { name: string; color: string } | null;
       url: string;
+    }[];
+  };
+  pullRequests?: {
+    nodes: {
+      title: string;
+      comments?: { totalCount: number };
+      labels?: { nodes: { name: string }[] };
+      repository?: { name: string; stargazerCount: number };
+    }[];
+  };
+  issues?: {
+    nodes: {
+      title: string;
+      comments?: { totalCount: number };
+      labels?: { nodes: { name: string }[] };
+      repository?: { name: string; stargazerCount: number };
     }[];
   };
   contributionsCollection: {
@@ -262,6 +304,7 @@ export async function fetchContributorProfile(
 export function contributorToScoreInputs(c: GitHubContributor): {
   stats: ContributorStats;
   repos: Repo[];
+  impactContext: ContributionImpactContext;
 } {
   const cc = c.contributionsCollection;
   const stats: ContributorStats = {
@@ -281,8 +324,30 @@ export function contributorToScoreInputs(c: GitHubContributor): {
     url: n.url,
     topics: [],
   }));
-  return { stats, repos };
+
+  const prs =
+    c.pullRequests?.nodes?.map((pr) => ({
+      title: pr.title,
+      repoName: pr.repository?.name,
+      repoStars: pr.repository?.stargazerCount ?? 0,
+      labels: pr.labels?.nodes?.map((l) => l.name) ?? [],
+      commentsCount: pr.comments?.totalCount ?? 0,
+    })) ?? [];
+
+  const issues =
+    c.issues?.nodes?.map((iss) => ({
+      title: iss.title,
+      repoName: iss.repository?.name,
+      repoStars: iss.repository?.stargazerCount ?? 0,
+      labels: iss.labels?.nodes?.map((l) => l.name) ?? [],
+      commentsCount: iss.comments?.totalCount ?? 0,
+    })) ?? [];
+
+  const impactContext: ContributionImpactContext = { prs, issues };
+
+  return { stats, repos, impactContext };
 }
+
 
 /* -------------------------------------------------------------------------- */
 /* Public contribution calendar (no token required)                           */
