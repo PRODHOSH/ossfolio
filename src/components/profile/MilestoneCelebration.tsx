@@ -64,6 +64,16 @@ export function MilestoneCelebration({
     }
   }, [isOpen, achievement, fireConfetti]);
 
+  // Declared above the early return below, with the other hooks.
+  //
+  // React identifies hook state by call order, so every hook has to run on
+  // every render. This one sat after `if (!isOpen || !achievement) return null`,
+  // which meant the component called two hooks while closed and three while
+  // open. The `copied` state was created and torn down as the dialog toggled,
+  // and any hook added after it would have landed on a shifting index — the
+  // failure mode where state appears to belong to the wrong variable.
+  const [copied, setCopied] = React.useState(false);
+
   if (!isOpen || !achievement) return null;
 
   const shareUrl = typeof window !== "undefined"
@@ -98,7 +108,6 @@ export function MilestoneCelebration({
     }
   };
 
-  const [copied, setCopied] = React.useState(false);
   const handleCopyLink = () => {
     if (navigator.clipboard) {
       navigator.clipboard.writeText(`${shareText} ${shareUrl}`);
