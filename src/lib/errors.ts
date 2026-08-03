@@ -17,6 +17,9 @@ export class AppError extends Error {
     this.code = code;
     this.details = details;
     this.retryAfterSeconds = retryAfterSeconds;
+    
+    // Ensure prototype chain is correctly maintained for instanceof checks
+    Object.setPrototypeOf(this, new.target.prototype);
   }
 }
 
@@ -77,9 +80,10 @@ export class UpstreamError extends AppError {
  * simple `instanceof` check rather than fragile message-string comparisons.
  */
 export class GitHubRateLimitError extends Error {
-  readonly name = "GitHubRateLimitError";
   constructor(message = "GitHub API rate limit exceeded") {
     super(message);
+    this.name = "GitHubRateLimitError";
+    Object.setPrototypeOf(this, new.target.prototype);
   }
 }
 
@@ -91,6 +95,16 @@ export type ErrorCode =
   | "UPSTREAM_ERROR"
   | "SERVICE_UNAVAILABLE"
   | "INTERNAL_ERROR";
+
+const VALID_ERROR_CODES = new Set<ErrorCode>([
+  "VALIDATION_ERROR",
+  "AUTH_ERROR",
+  "NOT_FOUND",
+  "RATE_LIMITED",
+  "UPSTREAM_ERROR",
+  "SERVICE_UNAVAILABLE",
+  "INTERNAL_ERROR",
+]);
 
 // A type alias rather than an interface, deliberately.
 //
@@ -113,19 +127,30 @@ export type ApiErrorBody = {
 };
 
 export function toApiErrorBody(error: AppError): ApiErrorBody {
-  const code = (error.code || "INTERNAL_ERROR") as ErrorCode;
-  return {
+  // 1. Strict Serialization Mapping: Guarantee code matches the union type
+  const code: ErrorCode = VALID_ERROR_CODES.has(error.code as ErrorCode)
+    ? (error.code as ErrorCode)
+    : "INTERNAL_ERROR";
+
+  const body: ApiErrorBody = {
     success: false,
     error: {
       code,
       message: error.message,
-      ...(error.details ? { details: error.details } : {}),
     },
     code,
     status: error.status,
     timestamp: new Date().toISOString(),
-    ...(error.retryAfterSeconds !== undefined
-      ? { retryAfterSeconds: error.retryAfterSeconds }
-      : {}),
   };
+
+  // 2. Clean property assignment to avoid injecting explicit `undefined` keys
+  if (error.details !== undefined) {
+    body.error.details = error.details;
+  }
+  
+  if (error.retryAfterSeconds !== undefined) {
+    body.retryAfterSeconds = error.retryAfterSeconds;
+  }
+
+  return body;
 }
