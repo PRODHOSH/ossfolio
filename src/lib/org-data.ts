@@ -49,7 +49,7 @@ export interface OrgDashboardData {
  * Calculates aggregate team contributor score from member list and repo stats
  */
 export function calculateTeamScore(members: OrgMember[], totalStars: number): number {
-  if (members.length === 0) return 60;
+  if (!members || members.length === 0) return 60;
   const avgMemberScore = members.reduce((sum, m) => sum + m.score, 0) / members.length;
   const starBonus = Math.min(25, Math.floor(totalStars / 50));
   return Math.min(99, Math.max(40, Math.floor(avgMemberScore + starBonus)));
@@ -71,7 +71,9 @@ export async function getOrganizationData(
       .eq("slug", cleanSlug)
       .maybeSingle();
 
-    if (dbOrg && dbOrg.stats && dbOrg.stats.memberCount) {
+    // 1. Fixed Falsy Cache Bug: Explicitly check for type 'number' instead of 
+    // relying on truthiness, which would skip the cache for orgs with 0 members.
+    if (dbOrg && dbOrg.stats && typeof dbOrg.stats.memberCount === "number") {
       const updatedAt = new Date(dbOrg.updated_at || dbOrg.created_at || 0).getTime();
       const ageMs = Date.now() - updatedAt;
       // 12 hour cache freshness
@@ -228,7 +230,7 @@ export async function refreshOrganizationStats(
 
   // Upsert to Supabase
   try {
-    const { data: updatedDb } = await supabase
+    const { data: updatedDb, error: upsertError } = await supabase
       .from("organizations")
       .upsert(
         {
@@ -245,10 +247,12 @@ export async function refreshOrganizationStats(
           },
           updated_at: new Date().toISOString(),
         },
-        { onConflict: "slug" }
+        { onConflict: "slug", ignoreDuplicates: false } // ensure updates happen strictly
       )
       .select("*")
       .maybeSingle();
+
+    if (upsertError) throw upsertError;
 
     if (updatedDb) {
       dashboardData.id = updatedDb.id;
@@ -273,16 +277,26 @@ export async function claimOrganization(
   const cleanSlug = orgSlug.trim().toLowerCase();
 
   try {
-    const { error } = await supabase
+    // 2. Atomic claim: update only if claimed_by is currently null,
+    // and select the result to verify the row was actually modified.
+    const { data, error } = await supabase
       .from("organizations")
       .update({
         claimed_by: userId,
         claimed_at: new Date().toISOString(),
       })
       .eq("slug", cleanSlug)
-      .is("claimed_by", null);
+      .is("claimed_by", null)
+      .select("id")
+      .maybeSingle();
 
-    if (!error) return true;
+    if (error) {
+      console.error("Error claiming organization:", error);
+      return false;
+    }
+
+    // Only return true if the update matched the condition and returned data
+    return !!data;
   } catch (err) {
     console.error("Error claiming organization:", err);
   }
