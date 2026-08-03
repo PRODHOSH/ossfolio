@@ -39,6 +39,13 @@ export interface AnomalyResult {
   commitRatio: number;
 }
 
+/** Guards against negatives and non-finite numbers from API stats. */
+const safeCount = (value: unknown): number => {
+  const parsed = typeof value === "number" ? value : Number(value);
+  if (!Number.isFinite(parsed) || parsed < 0) return 0;
+  return Math.floor(parsed);
+};
+
 /**
  * Applies the ratio heuristic to a contributor's aggregate stats.
  * Pure — no side effects, no network.
@@ -47,9 +54,13 @@ export function detectAnomaly(
   stats: ContributorStats,
   totalStars: number,
 ): AnomalyResult {
-  const collaborative = stats.totalPRs + stats.totalIssues + stats.totalReviews;
-  const commitRatio =
-    collaborative > 0 ? stats.totalCommits / collaborative : stats.totalCommits;
+  const totalCommits = safeCount(stats?.totalCommits);
+  const collaborative =
+    safeCount(stats?.totalPRs) +
+    safeCount(stats?.totalIssues) +
+    safeCount(stats?.totalReviews);
+
+  const commitRatio = collaborative > 0 ? totalCommits / collaborative : totalCommits;
 
   const notFlagged: AnomalyResult = {
     flagged: false,
@@ -58,10 +69,10 @@ export function detectAnomaly(
   };
 
   // Guard 1 — too little volume to be worth flagging.
-  if (stats.totalCommits < ANOMALY_THRESHOLDS.MIN_COMMITS) return notFlagged;
+  if (totalCommits < ANOMALY_THRESHOLDS.MIN_COMMITS) return notFlagged;
 
   // Guard 2 — community validation. Stars mean real projects people use.
-  if (totalStars >= ANOMALY_THRESHOLDS.CREDIBLE_STARS) return notFlagged;
+  if (safeCount(totalStars) >= ANOMALY_THRESHOLDS.CREDIBLE_STARS) return notFlagged;
 
   // Guard 3 — the ratio itself must be implausible.
   if (commitRatio < ANOMALY_THRESHOLDS.MAX_COMMIT_RATIO) return notFlagged;
@@ -69,9 +80,9 @@ export function detectAnomaly(
   return {
     flagged: true,
     reason:
-      `Unusual commit ratio: ${stats.totalCommits.toLocaleString("en-US")} commits ` +
+      `Unusual commit ratio: ${totalCommits.toLocaleString("en-US")} commits ` +
       `vs ${collaborative.toLocaleString("en-US")} PRs/issues/reviews ` +
-      `(${Math.round(commitRatio)}:1) with ${totalStars} stars`,
+      `(${Math.round(commitRatio)}:1) with ${safeCount(totalStars)} stars`,
     commitRatio,
   };
 }
@@ -81,8 +92,9 @@ export function applyAnomalyDiscount(
   score: number,
   anomaly: AnomalyResult,
 ): number {
-  if (!anomaly.flagged) return score;
-  return Math.round(score * ANOMALY_SCORE_MULTIPLIER);
+  if (!anomaly || !anomaly.flagged) return score;
+  const safeScore = typeof score === "number" && Number.isFinite(score) ? score : 0;
+  return Math.round(safeScore * ANOMALY_SCORE_MULTIPLIER);
 }
 
 /**
@@ -94,7 +106,10 @@ export function scoreWithAnomalyCheck(
   stats: ContributorStats,
   repos: Repo[],
 ): { score: number; rawScore: number; anomaly: AnomalyResult } {
-  const totalStars = repos.reduce((sum, r) => sum + r.stars, 0);
+  const totalStars = Array.isArray(repos)
+    ? repos.reduce((sum, r) => sum + safeCount(r?.stars), 0)
+    : 0;
+  
   const rawScore = calculateScore(stats, repos);
   const anomaly = detectAnomaly(stats, totalStars);
   return {
