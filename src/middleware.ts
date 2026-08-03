@@ -1,4 +1,4 @@
-import { NextResponse, type NextRequest } from "next/server";
+import { NextResponse, type NextRequest, type NextFetchEvent } from "next/server";
 import { recordProfileView } from "@/lib/analytics-tracker";
 
 const CSP_DIRECTIVES = {
@@ -59,7 +59,7 @@ const SYSTEM_ROUTES = new Set([
   "og-image.png",
 ]);
 
-export function middleware(request: NextRequest) {
+export function middleware(request: NextRequest, event: NextFetchEvent) {
   const { pathname } = request.nextUrl;
 
   // Skip middleware for static files and Next.js internals.
@@ -89,16 +89,18 @@ export function middleware(request: NextRequest) {
         request.headers.get("x-vercel-ip-city");
       const userAgent = request.headers.get("user-agent");
 
-      // Record view asynchronously
-      recordProfileView({
-        username,
-        referrerHeader,
-        visitorIp,
-        countryHeader,
-        cityHeader,
-        userAgent,
-      }).catch((err) =>
-        console.error("Async middleware view tracking error:", err)
+      // Record view asynchronously using event.waitUntil to prevent premature termination
+      event.waitUntil(
+        recordProfileView({
+          username,
+          referrerHeader,
+          visitorIp,
+          countryHeader,
+          cityHeader,
+          userAgent,
+        }).catch((err) =>
+          console.error("Async middleware view tracking error:", err)
+        )
       );
     }
   }
