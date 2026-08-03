@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
+import { ProfileSkeleton } from "@/components/profile/ProfileSkeleton";
 
 /**
  * Shown the first time a profile is viewed, while its snapshot is being built in
@@ -125,6 +126,12 @@ export function ProfileSyncing({ username }: { username: string }) {
             </button>
           )}
         </div>
+
+        {/* Skeleton layout while the snapshot is being built — mirrors the real
+            ProfileView sections so the page holds its shape during the wait.
+            Once `router.refresh()` re-renders the server component with a
+            stored snapshot, the real profile replaces this skeleton. */}
+        <ProfileSkeleton />
       </main>
       <Footer />
 
