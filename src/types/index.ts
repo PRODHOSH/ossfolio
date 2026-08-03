@@ -52,11 +52,19 @@ export interface Repo {
   topics: string[];
 }
 
+export interface OrgStats {
+  prsCount?: number;
+  issuesCount?: number;
+  commitsCount?: number;
+  reviewsCount?: number;
+}
+
 export interface Org {
   login: string;
   name: string | null;
   avatarUrl: string;
   url: string;
+  stats?: OrgStats;
 }
 
 export interface HeatmapDay {
