@@ -2,8 +2,9 @@
 
 import dynamic from "next/dynamic";
 import { useState } from "react";
-import type { ContributorStats } from "@/types";
+import type { ContributorStats, Repo } from "@/types";
 import { ExportMenu } from "@/components/profile/ExportMenu";
+import { StoryModal } from "@/components/profile/StoryModal";
 
 const ProfileAnalyticsModal = dynamic(
   () =>
@@ -19,6 +20,7 @@ interface ProfileActionsProps {
   username: string;
   score: number;
   stats: ContributorStats;
+  repos?: Repo[];
   isRefreshing: boolean;
   onRefresh: () => Promise<void>;
   isOwner?: boolean;
@@ -28,6 +30,7 @@ export function ProfileActions({
   username,
   score,
   stats,
+  repos = [],
   isRefreshing,
   onRefresh,
   isOwner = false,
@@ -35,6 +38,7 @@ export function ProfileActions({
   const [copied, setCopied] = useState(false);
   const [copiedMarkdown, setCopiedMarkdown] = useState(false);
   const [isAnalyticsOpen, setIsAnalyticsOpen] = useState(false);
+  const [isStoryOpen, setIsStoryOpen] = useState(false);
   const [refreshState, setRefreshState] = useState<
     "idle" | "loading" | "success" | "error"
   >("idle");
@@ -305,12 +309,36 @@ export function ProfileActions({
             </>
           )}
         </button>
+
+        <button
+          type="button"
+          onClick={() => setIsStoryOpen(true)}
+          style={{
+            ...btnBase,
+            backgroundColor: "rgba(99, 102, 241, 0.12)",
+            borderColor: "rgba(99, 102, 241, 0.3)",
+            color: "#6366f1",
+            fontWeight: 600,
+          }}
+          aria-label="Generate and share your year in open source story"
+        >
+          <span>🚀</span> Year in OSS
+        </button>
       </div>
 
       <ProfileAnalyticsModal
         username={username}
         isOpen={isAnalyticsOpen}
         onClose={() => setIsAnalyticsOpen(false)}
+      />
+
+      <StoryModal
+        username={username}
+        score={score}
+        stats={stats}
+        repos={repos}
+        isOpen={isStoryOpen}
+        onClose={() => setIsStoryOpen(false)}
       />
     </>
   );
