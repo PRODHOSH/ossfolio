@@ -52,6 +52,22 @@ export interface Repo {
   topics: string[];
 }
 
+export interface GistItem {
+  id: string;
+  description: string | null;
+  url: string;
+  filesCount: number;
+  commentsCount: number;
+  isPublic: boolean;
+  createdAt: string;
+  updatedAt: string;
+  primaryFile?: {
+    filename: string;
+    language: string | null;
+    size: number;
+  };
+}
+
 export interface Org {
   login: string;
   name: string | null;
