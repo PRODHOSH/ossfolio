@@ -1,4 +1,4 @@
-export const LANG_COLORS: Record<string, string> = {
+export const LANG_COLORS = {
   TypeScript: "#3178c6",
   JavaScript: "#f1e05a",
   Python: "#3572A5",
@@ -20,7 +20,9 @@ export const LANG_COLORS: Record<string, string> = {
   PHP: "#4F5D95",
   "Jupyter Notebook": "#DA5B0B",
   Dockerfile: "#384d54",
-};
+} as const;
+
+export type KnownLanguage = keyof typeof LANG_COLORS;
 
 /**
  * Languages offered as filter options in the UI.
@@ -42,6 +44,10 @@ export const POPULAR_LANGUAGES = [
   "Ruby",
   "PHP",
   "Swift",
+  "Kotlin",
+  "Dart",
+  "Vue",
+  "Svelte",
 ] as const;
 
 export type PopularLanguage = (typeof POPULAR_LANGUAGES)[number];
