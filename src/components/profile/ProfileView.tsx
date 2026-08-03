@@ -40,6 +40,7 @@ import { ProfileReposSection } from "@/components/profile/ProfileReposSection";
 import { ProfileBadgeModal } from "@/components/profile/ProfileBadgeModal";
 import { DeveloperInsightsCard } from "@/components/profile/DeveloperInsightsCard";
 import { SponsorshipSection } from "@/components/profile/SponsorshipSection";
+import { ProviderIntegrations } from "@/components/profile/ProviderIntegrations";
 import { getSponsorshipData, type SponsorshipData } from "@/lib/sponsors";
 
 // Code-split the contribution heatmap out of the initial ProfileView bundle.
@@ -2597,6 +2598,9 @@ export function ProfileView({
 
       {/* Organizations */}
       <OrganizationSection orgs={orgs} />
+
+      {/* Multi-Platform Integrations */}
+      <ProviderIntegrations username={user.login} isOwner={isOwner} />
 
       {/* Contribution heatmap with year navigation */}
       <HeatmapWithYearNav
