@@ -2470,7 +2470,12 @@ export function ProfileView({
             exit={tabExit}
           >
             {/* Contribution Timeline */}
-            <ContributionTimeline mergedPRs={mergedPRs} badges={badgesList} />
+            <ContributionTimeline
+              mergedPRs={mergedPRs}
+              repos={repos}
+              orgs={orgs}
+              badges={badgesList}
+            />
           </motion.div>
         )}
 
