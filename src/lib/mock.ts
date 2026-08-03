@@ -24,14 +24,26 @@ function colorForCount(count: number): string {
   return HEATMAP_COLORS[4];
 }
 
-/** Tiny deterministic string hash -> 32-bit int. */
-function seedFromString(input: string): number {
-  let hash = 2166136261;
-  for (let i = 0; i < input.length; i++) {
-    hash ^= input.charCodeAt(i);
-    hash = Math.imul(hash, 16777619);
+/** 
+ * Robust deterministic string hash (cyrb53) -> 32-bit int.
+ * Significantly improves entropy over FNV-1a to prevent similar usernames 
+ * from generating nearly identical sequences.
+ */
+function seedFromString(str: string): number {
+  let h1 = 0xdeadbeef ^ str.length,
+    h2 = 0x41c6ce57 ^ str.length;
+  for (let i = 0, ch; i < str.length; i++) {
+    ch = str.charCodeAt(i);
+    h1 = Math.imul(h1 ^ ch, 2654435761);
+    h2 = Math.imul(h2 ^ ch, 1597334677);
   }
-  return hash >>> 0;
+  h1 =
+    Math.imul(h1 ^ (h1 >>> 16), 2246822507) ^
+    Math.imul(h2 ^ (h2 >>> 13), 3266489909);
+  h2 =
+    Math.imul(h2 ^ (h2 >>> 16), 2246822507) ^
+    Math.imul(h1 ^ (h1 >>> 13), 3266489909);
+  return h1 >>> 0;
 }
 
 /** Mulberry32 -- small seeded PRNG so the calendar is stable per username. */
@@ -61,18 +73,25 @@ export function generateMockHeatmap(username: string): MockHeatmap {
   let totalContributions = 0;
 
   const today = new Date();
-  // Walk back to the Sunday that starts the 53-week window.
+  const todayKey = today.toISOString().slice(0, 10);
+  
+  // Walk back to the Sunday that starts the 53-week window using STRICT UTC math.
+  // Using local getDay/getDate methods causes timezone drift when sliced into ISO strings.
   const start = new Date(today);
-  start.setDate(start.getDate() - 7 * 52 - today.getDay());
+  start.setUTCDate(start.getUTCDate() - 7 * 52 - today.getUTCDay());
 
   const cursor = new Date(start);
   for (let w = 0; w < 53; w++) {
     const days = [];
     for (let d = 0; d < 7; d++) {
-      // Don't generate counts for days in the future.
-      const isFuture = cursor > today;
-      // Weekends quieter than weekdays, with occasional zero days.
-      const weekday = cursor.getDay();
+      const dateKey = cursor.toISOString().slice(0, 10);
+      
+      // Don't generate counts for days in the future. Lexicographical comparison 
+      // of UTC strings ensures timezone-agnostic safety across boundaries.
+      const isFuture = dateKey > todayKey;
+      
+      // Weekends quieter than weekdays, with occasional zero days (Strict UTC).
+      const weekday = cursor.getUTCDay();
       const base = weekday === 0 || weekday === 6 ? 2 : 5;
       const roll = rand();
       let count = 0;
@@ -81,11 +100,11 @@ export function generateMockHeatmap(username: string): MockHeatmap {
       }
       totalContributions += count;
       days.push({
-        date: cursor.toISOString().slice(0, 10),
+        date: dateKey,
         count,
         color: isFuture ? HEATMAP_COLORS[0] : colorForCount(count),
       });
-      cursor.setDate(cursor.getDate() + 1);
+      cursor.setUTCDate(cursor.getUTCDate() + 1);
     }
     weeks.push({ days });
   }
