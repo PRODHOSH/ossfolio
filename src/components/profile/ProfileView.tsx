@@ -464,6 +464,7 @@ function ProfileDownloadCard({
                   width={64}
                   height={64}
                   unoptimized
+                  priority
                   style={{
                     width: "64px",
                     height: "64px",
@@ -1187,6 +1188,7 @@ export function ProfileView({
           alt={displayName}
           width={88}
           height={88}
+          priority
           style={{
             borderRadius: "9999px",
             border: "1px solid var(--color-hairline)",
