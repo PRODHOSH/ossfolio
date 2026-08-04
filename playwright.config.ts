@@ -54,6 +54,10 @@ export default defineConfig({
       // A cold Next build is slow; the default 60s is not enough on a CI runner.
       timeout: 240_000,
       reuseExistingServer: !process.env.CI,
+      // Server-side runtime environment variables for the Next.js application in CI.
+      // NOTE: This is the single source of truth for runtime environment variables passed to the
+      // Next.js server when Playwright launches `npm run start` in CI. If you add a new server-side
+      // environment variable read at request time, configure it here so the server receives it.
       env: {
         NEXT_PUBLIC_SUPABASE_URL: "http://127.0.0.1:54321",
         // Not real credentials, and not secret — the fixture server ignores them entirely.
