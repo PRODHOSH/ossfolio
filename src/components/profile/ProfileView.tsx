@@ -40,6 +40,7 @@ import { ProfileReposSection } from "@/components/profile/ProfileReposSection";
 import { ProfileBadgeModal } from "@/components/profile/ProfileBadgeModal";
 import { DeveloperInsightsCard } from "@/components/profile/DeveloperInsightsCard";
 import { SponsorshipSection } from "@/components/profile/SponsorshipSection";
+import { ProviderIntegrations } from "@/components/profile/ProviderIntegrations";
 import { aggregateOrgContributionStats } from "@/lib/org-stats";
 import { ProfileViewCounter } from "@/components/profile/ProfileViewCounter";
 import { LanguageTreemap } from "@/components/profile/LanguageTreemap";
@@ -2545,6 +2546,9 @@ export function ProfileView({
 
       {/* Public Gists & Snippets */}
       <GistList username={user.login} />
+
+      {/* Multi-Platform Integrations */}
+      <ProviderIntegrations username={user.login} isOwner={isOwner} />
 
       {/* Contribution heatmap with year navigation */}
       <HeatmapWithYearNav
