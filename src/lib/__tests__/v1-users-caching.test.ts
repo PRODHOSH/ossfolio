@@ -73,7 +73,9 @@ describe("GET /api/v1/users/[username] — conditional caching", () => {
   it("a stale ETag falls through to a full 200", async () => {
     const res = await call({ "if-none-match": '"0000000000000000000000000000dead"' });
     expect(res.status).toBe(200);
-    expect((await res.json()).username).toBe("octocat");
+    // The route wraps its payload with createApiResponse, so profile fields
+    // live under `data` rather than at the top level.
+    expect((await res.json()).data.username).toBe("octocat");
   });
 
   it("the ETag is stable across repeated identical requests", async () => {
@@ -85,7 +87,7 @@ describe("GET /api/v1/users/[username] — conditional caching", () => {
     // public contract, so a field appearing or disappearing should fail here and
     // force a deliberate decision, not slip through unnoticed.
     const body = await (await call()).json();
-    expect(body).toEqual({
+    expect(body.data).toEqual({
       username: "octocat",
       name: "The Octocat",
       avatar_url: "https://a",
