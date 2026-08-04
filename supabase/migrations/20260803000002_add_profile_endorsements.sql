@@ -4,6 +4,7 @@
 create table if not exists public.endorsements (
   id uuid primary key default gen_random_uuid(),
   endorser_user_id uuid not null references auth.users(id) on delete cascade,
+  endorsed_user_id uuid references auth.users(id) on delete cascade,
   endorsed_username text not null references public.profiles(username) on delete cascade,
   skill text not null,
   created_at timestamptz not null default now(),

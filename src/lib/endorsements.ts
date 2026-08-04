@@ -138,6 +138,7 @@ export async function toggleEndorsement(
       // Insert new endorsement (toggle on)
       const { error: insertError } = await dbClient.from("endorsements").insert({
         endorser_user_id: endorserUserId,
+        endorsed_user_id: endorsedProfileUserId ?? null,
         endorsed_username: normalizedUsername,
         skill: normalizedSkill,
       });
