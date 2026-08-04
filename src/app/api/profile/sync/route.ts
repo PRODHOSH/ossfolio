@@ -8,7 +8,7 @@ import { mapRepos, fetchLiveStats } from "@/lib/profile-data";
 import { scoreWithAnomalyCheck } from "@/lib/anomaly";
 import { createApiResponse, createErrorResponse } from "@/lib/validators/api";
 import { fetchWithTimeout } from "@/lib/fetch-with-timeout";
-import type { ContributorStats, Repo } from "@/types";
+import type { ContributorStats, Repo, ContributionImpactContext } from "@/types";
 import { GITHUB_API_BASE } from '@/lib/constants';
 
 // Runtime managed by @opennextjs/cloudflare
@@ -52,7 +52,7 @@ function extractToken(request: NextRequest): string | null {
 /** REST fallback for when no GitHub OAuth token is available (GraphQL needs one). */
 async function statsFromRest(
   username: string,
-): Promise<{ stats: ContributorStats; repos: Repo[] }> {
+): Promise<{ stats: ContributorStats; repos: Repo[]; impactContext?: ContributionImpactContext }> {
   // Bounded: this runs inside an edge invocation. The client stops waiting after
   // SYNC_TIMEOUT_MS and redirects, but the invocation itself would otherwise keep running
   // until GitHub answers, so the request is aborted rather than merely abandoned.
@@ -68,7 +68,7 @@ async function statsFromRest(
   const filtered = Array.isArray(rawRepos)
     ? rawRepos.filter((r: { fork: boolean }) => !r.fork).slice(0, 6)
     : [];
-  return { repos: mapRepos(filtered), stats: await fetchLiveStats(username) };
+  return { repos: mapRepos(filtered), stats: await fetchLiveStats(username), impactContext: { prs: [], issues: [] } };
 }
 
 export async function POST(request: NextRequest) {
@@ -108,6 +108,7 @@ export async function POST(request: NextRequest) {
 
   let stats: ContributorStats;
   let repos: Repo[];
+  let impactContext: ContributionImpactContext | undefined;
   try {
     if (providerToken) {
       try {
@@ -115,21 +116,19 @@ export async function POST(request: NextRequest) {
           username,
           providerToken,
         );
-        ({ stats, repos } = contributorToScoreInputs(contributor));
+        ({ stats, repos, impactContext } = contributorToScoreInputs(contributor));
       } catch {
-        ({ stats, repos } = await statsFromRest(username));
+        ({ stats, repos, impactContext } = await statsFromRest(username));
       }
     } else {
-      ({ stats, repos } = await statsFromRest(username));
+      ({ stats, repos, impactContext } = await statsFromRest(username));
     }
   } catch {
     return createErrorResponse("Could not read this account from GitHub", 502);
   }
 
-  // Score the account and run the anti-gaming heuristic. A flagged account is persisted with
-  // its reason (auditable, reversible) and stores the discounted score, so every surface that
-  // reads `profiles.score` reflects the discount.
-  const { score, anomaly } = scoreWithAnomalyCheck(stats, repos);
+  // Score the account, calculate impact analysis, and run the anti-gaming heuristic.
+  const { score, anomaly, impactBreakdown } = scoreWithAnomalyCheck(stats, repos, impactContext);
   const now = new Date().toISOString();
 
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -148,6 +147,8 @@ export async function POST(request: NextRequest) {
       total_prs: stats.totalPRs,
       total_issues: stats.totalIssues,
       total_reviews: stats.totalReviews,
+      impact_multiplier: impactBreakdown.impactMultiplier,
+      impact_details: impactBreakdown,
       flagged: anomaly.flagged,
       flag_reason: anomaly.reason,
       flagged_at: anomaly.flagged ? now : null,
@@ -165,6 +166,8 @@ export async function POST(request: NextRequest) {
     success: true,
     username,
     score,
+    impactMultiplier: impactBreakdown.impactMultiplier,
+    impactDetails: impactBreakdown,
     flagged: anomaly.flagged,
   });
 }

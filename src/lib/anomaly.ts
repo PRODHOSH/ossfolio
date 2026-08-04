@@ -1,5 +1,5 @@
-import type { ContributorStats, Repo } from "@/types";
-import { calculateScore } from "@/lib/score";
+import type { ContributorStats, Repo, ContributionImpactContext, ImpactBreakdown } from "@/types";
+import { calculateScore, getScoreBreakdown } from "@/lib/score";
 
 /**
  * Heuristic anti-gaming check for the contributor score.
@@ -105,16 +105,20 @@ export function applyAnomalyDiscount(
 export function scoreWithAnomalyCheck(
   stats: ContributorStats,
   repos: Repo[],
-): { score: number; rawScore: number; anomaly: AnomalyResult } {
+  impactContext?: ContributionImpactContext,
+): { score: number; rawScore: number; anomaly: AnomalyResult; impactBreakdown: ImpactBreakdown } {
   const totalStars = Array.isArray(repos)
     ? repos.reduce((sum, r) => sum + safeCount(r?.stars), 0)
     : 0;
   
-  const rawScore = calculateScore(stats, repos);
+  const rawScore = calculateScore(stats, repos, impactContext);
+  const breakdown = getScoreBreakdown(stats, totalStars, impactContext);
   const anomaly = detectAnomaly(stats, totalStars);
   return {
     score: applyAnomalyDiscount(rawScore, anomaly),
     rawScore,
     anomaly,
+    impactBreakdown: breakdown.impactBreakdown,
   };
 }
+

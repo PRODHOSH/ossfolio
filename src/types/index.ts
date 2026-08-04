@@ -160,3 +160,35 @@ export interface ImpactNetworkData {
   nodes: NetworkNode[];
   edges: NetworkEdge[];
 }
+
+export interface PRImpactDetails {
+  title?: string;
+  repoName?: string;
+  repoStars: number;
+  labels: string[];
+  commentsCount: number;
+}
+
+export interface IssueImpactDetails {
+  title?: string;
+  repoName?: string;
+  repoStars: number;
+  labels: string[];
+  commentsCount: number;
+}
+
+export interface ContributionImpactContext {
+  prs?: PRImpactDetails[];
+  issues?: IssueImpactDetails[];
+}
+
+export interface ImpactBreakdown {
+  impactMultiplier: number;
+  prMultiplier: number;
+  issueMultiplier: number;
+  highImpactPRsCount: number;
+  criticalIssuesCount: number;
+  averageRepoStars: number;
+  impactBonus: number;
+}
+
