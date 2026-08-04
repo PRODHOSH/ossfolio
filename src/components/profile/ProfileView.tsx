@@ -1394,6 +1394,7 @@ export function ProfileView({
               username={user.login}
               score={score}
               stats={stats}
+              repos={repos}
               isRefreshing={isRefreshing}
               onRefresh={handleRefresh}
               isOwner={isOwner}
