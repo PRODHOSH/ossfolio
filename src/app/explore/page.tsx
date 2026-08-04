@@ -16,9 +16,10 @@ import {
   normalizeScoreTier,
   buildExploreQuery,
   hasActiveFilters,
-  describeFilters,
   type ExploreFilters,
 } from "@/lib/explore-filters";
+import { fetchTrendingProjects } from "@/lib/trending-projects";
+import { ProjectsToWatch } from "@/components/discover/ProjectsToWatch";
 
 import { GoodFirstIssueFinder } from "@/components/discover/GoodFirstIssueFinder";
 
@@ -169,6 +170,7 @@ export default async function ExplorePage({ searchParams }: ExplorePageProps) {
     lang,
     minScore,
   );
+  const trendingProjects = await fetchTrendingProjects(6);
   const hasPrev = page > 1;
   const rankOffset = (page - 1) * PAGE_SIZE;
 
@@ -203,6 +205,9 @@ export default async function ExplorePage({ searchParams }: ExplorePageProps) {
                 : "Contributors"}
             </h1>
           </header>
+
+          {/* Projects to Watch section */}
+          <ProjectsToWatch projects={trendingProjects} />
 
           {/* Toggle Tabs */}
           <div
