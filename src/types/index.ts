@@ -57,6 +57,20 @@ export interface OrgStats {
   issuesCount?: number;
   commitsCount?: number;
   reviewsCount?: number;
+export interface GistItem {
+  id: string;
+  description: string | null;
+  url: string;
+  filesCount: number;
+  commentsCount: number;
+  isPublic: boolean;
+  createdAt: string;
+  updatedAt: string;
+  primaryFile?: {
+    filename: string;
+    language: string | null;
+    size: number;
+  };
 }
 
 export interface Org {
@@ -168,3 +182,35 @@ export interface ImpactNetworkData {
   nodes: NetworkNode[];
   edges: NetworkEdge[];
 }
+
+export interface PRImpactDetails {
+  title?: string;
+  repoName?: string;
+  repoStars: number;
+  labels: string[];
+  commentsCount: number;
+}
+
+export interface IssueImpactDetails {
+  title?: string;
+  repoName?: string;
+  repoStars: number;
+  labels: string[];
+  commentsCount: number;
+}
+
+export interface ContributionImpactContext {
+  prs?: PRImpactDetails[];
+  issues?: IssueImpactDetails[];
+}
+
+export interface ImpactBreakdown {
+  impactMultiplier: number;
+  prMultiplier: number;
+  issueMultiplier: number;
+  highImpactPRsCount: number;
+  criticalIssuesCount: number;
+  averageRepoStars: number;
+  impactBonus: number;
+}
+
