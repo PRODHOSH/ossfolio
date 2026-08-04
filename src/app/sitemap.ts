@@ -1,9 +1,36 @@
 import type { MetadataRoute } from "next";
 
-const siteUrl = "https://ossfolio.qzz.io";
+import { supabaseAdmin } from "@/lib/supabase";
 
-export default function sitemap(): MetadataRoute.Sitemap {
-  return [
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://ossfolio.qzz.io";
+
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  // Fetch public profiles for dynamic sitemap generation
+  // We use supabaseAdmin here just to be safe with server-side environment, 
+  // but supabase (anon) works too if configured correctly.
+  let profiles: { username: string; updated_at?: string }[] = [];
+  try {
+    // using the admin client to bypass any potential RLS read issues server-side,
+    // though public visibility should be readable by anon.
+    const { data } = await supabaseAdmin()
+      .from("profiles")
+      .select("username, updated_at")
+      .eq("visibility", "public");
+    if (data) {
+      profiles = data;
+    }
+  } catch (error) {
+    console.error("Failed to fetch profiles for sitemap:", error);
+  }
+
+  const dynamicRoutes: MetadataRoute.Sitemap = profiles.map((profile) => ({
+    url: `${siteUrl}/${profile.username}`,
+    lastModified: profile.updated_at ? new Date(profile.updated_at) : new Date(),
+    changeFrequency: "daily",
+    priority: 0.8,
+  }));
+
+  const staticRoutes: MetadataRoute.Sitemap = [
     {
       url: siteUrl,
       lastModified: new Date(),
@@ -47,4 +74,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 0.3,
     },
   ];
+
+  return [...staticRoutes, ...dynamicRoutes];
 }
