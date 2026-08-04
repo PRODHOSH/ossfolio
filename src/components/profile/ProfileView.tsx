@@ -40,6 +40,7 @@ import { ProfileReposSection } from "@/components/profile/ProfileReposSection";
 import { ProfileBadgeModal } from "@/components/profile/ProfileBadgeModal";
 import { DeveloperInsightsCard } from "@/components/profile/DeveloperInsightsCard";
 import { SponsorshipSection } from "@/components/profile/SponsorshipSection";
+import { aggregateOrgContributionStats } from "@/lib/org-stats";
 import { ProfileViewCounter } from "@/components/profile/ProfileViewCounter";
 import { LanguageTreemap } from "@/components/profile/LanguageTreemap";
 import { GistList } from "@/components/profile/GistList";
@@ -2528,7 +2529,19 @@ export function ProfileView({
       {sponsorshipData && <SponsorshipSection sponsorshipData={sponsorshipData} />}
 
       {/* Organizations */}
-      <OrganizationSection orgs={orgs} />
+      <OrganizationSection
+        orgs={aggregateOrgContributionStats(
+          orgs,
+          mergedPRs.map((p) => ({
+            repositoryName: p.repository,
+            prNumber: 0,
+            title: p.title,
+            stars: 0,
+          })),
+          [],
+          repos,
+        )}
+      />
 
       {/* Public Gists & Snippets */}
       <GistList username={user.login} />
