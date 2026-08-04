@@ -41,6 +41,8 @@ import { ProfileBadgeModal } from "@/components/profile/ProfileBadgeModal";
 import { DeveloperInsightsCard } from "@/components/profile/DeveloperInsightsCard";
 import { SponsorshipSection } from "@/components/profile/SponsorshipSection";
 import { ProfileViewCounter } from "@/components/profile/ProfileViewCounter";
+import { LanguageTreemap } from "@/components/profile/LanguageTreemap";
+import { GistList } from "@/components/profile/GistList";
 import { getSponsorshipData, type SponsorshipData } from "@/lib/sponsors";
 
 // Code-split the contribution heatmap out of the initial ProfileView bundle.
@@ -2473,7 +2475,12 @@ export function ProfileView({
             exit={tabExit}
           >
             {/* Contribution Timeline */}
-            <ContributionTimeline mergedPRs={mergedPRs} badges={badgesList} />
+            <ContributionTimeline
+              mergedPRs={mergedPRs}
+              repos={repos}
+              orgs={orgs}
+              badges={badgesList}
+            />
           </motion.div>
         )}
 
@@ -2513,85 +2520,7 @@ export function ProfileView({
           >
             Tech stack
           </h2>
-          {(() => {
-            const totalRepoCount = techStack.reduce(
-              (sum, t) => sum + t.repoCount,
-              0,
-            );
-            if (totalRepoCount === 0) return null;
-            const summary = techStack
-              .map(
-                (t) =>
-                  `${t.language} ${Math.round((t.repoCount / totalRepoCount) * 100)}%`,
-              )
-              .join(", ");
-            return (
-              <div
-                role="img"
-                aria-label={`Language breakdown: ${summary}`}
-                style={{
-                  display: "flex",
-                  width: "100%",
-                  height: "8px",
-                  borderRadius: "9999px",
-                  overflow: "hidden",
-                  marginBottom: "16px",
-                  backgroundColor: "var(--color-canvas-soft)",
-                }}
-              >
-                {techStack.map(({ language, repoCount }, i) => (
-                  <div
-                    key={language}
-                    style={{
-                      width: `${(repoCount / totalRepoCount) * 100}%`,
-                      backgroundColor: LANG_COLORS[language] ?? "#9a9a9a",
-                      borderTopLeftRadius: i === 0 ? "9999px" : 0,
-                      borderBottomLeftRadius: i === 0 ? "9999px" : 0,
-                      borderTopRightRadius:
-                        i === techStack.length - 1 ? "9999px" : 0,
-                      borderBottomRightRadius:
-                        i === techStack.length - 1 ? "9999px" : 0,
-                    }}
-                  />
-                ))}
-              </div>
-            );
-          })()}
-          <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
-            {techStack.map(({ language, repoCount }) => (
-              <span
-                key={language}
-                style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: "6px",
-                  padding: "6px 12px",
-                  border: "1px solid var(--color-hairline)",
-                  borderRadius: "9999px",
-                  fontSize: "13px",
-                  color: "var(--color-ink)",
-                  backgroundColor: "var(--color-canvas-soft)",
-                }}
-              >
-                <span
-                  style={{
-                    width: "10px",
-                    height: "10px",
-                    backgroundColor: LANG_COLORS[language] ?? "#9a9a9a",
-                    borderRadius: "9999px",
-                    flexShrink: 0,
-                    display: "inline-block",
-                  }}
-                ></span>
-                {language}
-                <span
-                  style={{ color: "var(--color-ink-mute)", fontSize: "12px" }}
-                >
-                  ×{repoCount}
-                </span>
-              </span>
-            ))}
-          </div>
+          <LanguageTreemap techStack={techStack} repos={repos} />
         </div>
       )}
 
@@ -2600,6 +2529,9 @@ export function ProfileView({
 
       {/* Organizations */}
       <OrganizationSection orgs={orgs} />
+
+      {/* Public Gists & Snippets */}
+      <GistList username={user.login} />
 
       {/* Contribution heatmap with year navigation */}
       <HeatmapWithYearNav
