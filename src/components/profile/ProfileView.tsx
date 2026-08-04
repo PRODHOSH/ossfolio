@@ -40,6 +40,12 @@ import { ProfileReposSection } from "@/components/profile/ProfileReposSection";
 import { ProfileBadgeModal } from "@/components/profile/ProfileBadgeModal";
 import { DeveloperInsightsCard } from "@/components/profile/DeveloperInsightsCard";
 import { SponsorshipSection } from "@/components/profile/SponsorshipSection";
+import { SkillEndorsements } from "@/components/profile/SkillEndorsements";
+import { ProviderIntegrations } from "@/components/profile/ProviderIntegrations";
+import { aggregateOrgContributionStats } from "@/lib/org-stats";
+import { ProfileViewCounter } from "@/components/profile/ProfileViewCounter";
+import { LanguageTreemap } from "@/components/profile/LanguageTreemap";
+import { GistList } from "@/components/profile/GistList";
 import { getSponsorshipData, type SponsorshipData } from "@/lib/sponsors";
 
 // Code-split the contribution heatmap out of the initial ProfileView bundle.
@@ -1380,6 +1386,8 @@ export function ProfileView({
               </svg>
               GitHub
             </a>
+
+            <ProfileViewCounter username={user.login} />
           </div>
 
           <div style={{ marginTop: "14px" }}>
@@ -1387,6 +1395,7 @@ export function ProfileView({
               username={user.login}
               score={score}
               stats={stats}
+              repos={repos}
               isRefreshing={isRefreshing}
               onRefresh={handleRefresh}
               isOwner={isOwner}
@@ -2470,7 +2479,12 @@ export function ProfileView({
             exit={tabExit}
           >
             {/* Contribution Timeline */}
-            <ContributionTimeline mergedPRs={mergedPRs} badges={badgesList} />
+            <ContributionTimeline
+              mergedPRs={mergedPRs}
+              repos={repos}
+              orgs={orgs}
+              badges={badgesList}
+            />
           </motion.div>
         )}
 
@@ -2589,6 +2603,13 @@ export function ProfileView({
               </span>
             ))}
           </div>
+
+          <SkillEndorsements
+            username={user.login}
+            profileUserId={profileId}
+            techStack={techStack}
+          />
+          <LanguageTreemap techStack={techStack} repos={repos} />
         </div>
       )}
 
@@ -2596,7 +2617,25 @@ export function ProfileView({
       {sponsorshipData && <SponsorshipSection sponsorshipData={sponsorshipData} />}
 
       {/* Organizations */}
-      <OrganizationSection orgs={orgs} />
+      <OrganizationSection
+        orgs={aggregateOrgContributionStats(
+          orgs,
+          mergedPRs.map((p) => ({
+            repositoryName: p.repository,
+            prNumber: 0,
+            title: p.title,
+            stars: 0,
+          })),
+          [],
+          repos,
+        )}
+      />
+
+      {/* Public Gists & Snippets */}
+      <GistList username={user.login} />
+
+      {/* Multi-Platform Integrations */}
+      <ProviderIntegrations username={user.login} isOwner={isOwner} />
 
       {/* Contribution heatmap with year navigation */}
       <HeatmapWithYearNav

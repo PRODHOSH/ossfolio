@@ -11,6 +11,54 @@ interface HeatmapWithYearNavProps {
   initialLongestStreak: number;
 }
 
+export type HeatmapTheme = "emerald" | "violet" | "amber" | "neon" | "ocean";
+
+export interface HeatmapThemeDefinition {
+  id: HeatmapTheme;
+  name: string;
+  shades: [string, string, string, string, string];
+}
+
+export const HEATMAP_THEMES: Record<HeatmapTheme, HeatmapThemeDefinition> = {
+  emerald: {
+    id: "emerald",
+    name: "Classic Emerald",
+    shades: ["rgba(128, 128, 128, 0.1)", "#9be9a8", "#40c463", "#30a14e", "#216e39"],
+  },
+  violet: {
+    id: "violet",
+    name: "Electric Violet",
+    shades: ["rgba(128, 128, 128, 0.1)", "#c7d2fe", "#a5b4fc", "#6366f1", "#4338ca"],
+  },
+  amber: {
+    id: "amber",
+    name: "Solar Amber",
+    shades: ["rgba(128, 128, 128, 0.1)", "#fef3c7", "#fcd34d", "#f59e0b", "#b45309"],
+  },
+  neon: {
+    id: "neon",
+    name: "Cyberpunk Neon",
+    shades: ["rgba(128, 128, 128, 0.1)", "#67e8f9", "#06b6d4", "#f43f5e", "#d946ef"],
+  },
+  ocean: {
+    id: "ocean",
+    name: "Ocean Breeze",
+    shades: ["rgba(128, 128, 128, 0.1)", "#99f6e4", "#2dd4bf", "#0ea5e9", "#0369a1"],
+  },
+};
+
+export function getShadeForCount(
+  count: number,
+  theme: HeatmapTheme = "emerald",
+): string {
+  const shades = HEATMAP_THEMES[theme]?.shades || HEATMAP_THEMES.emerald.shades;
+  if (count === 0) return shades[0];
+  if (count < 3) return shades[1];
+  if (count < 6) return shades[2];
+  if (count < 9) return shades[3];
+  return shades[4];
+}
+
 const currentYear = new Date().getFullYear();
 const years = Array.from({ length: 5 }, (_, i) => currentYear - i);
 
@@ -42,7 +90,6 @@ const YearButton = memo(function YearButton({
         borderRadius: "9999px",
         cursor: loading ? "wait" : "pointer",
         transition: "background-color 0.15s, color 0.15s",
-        // Hold the pill's natural width so the strip scrolls instead of squashing.
         flexShrink: 0,
       }}
     >
@@ -131,6 +178,41 @@ function HeatmapWithYearNavInner({
   const [weeks, setWeeks] = useState(initialWeeks);
   const [viewMode, setViewMode] = useState<"365" | "calendar">("365");
   const [loading, setLoading] = useState(false);
+  const [selectedTheme, setSelectedTheme] = useState<HeatmapTheme>("emerald");
+  const [showCustomizer, setShowCustomizer] = useState(false);
+  const customizerRef = useRef<HTMLDivElement>(null);
+
+  // Load saved theme preference from localStorage on mount
+  useEffect(() => {
+    try {
+      const savedTheme = localStorage.getItem("heatmap_theme") as HeatmapTheme | null;
+      if (savedTheme && HEATMAP_THEMES[savedTheme]) {
+        setSelectedTheme(savedTheme);
+      }
+    } catch {
+      // Ignore storage errors
+    }
+  }, []);
+
+  const handleSelectTheme = (theme: HeatmapTheme) => {
+    setSelectedTheme(theme);
+    try {
+      localStorage.setItem("heatmap_theme", theme);
+    } catch {
+      // Ignore storage errors
+    }
+  };
+
+  // Close customizer popover on outside click
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (customizerRef.current && !customizerRef.current.contains(e.target as Node)) {
+        setShowCustomizer(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   const fetchYear = useCallback(
     async (year: number) => {
@@ -139,7 +221,7 @@ function HeatmapWithYearNavInner({
           localStorage.setItem("heatmap_selected_year", String(year));
         }
       } catch {
-        // Ignore storage errors to ensure the fetch still proceeds
+        // Ignore storage errors
       }
       if (year === selectedYear && weeks.length > 0) return;
       if (year === currentYear && initialWeeks.length > 0) {
@@ -177,14 +259,14 @@ function HeatmapWithYearNavInner({
       if (savedYearStr) {
         const savedYear = parseInt(savedYearStr, 10);
         if (years.includes(savedYear) && savedYear !== currentYear) {
-          // eslint-disable-next-line react-hooks/set-state-in-effect
           fetchYear(savedYear);
         }
       }
     } catch {
-      // Ignore errors from blocked storage access
+      // Ignore errors
     }
   }, [fetchYear]);
+
   const displayedWeeks = useMemo(() => {
     return getFilteredWeeks(
       weeks,
@@ -202,6 +284,8 @@ function HeatmapWithYearNavInner({
   }, [displayedWeeks]);
 
   if (initialWeeks.length === 0 && weeks.length === 0) return null;
+
+  const currentShades = HEATMAP_THEMES[selectedTheme].shades;
 
   return (
     <div style={{ marginTop: "44px" }}>
@@ -228,11 +312,6 @@ function HeatmapWithYearNavInner({
           style={{
             display: "flex",
             gap: "6px",
-            // Keep the years on one row and let the strip scroll horizontally on
-            // narrow screens rather than squashing the buttons. `minWidth: 0` is
-            // required because this div is itself a flex item — without it the
-            // default `min-width: auto` prevents it from shrinking below its
-            // content, so `overflowX` would never engage.
             flexWrap: "nowrap",
             overflowX: "auto",
             minWidth: 0,
@@ -267,56 +346,164 @@ function HeatmapWithYearNavInner({
           <StreakBadge label="Longest streak" value={longestStreak} />
         </div>
 
-        {/* Toggle switch for Last 365 Days vs Calendar Year */}
-        {selectedYear === currentYear && (
-          <div
-            style={{
-              display: "inline-flex",
-              backgroundColor: "var(--color-canvas-soft)",
-              border: "1px solid var(--color-hairline)",
-              borderRadius: "20px",
-              padding: "2px",
-              gap: "2px",
-            }}
-          >
+        <div style={{ display: "flex", alignItems: "center", gap: "8px", position: "relative" }}>
+          {/* Customization Gear / Palette Button */}
+          <div ref={customizerRef} style={{ position: "relative" }}>
             <button
               type="button"
-              onClick={() => setViewMode("365")}
+              onClick={() => setShowCustomizer((prev) => !prev)}
+              aria-label="Customize Heatmap Theme"
               style={{
-                padding: "4px 12px",
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "6px",
+                padding: "5px 12px",
                 fontSize: "12px",
-                fontWeight: viewMode === "365" ? 600 : 400,
-                color: viewMode === "365" ? "#171717" : "var(--color-ink-mute)",
-                backgroundColor: viewMode === "365" ? "#3ecf8e" : "transparent",
-                border: "none",
-                borderRadius: "9999px",
+                fontWeight: 500,
+                color: "var(--color-ink)",
+                backgroundColor: "var(--color-canvas-soft)",
+                border: "1px solid var(--color-hairline)",
+                borderRadius: "20px",
                 cursor: "pointer",
-                transition: "background-color 0.15s, color 0.15s",
               }}
             >
-              Last 365 Days
+              <span>🎨</span> Customize
             </button>
-            <button
-              type="button"
-              onClick={() => setViewMode("calendar")}
-              style={{
-                padding: "4px 12px",
-                fontSize: "12px",
-                fontWeight: viewMode === "calendar" ? 600 : 400,
-                color:
-                  viewMode === "calendar" ? "#171717" : "var(--color-ink-mute)",
-                backgroundColor:
-                  viewMode === "calendar" ? "#3ecf8e" : "transparent",
-                border: "none",
-                borderRadius: "9999px",
-                cursor: "pointer",
-                transition: "background-color 0.15s, color 0.15s",
-              }}
-            >
-              {currentYear} Year
-            </button>
+
+            {/* Customization Settings Dropdown Menu */}
+            {showCustomizer && (
+              <div
+                style={{
+                  position: "absolute",
+                  right: 0,
+                  top: "calc(100% + 6px)",
+                  zIndex: 50,
+                  width: "240px",
+                  backgroundColor: "var(--color-canvas)",
+                  border: "1px solid var(--color-hairline-strong)",
+                  borderRadius: "12px",
+                  padding: "16px",
+                  boxShadow: "0 10px 25px rgba(0,0,0,0.2)",
+                }}
+              >
+                <div
+                  style={{
+                    fontSize: "12px",
+                    fontWeight: 600,
+                    color: "var(--color-ink)",
+                    marginBottom: "10px",
+                  }}
+                >
+                  Color Scheme
+                </div>
+
+                <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                  {(Object.keys(HEATMAP_THEMES) as HeatmapTheme[]).map((themeKey) => {
+                    const themeDef = HEATMAP_THEMES[themeKey];
+                    const isSelected = selectedTheme === themeKey;
+
+                    return (
+                      <button
+                        key={themeKey}
+                        type="button"
+                        onClick={() => handleSelectTheme(themeKey)}
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "space-between",
+                          padding: "6px 10px",
+                          borderRadius: "6px",
+                          border: `1px solid ${
+                            isSelected ? "var(--color-primary)" : "transparent"
+                          }`,
+                          backgroundColor: isSelected
+                            ? "var(--color-canvas-soft)"
+                            : "transparent",
+                          cursor: "pointer",
+                        }}
+                      >
+                        <span
+                          style={{
+                            fontSize: "12px",
+                            fontWeight: isSelected ? 600 : 400,
+                            color: "var(--color-ink)",
+                          }}
+                        >
+                          {themeDef.name}
+                        </span>
+
+                        <div style={{ display: "flex", gap: "3px" }}>
+                          {themeDef.shades.slice(1).map((s, idx) => (
+                            <span
+                              key={idx}
+                              style={{
+                                width: "8px",
+                                height: "8px",
+                                borderRadius: "2px",
+                                backgroundColor: s,
+                              }}
+                            />
+                          ))}
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
           </div>
-        )}
+
+          {/* Toggle switch for Last 365 Days vs Calendar Year */}
+          {selectedYear === currentYear && (
+            <div
+              style={{
+                display: "inline-flex",
+                backgroundColor: "var(--color-canvas-soft)",
+                border: "1px solid var(--color-hairline)",
+                borderRadius: "20px",
+                padding: "2px",
+                gap: "2px",
+              }}
+            >
+              <button
+                type="button"
+                onClick={() => setViewMode("365")}
+                style={{
+                  padding: "4px 12px",
+                  fontSize: "12px",
+                  fontWeight: viewMode === "365" ? 600 : 400,
+                  color: viewMode === "365" ? "#171717" : "var(--color-ink-mute)",
+                  backgroundColor: viewMode === "365" ? "#3ecf8e" : "transparent",
+                  border: "none",
+                  borderRadius: "9999px",
+                  cursor: "pointer",
+                  transition: "background-color 0.15s, color 0.15s",
+                }}
+              >
+                Last 365 Days
+              </button>
+              <button
+                type="button"
+                onClick={() => setViewMode("calendar")}
+                style={{
+                  padding: "4px 12px",
+                  fontSize: "12px",
+                  fontWeight: viewMode === "calendar" ? 600 : 400,
+                  color:
+                    viewMode === "calendar" ? "#171717" : "var(--color-ink-mute)",
+                  backgroundColor:
+                    viewMode === "calendar" ? "#3ecf8e" : "transparent",
+                  border: "none",
+                  borderRadius: "9999px",
+                  cursor: "pointer",
+                  transition: "background-color 0.15s, color 0.15s",
+                }}
+              >
+                {currentYear} Year
+              </button>
+            </div>
+          )}
+        </div>
       </div>
 
       <div
@@ -337,26 +524,30 @@ function HeatmapWithYearNavInner({
             key={wi}
             style={{ display: "flex", flexDirection: "column", gap: "3px" }}
           >
-            {week.days.map((day, di) => (
-              <div
-                key={di}
-                title={
-                  day.isPlaceholder
-                    ? undefined
-                    : `${day.count} contributions on ${day.date}`
-                }
-                style={{
-                  width: "11px",
-                  height: "11px",
-                  borderRadius: "2px",
-                  backgroundColor: day.isPlaceholder
-                    ? "transparent"
-                    : day.color,
-                  flexShrink: 0,
-                  pointerEvents: day.isPlaceholder ? "none" : "auto",
-                }}
-              />
-            ))}
+            {week.days.map((day, di) => {
+              const bgShade = day.isPlaceholder
+                ? "transparent"
+                : getShadeForCount(day.count, selectedTheme);
+
+              return (
+                <div
+                  key={di}
+                  title={
+                    day.isPlaceholder
+                      ? undefined
+                      : `${day.count} contribution${day.count === 1 ? "" : "s"} on ${day.date}`
+                  }
+                  style={{
+                    width: "11px",
+                    height: "11px",
+                    borderRadius: "2px",
+                    backgroundColor: bgShade,
+                    flexShrink: 0,
+                    pointerEvents: day.isPlaceholder ? "none" : "auto",
+                  }}
+                />
+              );
+            })}
           </div>
         ))}
         {displayedWeeks.length === 0 && !loading && (
@@ -372,6 +563,7 @@ function HeatmapWithYearNavInner({
         )}
       </div>
 
+      {/* Footer Legend */}
       <div
         style={{
           display: "flex",
@@ -390,13 +582,7 @@ function HeatmapWithYearNavInner({
         >
           Less
         </span>
-        {[
-          "var(--color-hairline)",
-          "#9be9a8",
-          "#40c463",
-          "#30a14e",
-          "#216e39",
-        ].map((shade) => (
+        {currentShades.map((shade) => (
           <span
             key={shade}
             aria-hidden="true"
@@ -404,9 +590,7 @@ function HeatmapWithYearNavInner({
               width: "11px",
               height: "11px",
               borderRadius: "2px",
-              backgroundColor: shade.startsWith("var")
-                ? "rgba(128, 128, 128, 0.1)"
-                : shade,
+              backgroundColor: shade,
               flexShrink: 0,
             }}
           />
