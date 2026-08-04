@@ -3,11 +3,12 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { Menu, X, Sun, Moon } from "lucide-react";
+import { Menu, X, Sun, Moon, Search } from "lucide-react";
 import { useTranslations } from "next-intl";
 import type { User } from "@supabase/supabase-js";
 import { supabase } from "@/lib/supabase";
 import { useThemeContext } from "@/context/ThemeContext";
+import { useCommandPalette } from "@/context/CommandPaletteContext";
 import { LanguageSwitcher } from "./LanguageSwitcher";
 
 // useLayoutEffect runs synchronously before the browser paints (client only);
@@ -109,6 +110,7 @@ export function Navbar({ onSignIn, onGetStarted }: NavbarProps) {
 
   const [mounted, setMounted] = useState(false);
   const { theme, toggleTheme } = useThemeContext();
+  const { open: openCommandPalette } = useCommandPalette();
   const isDarkMode = theme === "dark";
 
   useEffect(() => {
@@ -253,6 +255,39 @@ export function Navbar({ onSignIn, onGetStarted }: NavbarProps) {
           className="hide-on-mobile hover:text-primary transition-colors duration-200"
         >
           <LanguageSwitcher />
+          <button
+            type="button"
+            onClick={openCommandPalette}
+            aria-label="Open command palette"
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "6px",
+              padding: "5px 10px",
+              borderRadius: "6px",
+              border: "1px solid var(--color-hairline-strong)",
+              backgroundColor: "var(--color-canvas-soft)",
+              color: "var(--color-ink-mute)",
+              fontSize: "13px",
+              cursor: "pointer",
+            }}
+          >
+            <Search size={14} />
+            <span style={{ fontSize: "12px", fontWeight: 500 }}>Search</span>
+            <kbd
+              style={{
+                fontSize: "10px",
+                fontFamily: "monospace",
+                padding: "1px 4px",
+                borderRadius: "3px",
+                border: "1px solid var(--color-hairline-strong)",
+                backgroundColor: "var(--color-canvas)",
+                color: "var(--color-ink-mute)",
+              }}
+            >
+              ⌘K
+            </kbd>
+          </button>
           <button
             type="button"
             onClick={toggleTheme}
