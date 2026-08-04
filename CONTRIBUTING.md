@@ -222,10 +222,10 @@ OSSfolio uses GitHub OAuth integrated with Supabase for user authentication.
 
 #### End-to-End OAuth Lifecycle
 
-1. **Initiation**: The user clicks "Sign in with GitHub" in the frontend (e.g., [AuthModal.tsx](file:///c:/Users/Rushabh%20Mahajan/Documents/GitHub/ossfolio/src/components/auth/AuthModal.tsx)).
+1. **Initiation**: The user clicks "Sign in with GitHub" in the frontend (e.g., [AuthModal.tsx](src/components/auth/AuthModal.tsx)).
 2. **Supabase Redirection**: Supabase redirects the browser to GitHub's OAuth server.
 3. **GitHub Authentication**: The user authorizes the application, and GitHub redirects back to the configured callback URI: `/auth/callback`.
-4. **Session Resolution**: The client component at [auth/callback/page.tsx](file:///c:/Users/Rushabh%20Mahajan/Documents/GitHub/ossfolio/src/app/auth/callback/page.tsx) handles the login session.
+4. **Session Resolution**: The client component at [auth/callback/page.tsx](src/app/auth/callback/page.tsx) handles the login session.
 5. **Score Sync Trigger**: Once the session is successfully resolved, the score sync pipeline is invoked to calculate and cache the user's score.
 6. **Final Redirect**: The user is redirected to their public profile page (`/[username]`) or the home page (`/`) if the username metadata is missing.
 
