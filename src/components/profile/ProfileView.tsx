@@ -40,6 +40,7 @@ import { ProfileReposSection } from "@/components/profile/ProfileReposSection";
 import { ProfileBadgeModal } from "@/components/profile/ProfileBadgeModal";
 import { DeveloperInsightsCard } from "@/components/profile/DeveloperInsightsCard";
 import { SponsorshipSection } from "@/components/profile/SponsorshipSection";
+import { ProfileViewCounter } from "@/components/profile/ProfileViewCounter";
 import { LanguageTreemap } from "@/components/profile/LanguageTreemap";
 import { GistList } from "@/components/profile/GistList";
 import { getSponsorshipData, type SponsorshipData } from "@/lib/sponsors";
@@ -1382,6 +1383,8 @@ export function ProfileView({
               </svg>
               GitHub
             </a>
+
+            <ProfileViewCounter username={user.login} />
           </div>
 
           <div style={{ marginTop: "14px" }}>
