@@ -8,6 +8,7 @@ import { mapRepos, fetchLiveStats } from "@/lib/profile-data";
 import { scoreWithAnomalyCheck } from "@/lib/anomaly";
 import { createApiResponse, createErrorResponse } from "@/lib/validators/api";
 import { fetchWithTimeout } from "@/lib/fetch-with-timeout";
+import { awardBadges } from "@/lib/badges-config";
 import type { ContributorStats, Repo, ContributionImpactContext } from "@/types";
 import { GITHUB_API_BASE } from '@/lib/constants';
 
@@ -138,6 +139,29 @@ export async function POST(request: NextRequest) {
   }
 
   const admin = createClient(url, serviceKey);
+
+  // Fetch existing badges to preserve user-selected program badges
+  let existingBadges: Array<{ program: string; years: number[] }> = [];
+  try {
+    const { data: existingProfile } = await admin
+      .from("profiles")
+      .select("badges")
+      .eq("id", userId)
+      .single();
+    if (existingProfile?.badges && Array.isArray(existingProfile.badges)) {
+      existingBadges = existingProfile.badges;
+    }
+  } catch (err) {
+    console.warn("[profile/sync] could not read existing profile badges:", err);
+  }
+
+  const updatedBadges = awardBadges(existingBadges, {
+    stats,
+    repos,
+    prs: impactContext?.prs,
+    issues: impactContext?.issues,
+  });
+
   const { error } = await admin.from("profiles").upsert(
     {
       id: userId,
@@ -149,6 +173,7 @@ export async function POST(request: NextRequest) {
       total_reviews: stats.totalReviews,
       impact_multiplier: impactBreakdown.impactMultiplier,
       impact_details: impactBreakdown,
+      badges: updatedBadges,
       flagged: anomaly.flagged,
       flag_reason: anomaly.reason,
       flagged_at: anomaly.flagged ? now : null,
@@ -168,6 +193,7 @@ export async function POST(request: NextRequest) {
     score,
     impactMultiplier: impactBreakdown.impactMultiplier,
     impactDetails: impactBreakdown,
+    badges: updatedBadges,
     flagged: anomaly.flagged,
   });
 }
