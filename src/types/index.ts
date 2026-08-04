@@ -57,8 +57,6 @@ export interface OrgStats {
   issuesCount?: number;
   commitsCount?: number;
   reviewsCount?: number;
-}
-
 export interface GistItem {
   id: string;
   description: string | null;
