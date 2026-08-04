@@ -1,8 +1,8 @@
 import { describe, it, expect } from "vitest";
-import { AUTOMATED_BADGE_CRITERIA, awardBadges } from "../badges-config";
+import { AUTOMATED_BADGE_CRITERIA, awardBadges } from "../badges.config";
 import type { BadgeItem } from "@/types";
 
-describe("badges-config criteria evaluation", () => {
+describe("badges.config criteria evaluation", () => {
   const getCriterion = (id: string) =>
     AUTOMATED_BADGE_CRITERIA.find((c) => c.id === id)!;
 
@@ -62,6 +62,12 @@ describe("badges-config criteria evaluation", () => {
     expect(criterion.evaluate({ repos: [{ stars: 40 }, { stars: 50 }] })).toBe(false);
     expect(criterion.evaluate({ repos: [{ stars: 50 }, { stars: 60 }] })).toBe(true);
   });
+
+  it("evaluates 'review_master' correctly", () => {
+    const criterion = getCriterion("review_master");
+    expect(criterion.evaluate({ stats: { totalReviews: 40, totalCommits: 0, totalPRs: 0, totalIssues: 0 } })).toBe(false);
+    expect(criterion.evaluate({ stats: { totalReviews: 50, totalCommits: 0, totalPRs: 0, totalIssues: 0 } })).toBe(true);
+  });
 });
 
 describe("awardBadges function", () => {
@@ -90,5 +96,14 @@ describe("awardBadges function", () => {
     expect(programNames).toContain("Polyglot");
     expect(programNames).toContain("Star Magnet");
     expect(programNames).toContain("Review Master");
+  });
+
+  it("supports (userId, stats) signature", async () => {
+    const userId = "test-user-id";
+    const stats = { totalCommits: 120, totalPRs: 5, totalIssues: 2, totalReviews: 0 };
+
+    const awarded = await awardBadges(userId, stats);
+    const programNames = awarded.map((b) => b.program);
+    expect(programNames).toContain("First 100 Commits");
   });
 });
