@@ -20,6 +20,8 @@ import {
   type ExploreFilters,
 } from "@/lib/explore-filters";
 
+import { GoodFirstIssueFinder } from "@/components/discover/GoodFirstIssueFinder";
+
 // Runtime managed by @opennextjs/cloudflare
 
 export const metadata: Metadata = {
@@ -139,7 +141,7 @@ export default async function ExplorePage({ searchParams }: ExplorePageProps) {
     typeof sortByParam === "string" && VALID_SORT_OPTIONS.has(sortByParam)
       ? sortByParam
       : "score";
-  const VALID_TYPES = new Set(["users", "organizations"]);
+  const VALID_TYPES = new Set(["users", "organizations", "good-first-issues"]);
   const type =
     typeof typeParam === "string" && VALID_TYPES.has(typeParam)
       ? typeParam
@@ -194,7 +196,11 @@ export default async function ExplorePage({ searchParams }: ExplorePageProps) {
               }}
             >
               Explore{" "}
-              {type === "organizations" ? "Organizations" : "Contributors"}
+              {type === "organizations"
+                ? "Organizations"
+                : type === "good-first-issues"
+                ? "Good First Issues"
+                : "Contributors"}
             </h1>
           </header>
 
@@ -207,34 +213,42 @@ export default async function ExplorePage({ searchParams }: ExplorePageProps) {
               marginBottom: "24px",
             }}
           >
-            {["users", "organizations"].map((tab) => (
+            {[
+              { id: "users", label: "Contributors" },
+              { id: "organizations", label: "Organizations" },
+              { id: "good-first-issues", label: "Find an Issue" },
+            ].map((tab) => (
               <Link
-                key={tab}
+                key={tab.id}
                 href={{
                   pathname: "/explore",
-                  query: { type: tab, q: searchQuery, sortBy },
+                  query: { type: tab.id, q: searchQuery, sortBy },
                 }}
                 style={{
                   paddingBottom: "12px",
                   fontSize: "14px",
-                  fontWeight: type === tab ? 600 : 500,
+                  fontWeight: type === tab.id ? 600 : 500,
                   color:
-                    type === tab
+                    type === tab.id
                       ? "var(--color-primary)"
                       : "var(--color-ink-mute)",
                   borderBottom:
-                    type === tab ? "2px solid var(--color-primary)" : "none",
-                  textTransform: "capitalize",
+                    type === tab.id ? "2px solid var(--color-primary)" : "none",
                   textDecoration: "none",
                 }}
               >
-                {tab}
+                {tab.label}
               </Link>
             ))}
           </div>
 
-          {/* Search/Sort */}
-          <form
+          {/* Good First Issue Finder View vs Leaderboard Listing View */}
+          {type === "good-first-issues" ? (
+            <GoodFirstIssueFinder />
+          ) : (
+            <>
+              {/* Search/Sort */}
+              <form
             method="GET"
             action="/explore"
             style={{
@@ -637,6 +651,8 @@ export default async function ExplorePage({ searchParams }: ExplorePageProps) {
             // would drop them and silently widen the results on page 2.
             searchParams={buildExploreQuery(activeFilters)}
           />
+        </>
+      )}
         </div>
       </main>
       <Footer />
