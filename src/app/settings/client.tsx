@@ -15,9 +15,11 @@ interface Badge {
 }
 
 import type { FundingLink, SponsorItem } from "@/types";
+import { ProfileReadme } from "@/components/profile/ProfileReadme";
 
 interface ProfileSettings {
   headline: string;
+  readme: string;
   pinned_repos: string[];
   custom_links: CustomLink[];
   badges: Badge[];
@@ -42,6 +44,7 @@ export function SettingsClient() {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
+  const [readmeTab, setReadmeTab] = useState<"edit" | "preview">("edit");
 
   // Account deletion. `deleteConfirm` holds what the user has typed into the confirmation box: the
   // button stays disabled until it matches their username exactly, so this cannot be triggered by a
@@ -52,6 +55,7 @@ export function SettingsClient() {
   const [loaded, setLoaded] = useState(false);
   const [settings, setSettings] = useState<ProfileSettings>({
     headline: "",
+    readme: "",
     pinned_repos: [],
     custom_links: [],
     badges: [],
@@ -69,6 +73,7 @@ export function SettingsClient() {
         const data = await resp.json();
         setSettings({
           headline: data.headline || "",
+          readme: data.readme || "",
           pinned_repos: data.pinned_repos || [],
           custom_links: data.custom_links || [],
           badges: data.badges || [],
@@ -105,6 +110,7 @@ export function SettingsClient() {
 
     const payload = {
       headline: settings.headline.trim(),
+      readme: settings.readme,
       pinned_repos: settings.pinned_repos
         .map((r) => r.trim())
         .filter((r) => r.length > 0),
@@ -310,6 +316,121 @@ export function SettingsClient() {
               : "Your GitHub bio will appear here if no custom headline is set."}
           </p>
         </div>
+      </div>
+
+      <div style={sectionStyle}>
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            marginBottom: "8px",
+          }}
+        >
+          <label style={{ ...labelStyle, margin: 0 }}>Profile README (Markdown)</label>
+          <div style={{ display: "flex", gap: "6px" }}>
+            <button
+              type="button"
+              onClick={() => setReadmeTab("edit")}
+              style={{
+                fontSize: "12px",
+                fontWeight: 600,
+                padding: "3px 10px",
+                borderRadius: "6px",
+                border: "1px solid var(--color-hairline)",
+                backgroundColor:
+                  readmeTab === "edit"
+                    ? "var(--color-primary-deep)"
+                    : "var(--color-canvas)",
+                color: readmeTab === "edit" ? "#ffffff" : "var(--color-ink-mute)",
+                cursor: "pointer",
+              }}
+            >
+              Write
+            </button>
+            <button
+              type="button"
+              onClick={() => setReadmeTab("preview")}
+              style={{
+                fontSize: "12px",
+                fontWeight: 600,
+                padding: "3px 10px",
+                borderRadius: "6px",
+                border: "1px solid var(--color-hairline)",
+                backgroundColor:
+                  readmeTab === "preview"
+                    ? "var(--color-primary-deep)"
+                    : "var(--color-canvas)",
+                color:
+                  readmeTab === "preview" ? "#ffffff" : "var(--color-ink-mute)",
+                cursor: "pointer",
+              }}
+            >
+              Preview
+            </button>
+          </div>
+        </div>
+
+        <p
+          style={{
+            fontSize: "13px",
+            color: "var(--color-ink-mute)",
+            margin: "0 0 8px 0",
+          }}
+        >
+          Introduce yourself in detail using Markdown. You can format headings, list accomplishments, add code blocks, or embed images.
+        </p>
+
+        {readmeTab === "edit" ? (
+          <>
+            <textarea
+              placeholder="## Hi there 👋&#10;&#10;I'm a full-stack open source contributor..."
+              value={settings.readme}
+              onChange={(e) =>
+                setSettings((s) => ({ ...s, readme: e.target.value }))
+              }
+              maxLength={10000}
+              rows={10}
+              style={{
+                ...inputStyle,
+                fontFamily: "monospace",
+                fontSize: "14px",
+                lineHeight: 1.5,
+                resize: "vertical",
+              }}
+              aria-label="Profile README Markdown"
+            />
+            <p
+              style={{
+                fontSize: "12px",
+                color: "var(--color-ink-mute-2)",
+                marginTop: "4px",
+              }}
+            >
+              {settings.readme.length}/10000 characters
+            </p>
+          </>
+        ) : (
+          <div style={{ marginTop: "12px" }}>
+            {settings.readme.trim() ? (
+              <ProfileReadme readme={settings.readme} />
+            ) : (
+              <p
+                style={{
+                  fontSize: "13px",
+                  color: "var(--color-ink-mute)",
+                  fontStyle: "italic",
+                  padding: "16px",
+                  border: "1px dashed var(--color-hairline)",
+                  borderRadius: "8px",
+                  textAlign: "center",
+                }}
+              >
+                Nothing to preview yet. Switch to &quot;Write&quot; to add custom Markdown.
+              </p>
+            )}
+          </div>
+        )}
       </div>
 
       <div style={sectionStyle}>

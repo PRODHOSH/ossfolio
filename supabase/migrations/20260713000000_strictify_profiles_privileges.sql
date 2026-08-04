@@ -42,14 +42,14 @@ revoke insert, update, delete on public.profiles from anon, authenticated;
 
 -- A signed-in user may edit their own presentation. Nothing here feeds the leaderboard,
 -- the score, or the anti-gaming heuristic.
-grant update (headline, pinned_repos, custom_links, visibility, badges)
+grant update (headline, pinned_repos, custom_links, visibility, badges, readme)
   on public.profiles to authenticated;
 
 -- Row creation is still allowed (profiles_insert already pins it to `auth.uid() = id`),
 -- but a row may not be *born* with a forged score either — so the same column list, plus
 -- the identity fields that are set once at signup.
 grant insert (id, username, name, avatar_url, github_url, bio,
-              headline, pinned_repos, custom_links, visibility, badges)
+              headline, pinned_repos, custom_links, visibility, badges, readme)
   on public.profiles to authenticated;
 
 -- DELETE stays revoked. Nothing in the app deletes a profile from the client, and
