@@ -41,6 +41,7 @@ import { ProfileBadgeModal } from "@/components/profile/ProfileBadgeModal";
 import { DeveloperInsightsCard } from "@/components/profile/DeveloperInsightsCard";
 import { SponsorshipSection } from "@/components/profile/SponsorshipSection";
 import { LanguageTreemap } from "@/components/profile/LanguageTreemap";
+import { GistList } from "@/components/profile/GistList";
 import { getSponsorshipData, type SponsorshipData } from "@/lib/sponsors";
 
 // Code-split the contribution heatmap out of the initial ProfileView bundle.
@@ -2471,7 +2472,12 @@ export function ProfileView({
             exit={tabExit}
           >
             {/* Contribution Timeline */}
-            <ContributionTimeline mergedPRs={mergedPRs} badges={badgesList} />
+            <ContributionTimeline
+              mergedPRs={mergedPRs}
+              repos={repos}
+              orgs={orgs}
+              badges={badgesList}
+            />
           </motion.div>
         )}
 
@@ -2520,6 +2526,9 @@ export function ProfileView({
 
       {/* Organizations */}
       <OrganizationSection orgs={orgs} />
+
+      {/* Public Gists & Snippets */}
+      <GistList username={user.login} />
 
       {/* Contribution heatmap with year navigation */}
       <HeatmapWithYearNav
