@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server';
-import { fetchProfileSnapshot } from '@/lib/profile-snapshot';
+import { getProfileSnapshot } from '@/lib/profile-snapshot';
 import { generateOpenSourceStory } from '@/lib/open-source-story';
 import { createApiResponse, createErrorResponse } from '@/lib/validators/api';
 
@@ -21,7 +21,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       return createErrorResponse('Username is required', 400);
     }
 
-    const snapshot = await fetchProfileSnapshot(username);
+    const snapshot = await getProfileSnapshot(username);
     if (!snapshot) {
       return createErrorResponse('Profile not found', 404);
     }
@@ -29,11 +29,13 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     const { searchParams } = new URL(request.url);
     const format = searchParams.get('format'); // "markdown" | "json"
 
+    const snap = snapshot as any;
+
     const story = generateOpenSourceStory(
-      snapshot.username,
-      snapshot.stats,
-      snapshot.repos,
-      snapshot.score,
+      snap.username ?? username,
+      snap.stats,
+      snap.repos,
+      snap.score ?? 0,
     );
 
     if (format === 'markdown') {

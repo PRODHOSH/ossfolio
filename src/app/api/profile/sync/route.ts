@@ -55,9 +55,7 @@ function extractToken(request: NextRequest): string | null {
 }
 
 /** REST fallback for when no GitHub OAuth token is available (GraphQL needs one). */
-async function statsFromRest(
-  username: string,
-): Promise<{
+async function statsFromRest(username: string): Promise<{
   stats: ContributorStats;
   repos: Repo[];
   impactContext?: ContributionImpactContext;
