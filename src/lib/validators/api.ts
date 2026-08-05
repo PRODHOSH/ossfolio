@@ -1,7 +1,7 @@
-import { NextResponse } from "next/server";
-import { AppError, toApiErrorBody, type ErrorCode } from "@/lib/errors";
+import { NextResponse } from 'next/server';
+import { AppError, toApiErrorBody, type ErrorCode } from '@/lib/errors';
 
-export type { ErrorCode } from "@/lib/errors";
+export type { ErrorCode } from '@/lib/errors';
 
 export type ApiSuccessResponse<T> = {
   success: true;
@@ -27,7 +27,7 @@ export type ApiErrorResponse = {
 export type ApiResponse<T> = ApiSuccessResponse<T> | ApiErrorResponse;
 
 export function sanitizeUsername(value: unknown): string | null {
-  if (typeof value !== "string") return null;
+  if (typeof value !== 'string') return null;
   const cleaned = value.trim().toLowerCase();
   if (cleaned.length > 39) return null;
   if (!/^[a-zA-Z0-9](?:[a-zA-Z0-9-]*[a-zA-Z0-9])?$/.test(cleaned)) return null;
@@ -36,13 +36,17 @@ export function sanitizeUsername(value: unknown): string | null {
 }
 
 export function sanitizeUrl(value: unknown): string | null {
-  if (typeof value !== "string") return null;
+  if (typeof value !== 'string') return null;
   const trimmed = value.trim().slice(0, 2048);
   try {
     const url = new URL(trimmed);
-    if (!["http:", "https:"].includes(url.protocol)) return null;
+    if (!['http:', 'https:'].includes(url.protocol)) return null;
     // Added [::1] to block IPv6 localhost loopback bypasses
-    if (url.hostname === "localhost" || url.hostname === "127.0.0.1" || url.hostname === "[::1]")
+    if (
+      url.hostname === 'localhost' ||
+      url.hostname === '127.0.0.1' ||
+      url.hostname === '[::1]'
+    )
       return null;
     return url.toString();
   } catch {
@@ -51,7 +55,7 @@ export function sanitizeUrl(value: unknown): string | null {
 }
 
 export function validateYear(value: unknown): number | null {
-  if (typeof value !== "string") return null;
+  if (typeof value !== 'string') return null;
   if (!/^\d{4}$/.test(value)) return null;
   const parsed = parseInt(value, 10);
   const now = new Date().getFullYear();
@@ -66,15 +70,15 @@ export function validatePagination(
   maxSize = 100,
 ): { page: number; pageSize: number } {
   const p =
-    typeof page === "string"
+    typeof page === 'string'
       ? parseInt(page, 10)
-      : typeof page === "number"
+      : typeof page === 'number'
         ? page
         : 1;
   const s =
-    typeof pageSize === "string"
+    typeof pageSize === 'string'
       ? parseInt(pageSize, 10)
-      : typeof pageSize === "number"
+      : typeof pageSize === 'number'
         ? pageSize
         : 20;
   return {
@@ -88,7 +92,7 @@ export function validateSortBy<T extends string>(
   allowed: readonly T[],
   fallback: T,
 ): T {
-  if (typeof value !== "string") return fallback;
+  if (typeof value !== 'string') return fallback;
   return (allowed as readonly string[]).includes(value)
     ? (value as T)
     : fallback;
@@ -106,9 +110,9 @@ export function createApiResponse<T>(
   return NextResponse.json(body, {
     status,
     headers: {
-      "X-Content-Type-Options": "nosniff",
-      "X-Frame-Options": "DENY",
-      "Referrer-Policy": "strict-origin-when-cross-origin",
+      'X-Content-Type-Options': 'nosniff',
+      'X-Frame-Options': 'DENY',
+      'Referrer-Policy': 'strict-origin-when-cross-origin',
       ...extraHeaders,
     },
   });
@@ -138,8 +142,8 @@ export function createErrorResponse(
   return NextResponse.json(body, {
     status,
     headers: {
-      "X-Content-Type-Options": "nosniff",
-      "X-Frame-Options": "DENY",
+      'X-Content-Type-Options': 'nosniff',
+      'X-Frame-Options': 'DENY',
       ...headers,
     },
   });
@@ -148,20 +152,20 @@ export function createErrorResponse(
 function errorCodeForStatus(status: number): ErrorCode {
   switch (status) {
     case 400:
-      return "VALIDATION_ERROR";
+      return 'VALIDATION_ERROR';
     case 401:
     case 403:
-      return "AUTH_ERROR";
+      return 'AUTH_ERROR';
     case 404:
-      return "NOT_FOUND";
+      return 'NOT_FOUND';
     case 429:
-      return "RATE_LIMITED";
+      return 'RATE_LIMITED';
     case 502:
-      return "UPSTREAM_ERROR";
+      return 'UPSTREAM_ERROR';
     case 503:
-      return "SERVICE_UNAVAILABLE";
+      return 'SERVICE_UNAVAILABLE';
     default:
-      return "INTERNAL_ERROR";
+      return 'INTERNAL_ERROR';
   }
 }
 
@@ -181,12 +185,12 @@ export function apiErrorResponse(
       : {}),
   };
   const headers: Record<string, string> = {
-    "X-Content-Type-Options": "nosniff",
-    "X-Frame-Options": "DENY",
+    'X-Content-Type-Options': 'nosniff',
+    'X-Frame-Options': 'DENY',
     ...extraHeaders,
   };
   if (error.retryAfterSeconds !== undefined) {
-    headers["Retry-After"] = String(error.retryAfterSeconds);
+    headers['Retry-After'] = String(error.retryAfterSeconds);
   }
   return NextResponse.json(body, {
     status: error.status,

@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import {
   ResponsiveContainer,
@@ -9,8 +9,12 @@ import {
   Radar,
   Tooltip,
   Legend,
-} from "recharts";
-import { buildRadarData, isRadarEmpty, type RadarMetricInput } from "@/lib/radar-metrics";
+} from 'recharts';
+import {
+  buildRadarData,
+  isRadarEmpty,
+  type RadarMetricInput,
+} from '@/lib/radar-metrics';
 
 interface CompareRadarChartProps {
   userA: RadarMetricInput;
@@ -28,8 +32,8 @@ interface CompareRadarChartProps {
  * usage in CompareCharts.tsx already passes `var(--color-*)` into SVG stroke
  * props, so this follows a pattern the codebase has proven works.
  */
-const COLOR_A = "var(--color-primary)";
-const COLOR_B = "var(--color-ink-mute)";
+const COLOR_A = 'var(--color-primary)';
+const COLOR_B = 'var(--color-ink-mute)';
 
 interface TooltipPayloadEntry {
   payload?: {
@@ -63,17 +67,17 @@ export const RadarTooltip = ({
   if (!point) return null;
 
   const rowStyle: React.CSSProperties = {
-    display: "flex",
-    alignItems: "center",
-    gap: "8px",
-    fontSize: "12px",
-    color: "var(--color-ink)",
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px',
+    fontSize: '12px',
+    color: 'var(--color-ink)',
   };
 
   const swatch = (color: string): React.CSSProperties => ({
-    width: "8px",
-    height: "8px",
-    borderRadius: "2px",
+    width: '8px',
+    height: '8px',
+    borderRadius: '2px',
     backgroundColor: color,
     flexShrink: 0,
   });
@@ -81,34 +85,36 @@ export const RadarTooltip = ({
   return (
     <div
       style={{
-        backgroundColor: "var(--color-canvas)",
-        border: "1px solid var(--color-hairline)",
-        borderRadius: "8px",
-        padding: "10px 12px",
-        boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
+        backgroundColor: 'var(--color-canvas)',
+        border: '1px solid var(--color-hairline)',
+        borderRadius: '8px',
+        padding: '10px 12px',
+        boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
       }}
     >
       <p
         style={{
-          fontSize: "12px",
+          fontSize: '12px',
           fontWeight: 600,
-          color: "var(--color-ink)",
-          margin: "0 0 6px 0",
+          color: 'var(--color-ink)',
+          margin: '0 0 6px 0',
         }}
       >
         {point.metric}
       </p>
-      <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
         <div style={rowStyle}>
           <span style={swatch(COLOR_A)} />
           <span>
-            {usernameA}: <strong>{(point.aRaw ?? 0).toLocaleString("en-US")}</strong>
+            {usernameA}:{' '}
+            <strong>{(point.aRaw ?? 0).toLocaleString('en-US')}</strong>
           </span>
         </div>
         <div style={rowStyle}>
           <span style={swatch(COLOR_B)} />
           <span>
-            {usernameB}: <strong>{(point.bRaw ?? 0).toLocaleString("en-US")}</strong>
+            {usernameB}:{' '}
+            <strong>{(point.bRaw ?? 0).toLocaleString('en-US')}</strong>
           </span>
         </div>
       </div>
@@ -130,27 +136,27 @@ export function CompareRadarChart({ userA, userB }: CompareRadarChartProps) {
   return (
     <div
       style={{
-        border: "1px solid var(--color-hairline)",
-        borderRadius: "12px",
-        padding: "24px",
-        backgroundColor: "var(--color-canvas-soft)",
+        border: '1px solid var(--color-hairline)',
+        borderRadius: '12px',
+        padding: '24px',
+        backgroundColor: 'var(--color-canvas-soft)',
       }}
     >
       <h3
         style={{
-          fontSize: "16px",
+          fontSize: '16px',
           fontWeight: 600,
-          color: "var(--color-ink)",
-          margin: "0 0 4px 0",
+          color: 'var(--color-ink)',
+          margin: '0 0 4px 0',
         }}
       >
         Contribution Profile Shape
       </h3>
       <p
         style={{
-          fontSize: "13px",
-          color: "var(--color-ink-mute)",
-          margin: "0 0 20px 0",
+          fontSize: '13px',
+          color: 'var(--color-ink-mute)',
+          margin: '0 0 20px 0',
         }}
       >
         Each axis is scaled against the higher of the two contributors, so the
@@ -160,23 +166,23 @@ export function CompareRadarChart({ userA, userB }: CompareRadarChartProps) {
       {empty ? (
         <p
           style={{
-            fontSize: "14px",
-            color: "var(--color-ink-mute)",
-            textAlign: "center",
-            padding: "48px 0",
+            fontSize: '14px',
+            color: 'var(--color-ink-mute)',
+            textAlign: 'center',
+            padding: '48px 0',
             margin: 0,
           }}
         >
           No contribution data available to compare.
         </p>
       ) : (
-        <div style={{ width: "100%", height: 360 }}>
+        <div style={{ width: '100%', height: 360 }}>
           <ResponsiveContainer width="100%" height="100%">
             <RadarChart data={data} outerRadius="72%">
               <PolarGrid stroke="var(--color-hairline)" />
               <PolarAngleAxis
                 dataKey="metric"
-                tick={{ fill: "var(--color-ink-mute)", fontSize: 12 }}
+                tick={{ fill: 'var(--color-ink-mute)', fontSize: 12 }}
               />
               <PolarRadiusAxis
                 angle={90}
@@ -214,9 +220,9 @@ export function CompareRadarChart({ userA, userB }: CompareRadarChartProps) {
 
       <p
         style={{
-          fontSize: "11px",
-          color: "var(--color-ink-mute-2)",
-          margin: "12px 0 0 0",
+          fontSize: '11px',
+          color: 'var(--color-ink-mute-2)',
+          margin: '12px 0 0 0',
         }}
       >
         Repo Stars counts stargazers across each contributor&apos;s top

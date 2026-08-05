@@ -12,12 +12,12 @@ export class AppError extends Error {
     retryAfterSeconds?: number,
   ) {
     super(message);
-    this.name = "AppError";
+    this.name = 'AppError';
     this.status = status;
     this.code = code;
     this.details = details;
     this.retryAfterSeconds = retryAfterSeconds;
-    
+
     // Ensure prototype chain is correctly maintained for instanceof checks
     Object.setPrototypeOf(this, new.target.prototype);
   }
@@ -25,49 +25,49 @@ export class AppError extends Error {
 
 export class ValidationError extends AppError {
   constructor(
-    message = "Validation failed",
+    message = 'Validation failed',
     details?: Record<string, unknown>,
   ) {
-    super(message, 400, "VALIDATION_ERROR", details);
-    this.name = "ValidationError";
+    super(message, 400, 'VALIDATION_ERROR', details);
+    this.name = 'ValidationError';
   }
 }
 
 export class AuthError extends AppError {
-  constructor(message = "Unauthorized", details?: Record<string, unknown>) {
-    super(message, 401, "AUTH_ERROR", details);
-    this.name = "AuthError";
+  constructor(message = 'Unauthorized', details?: Record<string, unknown>) {
+    super(message, 401, 'AUTH_ERROR', details);
+    this.name = 'AuthError';
   }
 }
 
 export class NotFoundError extends AppError {
   constructor(
-    message = "Resource not found",
+    message = 'Resource not found',
     details?: Record<string, unknown>,
   ) {
-    super(message, 404, "NOT_FOUND", details);
-    this.name = "NotFoundError";
+    super(message, 404, 'NOT_FOUND', details);
+    this.name = 'NotFoundError';
   }
 }
 
 export class RateLimitError extends AppError {
   constructor(
-    message = "Rate limit exceeded",
+    message = 'Rate limit exceeded',
     retryAfterSeconds: number,
     details?: Record<string, unknown>,
   ) {
-    super(message, 429, "RATE_LIMITED", details, retryAfterSeconds);
-    this.name = "RateLimitError";
+    super(message, 429, 'RATE_LIMITED', details, retryAfterSeconds);
+    this.name = 'RateLimitError';
   }
 }
 
 export class UpstreamError extends AppError {
   constructor(
-    message = "Upstream service unavailable",
+    message = 'Upstream service unavailable',
     details?: Record<string, unknown>,
   ) {
-    super(message, 502, "UPSTREAM_ERROR", details);
-    this.name = "UpstreamError";
+    super(message, 502, 'UPSTREAM_ERROR', details);
+    this.name = 'UpstreamError';
   }
 }
 
@@ -80,30 +80,30 @@ export class UpstreamError extends AppError {
  * simple `instanceof` check rather than fragile message-string comparisons.
  */
 export class GitHubRateLimitError extends Error {
-  constructor(message = "GitHub API rate limit exceeded") {
+  constructor(message = 'GitHub API rate limit exceeded') {
     super(message);
-    this.name = "GitHubRateLimitError";
+    this.name = 'GitHubRateLimitError';
     Object.setPrototypeOf(this, new.target.prototype);
   }
 }
 
 export type ErrorCode =
-  | "VALIDATION_ERROR"
-  | "AUTH_ERROR"
-  | "NOT_FOUND"
-  | "RATE_LIMITED"
-  | "UPSTREAM_ERROR"
-  | "SERVICE_UNAVAILABLE"
-  | "INTERNAL_ERROR";
+  | 'VALIDATION_ERROR'
+  | 'AUTH_ERROR'
+  | 'NOT_FOUND'
+  | 'RATE_LIMITED'
+  | 'UPSTREAM_ERROR'
+  | 'SERVICE_UNAVAILABLE'
+  | 'INTERNAL_ERROR';
 
 const VALID_ERROR_CODES = new Set<ErrorCode>([
-  "VALIDATION_ERROR",
-  "AUTH_ERROR",
-  "NOT_FOUND",
-  "RATE_LIMITED",
-  "UPSTREAM_ERROR",
-  "SERVICE_UNAVAILABLE",
-  "INTERNAL_ERROR",
+  'VALIDATION_ERROR',
+  'AUTH_ERROR',
+  'NOT_FOUND',
+  'RATE_LIMITED',
+  'UPSTREAM_ERROR',
+  'SERVICE_UNAVAILABLE',
+  'INTERNAL_ERROR',
 ]);
 
 // A type alias rather than an interface, deliberately.
@@ -130,7 +130,7 @@ export function toApiErrorBody(error: AppError): ApiErrorBody {
   // 1. Strict Serialization Mapping: Guarantee code matches the union type
   const code: ErrorCode = VALID_ERROR_CODES.has(error.code as ErrorCode)
     ? (error.code as ErrorCode)
-    : "INTERNAL_ERROR";
+    : 'INTERNAL_ERROR';
 
   const body: ApiErrorBody = {
     success: false,
@@ -147,7 +147,7 @@ export function toApiErrorBody(error: AppError): ApiErrorBody {
   if (error.details !== undefined) {
     body.error.details = error.details;
   }
-  
+
   if (error.retryAfterSeconds !== undefined) {
     body.retryAfterSeconds = error.retryAfterSeconds;
   }

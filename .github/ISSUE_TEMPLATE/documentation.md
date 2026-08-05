@@ -1,9 +1,9 @@
 ---
 name: Documentation Task
 about: Improve or add to OSSfolio's documentation
-title: "[DOCS] "
+title: '[DOCS] '
 labels: documentation
-assignees: ""
+assignees: ''
 ---
 
 ## What Needs Documenting?

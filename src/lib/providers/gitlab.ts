@@ -1,7 +1,7 @@
-import type { ContributorStats, Repo } from "@/types";
-import { fetchWithTimeout } from "@/lib/fetch-with-timeout";
+import type { ContributorStats, Repo } from '@/types';
+import { fetchWithTimeout } from '@/lib/fetch-with-timeout';
 
-const GITLAB_API_BASE = "https://gitlab.com/api/v4";
+const GITLAB_API_BASE = 'https://gitlab.com/api/v4';
 const TIMEOUT_MS = 6000;
 
 export async function fetchGitLabStats(
@@ -10,21 +10,27 @@ export async function fetchGitLabStats(
 ): Promise<{ stats: ContributorStats; repos: Repo[] }> {
   if (!username) {
     return {
-      stats: { totalCommits: 0, totalPRs: 0, totalIssues: 0, totalReviews: 0, totalContributions: 0 },
+      stats: {
+        totalCommits: 0,
+        totalPRs: 0,
+        totalIssues: 0,
+        totalReviews: 0,
+        totalContributions: 0,
+      },
       repos: [],
     };
   }
 
   try {
-    const headers: Record<string, string> = { Accept: "application/json" };
+    const headers: Record<string, string> = { Accept: 'application/json' };
     if (token) {
-      headers["PRIVATE-TOKEN"] = token;
+      headers['PRIVATE-TOKEN'] = token;
     }
 
     // Fetch user profile from GitLab API
     const userRes = await fetchWithTimeout(
       `${GITLAB_API_BASE}/users?username=${encodeURIComponent(username)}`,
-      { headers, cache: "no-store" },
+      { headers, cache: 'no-store' },
       TIMEOUT_MS,
     );
 
@@ -35,7 +41,13 @@ export async function fetchGitLabStats(
     const users = await userRes.json();
     if (!Array.isArray(users) || users.length === 0) {
       return {
-        stats: { totalCommits: 0, totalPRs: 0, totalIssues: 0, totalReviews: 0, totalContributions: 0 },
+        stats: {
+          totalCommits: 0,
+          totalPRs: 0,
+          totalIssues: 0,
+          totalReviews: 0,
+          totalContributions: 0,
+        },
         repos: [],
       };
     }
@@ -45,7 +57,7 @@ export async function fetchGitLabStats(
     // Fetch user projects
     const projectsRes = await fetchWithTimeout(
       `${GITLAB_API_BASE}/users/${userId}/projects?per_page=10&order_by=updated_at`,
-      { headers, cache: "no-store" },
+      { headers, cache: 'no-store' },
       TIMEOUT_MS,
     );
 
@@ -56,8 +68,8 @@ export async function fetchGitLabStats(
           description: p.description || null,
           stars: p.star_count || 0,
           forks: p.forks_count || 0,
-          language: p.primary_language || "GitLab",
-          languageColor: "#fc6d26",
+          language: p.primary_language || 'GitLab',
+          languageColor: '#fc6d26',
           url: p.web_url || `https://gitlab.com/${username}`,
           topics: p.tag_list || [],
         }))
@@ -71,7 +83,8 @@ export async function fetchGitLabStats(
     const totalPRs = Math.round(totalRepos * 3.5);
     const totalIssues = Math.round(totalRepos * 1.8);
     const totalReviews = Math.round(totalPRs * 0.4);
-    const totalContributions = totalCommits + totalPRs * 3 + totalIssues * 2 + totalReviews * 2;
+    const totalContributions =
+      totalCommits + totalPRs * 3 + totalIssues * 2 + totalReviews * 2;
 
     return {
       stats: {
@@ -86,7 +99,13 @@ export async function fetchGitLabStats(
   } catch (err) {
     console.warn(`[GitLab] Could not fetch stats for @${username}:`, err);
     return {
-      stats: { totalCommits: 0, totalPRs: 0, totalIssues: 0, totalReviews: 0, totalContributions: 0 },
+      stats: {
+        totalCommits: 0,
+        totalPRs: 0,
+        totalIssues: 0,
+        totalReviews: 0,
+        totalContributions: 0,
+      },
       repos: [],
     };
   }

@@ -80,7 +80,7 @@ export function Footer() {
           >
             <Link
               href="/"
-              aria-label={t('home') || "Home"}
+              aria-label={t('home') || 'Home'}
               style={{
                 display: 'flex',
                 alignItems: 'center',
@@ -138,7 +138,7 @@ export function Footer() {
               target="_blank"
               rel="noopener noreferrer"
               className="footer-social-link"
-              aria-label={t('starOnGitHub') || "Star on GitHub"}
+              aria-label={t('starOnGitHub') || 'Star on GitHub'}
               style={{
                 display: 'inline-flex',
                 alignItems: 'center',
@@ -310,7 +310,7 @@ export function Footer() {
             target="_blank"
             rel="noopener noreferrer"
             className="footer-author-link"
-            aria-label={t('builtBy') + " PRODHOSH V.S"}
+            aria-label={t('builtBy') + ' PRODHOSH V.S'}
             style={{
               display: 'flex',
               alignItems: 'center',

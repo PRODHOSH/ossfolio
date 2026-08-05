@@ -1,17 +1,17 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import {
   getInterFonts,
   resetFontCacheForTesting,
   default as OGImage,
-} from "@/app/[username]/opengraph-image";
-import { getProfileByUsername } from "@/lib/db";
+} from '@/app/[username]/opengraph-image';
+import { getProfileByUsername } from '@/lib/db';
 
-vi.mock("@/lib/db", () => ({
+vi.mock('@/lib/db', () => ({
   getProfileByUsername: vi.fn(),
 }));
 
 // Mock Next.js ImageResponse for vitest
-vi.mock("next/og", () => {
+vi.mock('next/og', () => {
   return {
     ImageResponse: class MockImageResponse {
       status = 200;
@@ -26,14 +26,14 @@ vi.mock("next/og", () => {
   };
 });
 
-describe("OpenGraph Font ArrayBuffer Caching & Response Headers", () => {
+describe('OpenGraph Font ArrayBuffer Caching & Response Headers', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     resetFontCacheForTesting();
   });
 
-  describe("getInterFonts", () => {
-    it("should fetch font data once and return cached ArrayBuffer promise on subsequent calls", async () => {
+  describe('getInterFonts', () => {
+    it('should fetch font data once and return cached ArrayBuffer promise on subsequent calls', async () => {
       const mockCssText = `
         @font-face {
           font-family: 'Inter';
@@ -52,20 +52,22 @@ describe("OpenGraph Font ArrayBuffer Caching & Response Headers", () => {
       const dummyBufferMedium = new ArrayBuffer(64);
       const dummyBufferRegular = new ArrayBuffer(32);
 
-      const fetchSpy = vi.spyOn(globalThis, "fetch").mockImplementation(async (url) => {
-        const urlStr = String(url);
-        const parsedUrl = new URL(urlStr);
-        if (parsedUrl.hostname === "fonts.googleapis.com") {
-          return new Response(mockCssText, { status: 200 });
-        }
-        if (urlStr.includes("inter-500.ttf")) {
-          return new Response(dummyBufferMedium, { status: 200 });
-        }
-        if (urlStr.includes("inter-400.ttf")) {
-          return new Response(dummyBufferRegular, { status: 200 });
-        }
-        return new Response("", { status: 200 });
-      });
+      const fetchSpy = vi
+        .spyOn(globalThis, 'fetch')
+        .mockImplementation(async (url) => {
+          const urlStr = String(url);
+          const parsedUrl = new URL(urlStr);
+          if (parsedUrl.hostname === 'fonts.googleapis.com') {
+            return new Response(mockCssText, { status: 200 });
+          }
+          if (urlStr.includes('inter-500.ttf')) {
+            return new Response(dummyBufferMedium, { status: 200 });
+          }
+          if (urlStr.includes('inter-400.ttf')) {
+            return new Response(dummyBufferRegular, { status: 200 });
+          }
+          return new Response('', { status: 200 });
+        });
 
       // First call -> triggers network fetch
       const fonts1 = await getInterFonts();
@@ -82,14 +84,14 @@ describe("OpenGraph Font ArrayBuffer Caching & Response Headers", () => {
       fetchSpy.mockRestore();
     });
 
-    it("should clear cache on error allowing subsequent retry", async () => {
+    it('should clear cache on error allowing subsequent retry', async () => {
       const fetchSpy = vi
-        .spyOn(globalThis, "fetch")
-        .mockRejectedValueOnce(new Error("Network Error"))
+        .spyOn(globalThis, 'fetch')
+        .mockRejectedValueOnce(new Error('Network Error'))
         .mockImplementation(async (url) => {
           const urlStr = String(url);
           const parsedUrl = new URL(urlStr);
-          if (parsedUrl.hostname === "fonts.googleapis.com") {
+          if (parsedUrl.hostname === 'fonts.googleapis.com') {
             return new Response(
               `
               @font-face {
@@ -111,7 +113,7 @@ describe("OpenGraph Font ArrayBuffer Caching & Response Headers", () => {
           return new Response(new ArrayBuffer(16), { status: 200 });
         });
 
-      await expect(getInterFonts()).rejects.toThrow("Network Error");
+      await expect(getInterFonts()).rejects.toThrow('Network Error');
 
       // Should attempt fetch again rather than returning failed promise
       await expect(getInterFonts()).resolves.toBeDefined();
@@ -120,17 +122,17 @@ describe("OpenGraph Font ArrayBuffer Caching & Response Headers", () => {
     });
   });
 
-  describe("OGImage response headers", () => {
-    it("should include Cache-Control immutable header on rendered ImageResponse", async () => {
+  describe('OGImage response headers', () => {
+    it('should include Cache-Control immutable header on rendered ImageResponse', async () => {
       vi.mocked(getProfileByUsername).mockResolvedValue({
         data: {
-          username: "octocat",
+          username: 'octocat',
           score: 95,
           total_commits: 100,
           total_prs: 20,
           total_issues: 5,
           total_reviews: 10,
-          visibility: "public",
+          visibility: 'public',
         },
         error: null,
       } as never);
@@ -150,31 +152,33 @@ describe("OpenGraph Font ArrayBuffer Caching & Response Headers", () => {
         }
       `;
 
-      const fetchSpy = vi.spyOn(globalThis, "fetch").mockImplementation(async (url) => {
-        const urlStr = String(url);
-        const parsedUrl = new URL(urlStr);
-        if (parsedUrl.hostname === "api.github.com") {
-          return new Response(
-            JSON.stringify({
-              name: "The Octocat",
-              avatar_url: "https://github.com/octocat.png",
-            }),
-            { status: 200 },
-          );
-        }
-        if (parsedUrl.hostname === "fonts.googleapis.com") {
-          return new Response(mockCssText, { status: 200 });
-        }
-        return new Response(new ArrayBuffer(16), { status: 200 });
-      });
+      const fetchSpy = vi
+        .spyOn(globalThis, 'fetch')
+        .mockImplementation(async (url) => {
+          const urlStr = String(url);
+          const parsedUrl = new URL(urlStr);
+          if (parsedUrl.hostname === 'api.github.com') {
+            return new Response(
+              JSON.stringify({
+                name: 'The Octocat',
+                avatar_url: 'https://github.com/octocat.png',
+              }),
+              { status: 200 },
+            );
+          }
+          if (parsedUrl.hostname === 'fonts.googleapis.com') {
+            return new Response(mockCssText, { status: 200 });
+          }
+          return new Response(new ArrayBuffer(16), { status: 200 });
+        });
 
       const res = await OGImage({
-        params: Promise.resolve({ username: "octocat" }),
+        params: Promise.resolve({ username: 'octocat' }),
       });
 
       expect(res.status).toBe(200);
-      expect(res.headers.get("Cache-Control")).toBe(
-        "public, immutable, max-age=31536000",
+      expect(res.headers.get('Cache-Control')).toBe(
+        'public, immutable, max-age=31536000',
       );
 
       fetchSpy.mockRestore();

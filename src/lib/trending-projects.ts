@@ -1,5 +1,5 @@
-import { createClient } from "@supabase/supabase-js";
-import { supabase } from "@/lib/supabase";
+import { createClient } from '@supabase/supabase-js';
+import { supabase } from '@/lib/supabase';
 
 export interface TrendingProject {
   id?: string;
@@ -18,87 +18,91 @@ export interface TrendingProject {
 
 export const FALLBACK_TRENDING_PROJECTS: TrendingProject[] = [
   {
-    repoName: "facebook/react",
-    description: "The library for web and native user interfaces.",
+    repoName: 'facebook/react',
+    description: 'The library for web and native user interfaces.',
     stars: 230000,
     forks: 46000,
-    language: "JavaScript",
-    url: "https://github.com/facebook/react",
+    language: 'JavaScript',
+    url: 'https://github.com/facebook/react',
     contributorsCount: 1650,
     recentActivityScore: 98.5,
-    topics: ["react", "ui", "frontend", "library"],
+    topics: ['react', 'ui', 'frontend', 'library'],
     seekingContributors: true,
   },
   {
-    repoName: "vercel/next.js",
-    description: "The React Framework for the Web.",
+    repoName: 'vercel/next.js',
+    description: 'The React Framework for the Web.',
     stars: 125000,
     forks: 26000,
-    language: "TypeScript",
-    url: "https://github.com/vercel/next.js",
+    language: 'TypeScript',
+    url: 'https://github.com/vercel/next.js',
     contributorsCount: 3100,
     recentActivityScore: 96.2,
-    topics: ["nextjs", "react", "framework", "ssr"],
+    topics: ['nextjs', 'react', 'framework', 'ssr'],
     seekingContributors: true,
   },
   {
-    repoName: "shadcn-ui/ui",
-    description: "Beautifully designed components that you can copy and paste into your apps.",
+    repoName: 'shadcn-ui/ui',
+    description:
+      'Beautifully designed components that you can copy and paste into your apps.',
     stars: 75000,
     forks: 5800,
-    language: "TypeScript",
-    url: "https://github.com/shadcn-ui/ui",
+    language: 'TypeScript',
+    url: 'https://github.com/shadcn-ui/ui',
     contributorsCount: 420,
     recentActivityScore: 94.0,
-    topics: ["tailwind", "radix-ui", "components", "react"],
+    topics: ['tailwind', 'radix-ui', 'components', 'react'],
     seekingContributors: true,
   },
   {
-    repoName: "tailwindlabs/tailwindcss",
-    description: "A utility-first CSS framework for rapid UI development.",
+    repoName: 'tailwindlabs/tailwindcss',
+    description: 'A utility-first CSS framework for rapid UI development.',
     stars: 82000,
     forks: 4200,
-    language: "TypeScript",
-    url: "https://github.com/tailwindlabs/tailwindcss",
+    language: 'TypeScript',
+    url: 'https://github.com/tailwindlabs/tailwindcss',
     contributorsCount: 320,
     recentActivityScore: 89.5,
-    topics: ["css", "tailwind", "design-system"],
+    topics: ['css', 'tailwind', 'design-system'],
     seekingContributors: false,
   },
   {
-    repoName: "supabase/supabase",
-    description: "The open source Firebase alternative.",
+    repoName: 'supabase/supabase',
+    description: 'The open source Firebase alternative.',
     stars: 74000,
     forks: 5400,
-    language: "TypeScript",
-    url: "https://github.com/supabase/supabase",
+    language: 'TypeScript',
+    url: 'https://github.com/supabase/supabase',
     contributorsCount: 1200,
     recentActivityScore: 92.8,
-    topics: ["database", "postgres", "auth", "realtime"],
+    topics: ['database', 'postgres', 'auth', 'realtime'],
     seekingContributors: true,
   },
   {
-    repoName: "astral-sh/uv",
-    description: "An extremely fast Python package and project manager, written in Rust.",
+    repoName: 'astral-sh/uv',
+    description:
+      'An extremely fast Python package and project manager, written in Rust.',
     stars: 38000,
     forks: 950,
-    language: "Rust",
-    url: "https://github.com/astral-sh/uv",
+    language: 'Rust',
+    url: 'https://github.com/astral-sh/uv',
     contributorsCount: 180,
     recentActivityScore: 95.0,
-    topics: ["python", "rust", "package-manager"],
+    topics: ['python', 'rust', 'package-manager'],
     seekingContributors: true,
   },
 ];
 
 /** Fetch trending projects from Supabase database with fallback to curated defaults */
-export async function fetchTrendingProjects(limit = 6): Promise<TrendingProject[]> {
+export async function fetchTrendingProjects(
+  limit = 6,
+): Promise<TrendingProject[]> {
   try {
     const { data, error } = await supabase
-      .from("trending_projects")
-      .select("*")
-      .order("recent_activity_score", { ascending: false })
-      .order("stars", { ascending: false })
+      .from('trending_projects')
+      .select('*')
+      .order('recent_activity_score', { ascending: false })
+      .order('stars', { ascending: false })
       .limit(limit);
 
     if (error || !data || data.length === 0) {
@@ -120,7 +124,7 @@ export async function fetchTrendingProjects(limit = 6): Promise<TrendingProject[
       updatedAt: row.updated_at,
     }));
   } catch (err) {
-    console.error("Failed to fetch trending projects:", err);
+    console.error('Failed to fetch trending projects:', err);
     return FALLBACK_TRENDING_PROJECTS.slice(0, limit);
   }
 }
@@ -133,7 +137,7 @@ export async function syncTrendingProjects(
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
   if (!supabaseUrl || !serviceKey) {
-    console.warn("Supabase configuration missing for syncTrendingProjects");
+    console.warn('Supabase configuration missing for syncTrendingProjects');
     return { success: false, count: 0 };
   }
 
@@ -155,18 +159,18 @@ export async function syncTrendingProjects(
       updated_at: now,
     }));
 
-    const { error } = await admin.from("trending_projects").upsert(records, {
-      onConflict: "repo_name",
+    const { error } = await admin.from('trending_projects').upsert(records, {
+      onConflict: 'repo_name',
     });
 
     if (error) {
-      console.error("Failed to upsert trending_projects:", error.message);
+      console.error('Failed to upsert trending_projects:', error.message);
       return { success: false, count: 0 };
     }
 
     return { success: true, count: projects.length };
   } catch (err) {
-    console.error("Error in syncTrendingProjects:", err);
+    console.error('Error in syncTrendingProjects:', err);
     return { success: false, count: 0 };
   }
 }

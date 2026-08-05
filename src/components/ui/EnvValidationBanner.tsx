@@ -1,7 +1,7 @@
-"use client";
+'use client';
 
-import { useEffect, useState } from "react";
-import { isSupabaseConfigured } from "@/lib/env";
+import { useEffect, useState } from 'react';
+import { isSupabaseConfigured } from '@/lib/env';
 
 export function EnvValidationBanner() {
   const [configured, setConfigured] = useState(true);
@@ -17,21 +17,21 @@ export function EnvValidationBanner() {
   return (
     <div
       style={{
-        backgroundColor: "rgba(239, 68, 68, 0.1)",
-        borderBottom: "1px solid rgba(239, 68, 68, 0.2)",
-        padding: "12px 20px",
-        textAlign: "center",
-        fontSize: "13px",
-        color: "var(--color-ink)",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        gap: "8px",
+        backgroundColor: 'rgba(239, 68, 68, 0.1)',
+        borderBottom: '1px solid rgba(239, 68, 68, 0.2)',
+        padding: '12px 20px',
+        textAlign: 'center',
+        fontSize: '13px',
+        color: 'var(--color-ink)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: '8px',
       }}
     >
       <span>⚠️</span>
       <span>
-        <strong>Supabase Credentials Missing:</strong> Copy{" "}
+        <strong>Supabase Credentials Missing:</strong> Copy{' '}
         <code>.env.example</code> to <code>.env.local</code> and fill in your
         Supabase variables.
       </span>
@@ -40,9 +40,9 @@ export function EnvValidationBanner() {
         target="_blank"
         rel="noopener noreferrer"
         style={{
-          color: "#3ecf8e",
+          color: '#3ecf8e',
           fontWeight: 600,
-          textDecoration: "underline",
+          textDecoration: 'underline',
         }}
       >
         Read setup guide

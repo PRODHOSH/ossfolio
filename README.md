@@ -99,12 +99,12 @@ src/lib/score.ts
 
 ## Tech Stack
 
-| Layer    | Tech                                                            |
-| -------- | --------------------------------------------------------------- |
+| Layer    | Tech                                                                 |
+| -------- | -------------------------------------------------------------------- |
 | Frontend | Next.js · TypeScript · Tailwind CSS · Radix UI + CVA · Framer Motion |
-| Backend  | Supabase · PostgreSQL                                           |
-| Data     | GitHub GraphQL API                                              |
-| Hosting  | Cloudflare Pages                                                |
+| Backend  | Supabase · PostgreSQL                                                |
+| Data     | GitHub GraphQL API                                                   |
+| Hosting  | Cloudflare Pages                                                     |
 
 ---
 

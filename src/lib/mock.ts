@@ -1,4 +1,4 @@
-import type { HeatmapWeek } from "@/types";
+import type { HeatmapWeek } from '@/types';
 
 /**
  * Heatmap fallback.
@@ -14,7 +14,7 @@ import type { HeatmapWeek } from "@/types";
  * placeholder rather than reshuffling on every request.
  */
 
-const HEATMAP_COLORS = ["#ebedf0", "#9be9a8", "#40c463", "#30a14e", "#216e39"];
+const HEATMAP_COLORS = ['#ebedf0', '#9be9a8', '#40c463', '#30a14e', '#216e39'];
 
 function colorForCount(count: number): string {
   if (count === 0) return HEATMAP_COLORS[0];
@@ -24,9 +24,9 @@ function colorForCount(count: number): string {
   return HEATMAP_COLORS[4];
 }
 
-/** 
+/**
  * Robust deterministic string hash (cyrb53) -> 32-bit int.
- * Significantly improves entropy over FNV-1a to prevent similar usernames 
+ * Significantly improves entropy over FNV-1a to prevent similar usernames
  * from generating nearly identical sequences.
  */
 function seedFromString(str: string): number {
@@ -74,7 +74,7 @@ export function generateMockHeatmap(username: string): MockHeatmap {
 
   const today = new Date();
   const todayKey = today.toISOString().slice(0, 10);
-  
+
   // Walk back to the Sunday that starts the 53-week window using STRICT UTC math.
   // Using local getDay/getDate methods causes timezone drift when sliced into ISO strings.
   const start = new Date(today);
@@ -85,11 +85,11 @@ export function generateMockHeatmap(username: string): MockHeatmap {
     const days = [];
     for (let d = 0; d < 7; d++) {
       const dateKey = cursor.toISOString().slice(0, 10);
-      
-      // Don't generate counts for days in the future. Lexicographical comparison 
+
+      // Don't generate counts for days in the future. Lexicographical comparison
       // of UTC strings ensures timezone-agnostic safety across boundaries.
       const isFuture = dateKey > todayKey;
-      
+
       // Weekends quieter than weekdays, with occasional zero days (Strict UTC).
       const weekday = cursor.getUTCDay();
       const base = weekday === 0 || weekday === 6 ? 2 : 5;

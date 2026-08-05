@@ -1,4 +1,4 @@
-import type { ContributorStats, Repo } from "@/types";
+import type { ContributorStats, Repo } from '@/types';
 
 export interface OpenSourceStory {
   username: string;
@@ -54,13 +54,13 @@ export function generateOpenSourceStory(
 
   const markdownLines = [
     `# 🚀 My ${year} Open Source Story — @${username}`,
-    "",
+    '',
     `In ${year}, I actively contributed to the open-source ecosystem:`,
-    `- 📊 **OSSfolio Score**: ${score.toLocaleString("en-US")}`,
-    `- ⚡ **Commits Made**: ${stats.totalCommits.toLocaleString("en-US")}`,
-    `- 🔀 **Pull Requests Merged**: ${stats.totalPRs.toLocaleString("en-US")}`,
-    `- 🐛 **Issues Resolved**: ${stats.totalIssues.toLocaleString("en-US")}`,
-    `- 👀 **Code Reviews**: ${stats.totalReviews.toLocaleString("en-US")}`,
+    `- 📊 **OSSfolio Score**: ${score.toLocaleString('en-US')}`,
+    `- ⚡ **Commits Made**: ${stats.totalCommits.toLocaleString('en-US')}`,
+    `- 🔀 **Pull Requests Merged**: ${stats.totalPRs.toLocaleString('en-US')}`,
+    `- 🐛 **Issues Resolved**: ${stats.totalIssues.toLocaleString('en-US')}`,
+    `- 👀 **Code Reviews**: ${stats.totalReviews.toLocaleString('en-US')}`,
   ];
 
   if (topLanguage) {
@@ -68,12 +68,12 @@ export function generateOpenSourceStory(
   }
 
   if (topRepos.length > 0) {
-    markdownLines.push(`- 🏆 **Key Repositories**: ${topRepos.join(", ")}`);
+    markdownLines.push(`- 🏆 **Key Repositories**: ${topRepos.join(', ')}`);
   }
 
-  markdownLines.push("", `Generated with [OSSfolio](${profileUrl}) 🌟`);
+  markdownLines.push('', `Generated with [OSSfolio](${profileUrl}) 🌟`);
 
-  const markdown = markdownLines.join("\n");
+  const markdown = markdownLines.join('\n');
 
   const tweetText = `In ${year}, I made ${stats.totalCommits} commits and merged ${stats.totalPRs} PRs on GitHub! OSSfolio Score: ${score}. Check out my Open Source Story: ${profileUrl} #opensource`;
 

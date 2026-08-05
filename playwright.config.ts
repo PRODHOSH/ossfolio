@@ -1,4 +1,4 @@
-import { defineConfig, devices } from "@playwright/test";
+import { defineConfig, devices } from '@playwright/test';
 
 /**
  * End-to-end tests.
@@ -19,38 +19,40 @@ import { defineConfig, devices } from "@playwright/test";
  * the app is built here with the mock's URL already set rather than having it injected later.
  */
 export default defineConfig({
-  testDir: "./e2e",
+  testDir: './e2e',
   // Fail the build rather than quietly skip, if someone leaves a `test.only` behind.
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
   // One worker on CI: the suite shares a single app server and a single fixture server, so
   // parallel workers would be racing over the same state for no real gain at this size.
   workers: process.env.CI ? 1 : undefined,
-  reporter: process.env.CI ? [["github"], ["html", { open: "never" }]] : "list",
+  reporter: process.env.CI ? [['github'], ['html', { open: 'never' }]] : 'list',
 
   use: {
-    baseURL: "http://127.0.0.1:3000",
-    trace: "on-first-retry",
-    screenshot: "only-on-failure",
+    baseURL: 'http://127.0.0.1:3000',
+    trace: 'on-first-retry',
+    screenshot: 'only-on-failure',
   },
 
   projects: [
     {
-      name: "chromium",
-      use: { ...devices["Desktop Chrome"] },
+      name: 'chromium',
+      use: { ...devices['Desktop Chrome'] },
     },
   ],
 
   webServer: [
     {
-      command: "node e2e/mock-supabase.mjs",
-      url: "http://127.0.0.1:54321/health",
+      command: 'node e2e/mock-supabase.mjs',
+      url: 'http://127.0.0.1:54321/health',
       reuseExistingServer: !process.env.CI,
-      stdout: "pipe",
+      stdout: 'pipe',
     },
     {
-      command: process.env.CI ? "npm run start" : "npm run build && npm run start",
-      url: "http://127.0.0.1:3000",
+      command: process.env.CI
+        ? 'npm run start'
+        : 'npm run build && npm run start',
+      url: 'http://127.0.0.1:3000',
       // A cold Next build is slow; the default 60s is not enough on a CI runner.
       timeout: 240_000,
       reuseExistingServer: !process.env.CI,
@@ -59,12 +61,12 @@ export default defineConfig({
       // Next.js server when Playwright launches `npm run start` in CI. If you add a new server-side
       // environment variable read at request time, configure it here so the server receives it.
       env: {
-        NEXT_PUBLIC_SUPABASE_URL: "http://127.0.0.1:54321",
+        NEXT_PUBLIC_SUPABASE_URL: 'http://127.0.0.1:54321',
         // Not real credentials, and not secret — the fixture server ignores them entirely.
         // They exist only because the client refuses to construct without a key.
-        NEXT_PUBLIC_SUPABASE_ANON_KEY: "e2e-anon-key",
-        SUPABASE_SERVICE_ROLE_KEY: "e2e-service-role-key",
-        NEXT_TELEMETRY_DISABLED: "1",
+        NEXT_PUBLIC_SUPABASE_ANON_KEY: 'e2e-anon-key',
+        SUPABASE_SERVICE_ROLE_KEY: 'e2e-service-role-key',
+        NEXT_TELEMETRY_DISABLED: '1',
       },
     },
   ],

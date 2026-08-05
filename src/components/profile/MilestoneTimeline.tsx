@@ -1,8 +1,8 @@
-"use client";
+'use client';
 
-import React, { useState } from "react";
-import type { Achievement } from "@/lib/achievements";
-import { MilestoneCard } from "./MilestoneCard";
+import React, { useState } from 'react';
+import type { Achievement } from '@/lib/achievements';
+import { MilestoneCard } from './MilestoneCard';
 
 interface MilestoneTimelineProps {
   achievements: Achievement[];
@@ -12,7 +12,8 @@ interface MilestoneTimelineProps {
   onShare: (achievement: Achievement) => void;
 }
 
-type FilterCategory = "all" | "unlocked" | "streak" | "contributions" | "community" | "funding";
+type FilterCategory =
+  'all' | 'unlocked' | 'streak' | 'contributions' | 'community' | 'funding';
 
 export function MilestoneTimeline({
   achievements,
@@ -21,13 +22,13 @@ export function MilestoneTimeline({
   onCelebrate,
   onShare,
 }: MilestoneTimelineProps) {
-  const [filter, setFilter] = useState<FilterCategory>("all");
+  const [filter, setFilter] = useState<FilterCategory>('all');
 
   const unlockedCount = achievements.filter((a) => a.unlocked).length;
 
   const filteredAchievements = achievements.filter((a) => {
-    if (filter === "unlocked") return a.unlocked;
-    if (filter === "all") return true;
+    if (filter === 'unlocked') return a.unlocked;
+    if (filter === 'all') return true;
     return a.category === filter;
   });
 
@@ -35,70 +36,74 @@ export function MilestoneTimeline({
   const streakTargets = [7, 30, 100];
   const activeStreak = Math.max(currentStreak, longestStreak);
   const nextStreakTarget = streakTargets.find((t) => t > activeStreak) || 100;
-  const streakProgressPct = Math.min(100, Math.round((activeStreak / nextStreakTarget) * 100));
+  const streakProgressPct = Math.min(
+    100,
+    Math.round((activeStreak / nextStreakTarget) * 100),
+  );
 
   return (
     <div
       style={{
-        marginTop: "40px",
-        paddingBottom: "32px",
-        borderBottom: "1px solid var(--color-hairline, #21262d)",
+        marginTop: '40px',
+        paddingBottom: '32px',
+        borderBottom: '1px solid var(--color-hairline, #21262d)',
       }}
     >
       {/* Header & Stats Bar */}
       <div
         style={{
-          display: "flex",
-          flexWrap: "wrap",
-          alignItems: "center",
-          justifyContent: "space-between",
-          gap: "16px",
-          marginBottom: "24px",
+          display: 'flex',
+          flexWrap: 'wrap',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: '16px',
+          marginBottom: '24px',
         }}
       >
         <div>
           <h2
             style={{
-              fontSize: "18px",
+              fontSize: '18px',
               fontWeight: 700,
-              color: "var(--color-ink, #f0f6fc)",
+              color: 'var(--color-ink, #f0f6fc)',
               margin: 0,
-              letterSpacing: "-0.2px",
+              letterSpacing: '-0.2px',
             }}
           >
             Streaks & Milestones 🏆
           </h2>
           <p
             style={{
-              fontSize: "13px",
-              color: "var(--color-ink-mute, #8b949e)",
-              margin: "4px 0 0",
+              fontSize: '13px',
+              color: 'var(--color-ink-mute, #8b949e)',
+              margin: '4px 0 0',
             }}
           >
-            Track your open-source streaks, PR milestones, and community achievements.
+            Track your open-source streaks, PR milestones, and community
+            achievements.
           </p>
         </div>
 
         <div
           style={{
-            display: "flex",
-            gap: "12px",
-            alignItems: "center",
+            display: 'flex',
+            gap: '12px',
+            alignItems: 'center',
           }}
         >
           {/* Current Streak pill */}
           <div
             style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "6px",
-              padding: "6px 12px",
-              borderRadius: "20px",
-              backgroundColor: "rgba(245, 158, 11, 0.12)",
-              border: "1px solid rgba(245, 158, 11, 0.3)",
-              fontSize: "13px",
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              padding: '6px 12px',
+              borderRadius: '20px',
+              backgroundColor: 'rgba(245, 158, 11, 0.12)',
+              border: '1px solid rgba(245, 158, 11, 0.3)',
+              fontSize: '13px',
               fontWeight: 600,
-              color: "#fbbf24",
+              color: '#fbbf24',
             }}
           >
             <span>🔥</span>
@@ -108,16 +113,16 @@ export function MilestoneTimeline({
           {/* Longest Streak pill */}
           <div
             style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "6px",
-              padding: "6px 12px",
-              borderRadius: "20px",
-              backgroundColor: "rgba(59, 130, 246, 0.12)",
-              border: "1px solid rgba(59, 130, 246, 0.3)",
-              fontSize: "13px",
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              padding: '6px 12px',
+              borderRadius: '20px',
+              backgroundColor: 'rgba(59, 130, 246, 0.12)',
+              border: '1px solid rgba(59, 130, 246, 0.3)',
+              fontSize: '13px',
               fontWeight: 600,
-              color: "#60a5fa",
+              color: '#60a5fa',
             }}
           >
             <span>⚡</span>
@@ -127,8 +132,8 @@ export function MilestoneTimeline({
           {/* Total Unlocked counter */}
           <span
             style={{
-              fontSize: "13px",
-              color: "var(--color-ink-mute, #8b949e)",
+              fontSize: '13px',
+              color: 'var(--color-ink-mute, #8b949e)',
               fontWeight: 500,
             }}
           >
@@ -140,28 +145,29 @@ export function MilestoneTimeline({
       {/* Gamified Active Streak Banner */}
       <div
         style={{
-          padding: "20px",
-          borderRadius: "12px",
-          background: "linear-gradient(135deg, rgba(245, 158, 11, 0.1) 0%, rgba(239, 68, 68, 0.08) 100%)",
-          border: "1px solid rgba(245, 158, 11, 0.25)",
-          marginBottom: "24px",
+          padding: '20px',
+          borderRadius: '12px',
+          background:
+            'linear-gradient(135deg, rgba(245, 158, 11, 0.1) 0%, rgba(239, 68, 68, 0.08) 100%)',
+          border: '1px solid rgba(245, 158, 11, 0.25)',
+          marginBottom: '24px',
         }}
       >
         <div
           style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            marginBottom: "8px",
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            marginBottom: '8px',
           }}
         >
-          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-            <span style={{ fontSize: "20px" }}>🔥</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span style={{ fontSize: '20px' }}>🔥</span>
             <span
               style={{
-                fontSize: "14px",
+                fontSize: '14px',
                 fontWeight: 700,
-                color: "var(--color-ink, #f0f6fc)",
+                color: 'var(--color-ink, #f0f6fc)',
               }}
             >
               Streak Progress
@@ -169,9 +175,9 @@ export function MilestoneTimeline({
           </div>
           <span
             style={{
-              fontSize: "12px",
+              fontSize: '12px',
               fontWeight: 600,
-              color: "#fbbf24",
+              color: '#fbbf24',
             }}
           >
             {activeStreak} / {nextStreakTarget} days
@@ -180,29 +186,29 @@ export function MilestoneTimeline({
 
         <div
           style={{
-            height: "8px",
-            width: "100%",
-            borderRadius: "9999px",
-            backgroundColor: "rgba(255, 255, 255, 0.1)",
-            overflow: "hidden",
-            marginBottom: "8px",
+            height: '8px',
+            width: '100%',
+            borderRadius: '9999px',
+            backgroundColor: 'rgba(255, 255, 255, 0.1)',
+            overflow: 'hidden',
+            marginBottom: '8px',
           }}
         >
           <div
             style={{
-              height: "100%",
+              height: '100%',
               width: `${streakProgressPct}%`,
-              borderRadius: "9999px",
-              background: "linear-gradient(90deg, #f59e0b, #ef4444)",
-              transition: "width 0.5s ease-out",
+              borderRadius: '9999px',
+              background: 'linear-gradient(90deg, #f59e0b, #ef4444)',
+              transition: 'width 0.5s ease-out',
             }}
           />
         </div>
 
         <div
           style={{
-            fontSize: "12px",
-            color: "var(--color-ink-mute, #8b949e)",
+            fontSize: '12px',
+            color: 'var(--color-ink-mute, #8b949e)',
           }}
         >
           {activeStreak >= nextStreakTarget
@@ -214,20 +220,20 @@ export function MilestoneTimeline({
       {/* Filter Tabs */}
       <div
         style={{
-          display: "flex",
-          gap: "8px",
-          marginBottom: "20px",
-          overflowX: "auto",
-          paddingBottom: "4px",
+          display: 'flex',
+          gap: '8px',
+          marginBottom: '20px',
+          overflowX: 'auto',
+          paddingBottom: '4px',
         }}
       >
         {[
-          { key: "all", label: "All Milestones" },
-          { key: "unlocked", label: `Unlocked (${unlockedCount})` },
-          { key: "streak", label: "Streaks 🔥" },
-          { key: "contributions", label: "Contributions 🚀" },
-          { key: "community", label: "Community 👀" },
-          { key: "funding", label: "Funding 💖" },
+          { key: 'all', label: 'All Milestones' },
+          { key: 'unlocked', label: `Unlocked (${unlockedCount})` },
+          { key: 'streak', label: 'Streaks 🔥' },
+          { key: 'contributions', label: 'Contributions 🚀' },
+          { key: 'community', label: 'Community 👀' },
+          { key: 'funding', label: 'Funding 💖' },
         ].map(({ key, label }) => {
           const isActive = filter === key;
           return (
@@ -235,22 +241,22 @@ export function MilestoneTimeline({
               key={key}
               onClick={() => setFilter(key as FilterCategory)}
               style={{
-                padding: "6px 14px",
-                fontSize: "12px",
+                padding: '6px 14px',
+                fontSize: '12px',
                 fontWeight: isActive ? 600 : 500,
-                borderRadius: "20px",
+                borderRadius: '20px',
                 border: `1px solid ${
                   isActive
-                    ? "var(--color-primary, #3b82f6)"
-                    : "var(--color-hairline, #21262d)"
+                    ? 'var(--color-primary, #3b82f6)'
+                    : 'var(--color-hairline, #21262d)'
                 }`,
                 backgroundColor: isActive
-                  ? "var(--color-primary, #3b82f6)"
-                  : "var(--color-canvas-soft, #161b22)",
-                color: isActive ? "#ffffff" : "var(--color-ink-mute, #8b949e)",
-                cursor: "pointer",
-                whiteSpace: "nowrap",
-                transition: "all 0.2s ease",
+                  ? 'var(--color-primary, #3b82f6)'
+                  : 'var(--color-canvas-soft, #161b22)',
+                color: isActive ? '#ffffff' : 'var(--color-ink-mute, #8b949e)',
+                cursor: 'pointer',
+                whiteSpace: 'nowrap',
+                transition: 'all 0.2s ease',
               }}
             >
               {label}
@@ -262,9 +268,9 @@ export function MilestoneTimeline({
       {/* Grid of Milestone Cards */}
       <div
         style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))",
-          gap: "16px",
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))',
+          gap: '16px',
         }}
       >
         {filteredAchievements.map((achievement) => (

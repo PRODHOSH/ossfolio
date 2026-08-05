@@ -5,7 +5,7 @@ import type {
   MergedPR,
   Org,
   CoContributor,
-} from "@/types";
+} from '@/types';
 
 export interface BuildNetworkParams {
   user: {
@@ -49,11 +49,11 @@ export function buildImpactNetwork({
   nodes.push({
     id: centralId,
     label: centralLabel,
-    type: "contributor",
+    type: 'contributor',
     avatarUrl: user.avatar_url,
     url: user.html_url || `https://github.com/${user.login}`,
     val: 28,
-    color: "#3ecf8e", // Emerald
+    color: '#3ecf8e', // Emerald
     details: user.bio || `@${user.login}`,
     statsText: `${user.public_repos ?? repos.length} repos • ${user.followers ?? 0} followers`,
   });
@@ -81,25 +81,30 @@ export function buildImpactNetwork({
     nodes.push({
       id: repoId,
       label: repo.name,
-      type: "repo",
+      type: 'repo',
       url: repo.html_url || `https://github.com/${user.login}/${repo.name}`,
       val: size,
-      color: "#60a5fa", // Soft Blue
-      details: repo.description || (repo.language ? `Primary: ${repo.language}` : "Repository"),
-      statsText: `⭐ ${stars} stars • 🍴 ${repo.forks_count || 0} forks${prCount > 0 ? ` • ${prCount} PRs` : ""}`,
+      color: '#60a5fa', // Soft Blue
+      details:
+        repo.description ||
+        (repo.language ? `Primary: ${repo.language}` : 'Repository'),
+      statsText: `⭐ ${stars} stars • 🍴 ${repo.forks_count || 0} forks${prCount > 0 ? ` • ${prCount} PRs` : ''}`,
     });
     nodeMap.add(repoId);
 
     // Edge thickness based on PR count and stars
-    const weight = Math.max(1, Math.min(7, 1 + prCount * 1.5 + Math.min(3, stars / 10)));
+    const weight = Math.max(
+      1,
+      Math.min(7, 1 + prCount * 1.5 + Math.min(3, stars / 10)),
+    );
     const edgeKey = `${centralId}->${repoId}`;
-    
+
     if (!edgeMap.has(edgeKey)) {
       edges.push({
         source: centralId,
         target: repoId,
         weight,
-        label: prCount > 0 ? `${prCount} PRs` : "Repository",
+        label: prCount > 0 ? `${prCount} PRs` : 'Repository',
       });
       edgeMap.add(edgeKey);
     }
@@ -113,12 +118,12 @@ export function buildImpactNetwork({
     nodes.push({
       id: orgId,
       label: org.name || org.login,
-      type: "org",
+      type: 'org',
       avatarUrl: org.avatarUrl,
       url: org.url || `https://github.com/${org.login}`,
       val: 18,
-      color: "#c084fc", // Purple
-      details: "Organization Member / Contributor",
+      color: '#c084fc', // Purple
+      details: 'Organization Member / Contributor',
       statsText: `@${org.login}`,
     });
     nodeMap.add(orgId);
@@ -129,7 +134,7 @@ export function buildImpactNetwork({
         source: centralId,
         target: orgId,
         weight: 3,
-        label: "Member",
+        label: 'Member',
       });
       edgeMap.add(edgeKey);
     }
@@ -140,10 +145,12 @@ export function buildImpactNetwork({
 
   // If no co-contributors fetched from GraphQL, generate collaborator nodes from merged PR repos
   if (allCollaborators.length === 0 && mergedPRs.length > 0) {
-    const repoNames = Array.from(new Set(mergedPRs.map((p) => p.repoName).filter(Boolean)));
+    const repoNames = Array.from(
+      new Set(mergedPRs.map((p) => p.repoName).filter(Boolean)),
+    );
     repoNames.slice(0, 5).forEach((rName, idx) => {
       // Robust owner parsing
-      const parts = rName.split("/");
+      const parts = rName.split('/');
       if (parts.length >= 2) {
         const owner = parts[0];
         if (owner && owner.toLowerCase() !== user.login.toLowerCase()) {
@@ -165,19 +172,22 @@ export function buildImpactNetwork({
       nodes.push({
         id: collabId,
         label: `@${collab.login}`,
-        type: "collaborator",
+        type: 'collaborator',
         avatarUrl: collab.avatarUrl || `https://github.com/${collab.login}.png`,
         url: `https://github.com/${collab.login}`,
         val: 14,
-        color: "#fbbf24", // Amber
-        details: "Co-contributor / Maintainer",
+        color: '#fbbf24', // Amber
+        details: 'Co-contributor / Maintainer',
         statsText: `${collab.contributionsCount || 1} joint contributions`,
       });
       nodeMap.add(collabId);
     }
 
-    const targetRepoId = collab.repoName ? `repo:${collab.repoName.toLowerCase()}` : null;
-    const targetId = targetRepoId && nodeMap.has(targetRepoId) ? targetRepoId : centralId;
+    const targetRepoId = collab.repoName
+      ? `repo:${collab.repoName.toLowerCase()}`
+      : null;
+    const targetId =
+      targetRepoId && nodeMap.has(targetRepoId) ? targetRepoId : centralId;
 
     const edgeKey = `${collabId}->${targetId}`;
     if (!edgeMap.has(edgeKey)) {
@@ -185,7 +195,7 @@ export function buildImpactNetwork({
         source: collabId,
         target: targetId,
         weight: Math.max(1, Math.min(5, collab.contributionsCount || 2)),
-        label: "Co-contributor",
+        label: 'Co-contributor',
       });
       edgeMap.add(edgeKey);
     }

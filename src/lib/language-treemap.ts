@@ -1,5 +1,5 @@
-import type { TechEntry, Repo } from "@/types";
-import { LANG_COLORS } from "@/lib/languages";
+import type { TechEntry, Repo } from '@/types';
+import { LANG_COLORS } from '@/lib/languages';
 
 export interface LanguageTreemapItem {
   language: string;
@@ -24,9 +24,12 @@ export function calculateLanguageTreemapData(
 
   return techStack.map((item) => {
     const percentage = Math.round((item.repoCount / totalCount) * 100);
-    const color = LANG_COLORS[item.language] || "#9a9a9a";
+    const color = LANG_COLORS[item.language] || '#9a9a9a';
     // Scale flex-grow between 1 and 10 for clean grid layout balance
-    const flexGrow = Math.max(1, Math.round((item.repoCount / totalCount) * 10));
+    const flexGrow = Math.max(
+      1,
+      Math.round((item.repoCount / totalCount) * 10),
+    );
 
     return {
       language: item.language,

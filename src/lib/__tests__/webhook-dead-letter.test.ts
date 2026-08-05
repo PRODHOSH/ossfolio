@@ -1,28 +1,28 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import {
   enqueueDeadLetterPayload,
   processDeadLetterQueue,
-} from "../webhook-dead-letter";
-import { supabaseAdmin } from "../supabase";
-import { refreshProfile } from "../refresh-profile";
+} from '../webhook-dead-letter';
+import { supabaseAdmin } from '../supabase';
+import { refreshProfile } from '../refresh-profile';
 
-vi.mock("../supabase", () => ({
+vi.mock('../supabase', () => ({
   supabaseAdmin: vi.fn(),
 }));
 
-vi.mock("../refresh-profile", () => ({
+vi.mock('../refresh-profile', () => ({
   refreshProfile: vi.fn(),
 }));
 
-describe("Webhook Dead-Letter Retry Queue", () => {
+describe('Webhook Dead-Letter Retry Queue', () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
-  describe("enqueueDeadLetterPayload", () => {
-    it("should insert failed payload into webhook_dead_letter_queue table", async () => {
+  describe('enqueueDeadLetterPayload', () => {
+    it('should insert failed payload into webhook_dead_letter_queue table', async () => {
       const mockSingle = vi.fn().mockResolvedValue({
-        data: { id: "dead-letter-123" },
+        data: { id: 'dead-letter-123' },
         error: null,
       });
       const mockSelect = vi.fn().mockReturnValue({ single: mockSingle });
@@ -34,29 +34,29 @@ describe("Webhook Dead-Letter Retry Queue", () => {
       } as never);
 
       const result = await enqueueDeadLetterPayload({
-        eventType: "push",
-        username: "octocat",
-        payload: { repository: "test-repo" },
-        errorReason: "transient_lock",
+        eventType: 'push',
+        username: 'octocat',
+        payload: { repository: 'test-repo' },
+        errorReason: 'transient_lock',
       });
 
-      expect(result).toEqual({ success: true, id: "dead-letter-123" });
-      expect(mockFrom).toHaveBeenCalledWith("webhook_dead_letter_queue");
+      expect(result).toEqual({ success: true, id: 'dead-letter-123' });
+      expect(mockFrom).toHaveBeenCalledWith('webhook_dead_letter_queue');
       expect(mockInsert).toHaveBeenCalledWith(
         expect.objectContaining({
-          event_type: "push",
-          username: "octocat",
-          error_reason: "transient_lock",
-          status: "pending",
+          event_type: 'push',
+          username: 'octocat',
+          error_reason: 'transient_lock',
+          status: 'pending',
           retry_count: 0,
         }),
       );
     });
 
-    it("should handle error when database insert fails", async () => {
+    it('should handle error when database insert fails', async () => {
       const mockSingle = vi.fn().mockResolvedValue({
         data: null,
-        error: { message: "DB Error" },
+        error: { message: 'DB Error' },
       });
       const mockSelect = vi.fn().mockReturnValue({ single: mockSingle });
       const mockInsert = vi.fn().mockReturnValue({ select: mockSelect });
@@ -67,8 +67,8 @@ describe("Webhook Dead-Letter Retry Queue", () => {
       } as never);
 
       const result = await enqueueDeadLetterPayload({
-        eventType: "push",
-        username: "octocat",
+        eventType: 'push',
+        username: 'octocat',
         payload: {},
       });
 
@@ -76,13 +76,13 @@ describe("Webhook Dead-Letter Retry Queue", () => {
     });
   });
 
-  describe("processDeadLetterQueue", () => {
-    it("should fetch due pending items, attempt refresh, and mark completed on success", async () => {
+  describe('processDeadLetterQueue', () => {
+    it('should fetch due pending items, attempt refresh, and mark completed on success', async () => {
       const mockPendingItems = [
         {
-          id: "item-1",
-          event_type: "push",
-          username: "octocat",
+          id: 'item-1',
+          event_type: 'push',
+          username: 'octocat',
           payload: {},
           retry_count: 0,
           max_retries: 5,
@@ -101,7 +101,7 @@ describe("Webhook Dead-Letter Retry Queue", () => {
       const mockUpdate = vi.fn().mockReturnValue({ eq: mockUpdateEq });
 
       const mockFrom = vi.fn().mockImplementation((table: string) => {
-        if (table === "webhook_dead_letter_queue") {
+        if (table === 'webhook_dead_letter_queue') {
           return {
             select: mockSelect,
             update: mockUpdate,
@@ -115,8 +115,8 @@ describe("Webhook Dead-Letter Retry Queue", () => {
       } as never);
 
       vi.mocked(refreshProfile).mockResolvedValue({
-        status: "refreshed",
-        username: "octocat",
+        status: 'refreshed',
+        username: 'octocat',
       });
 
       const stats = await processDeadLetterQueue(10);
@@ -128,18 +128,18 @@ describe("Webhook Dead-Letter Retry Queue", () => {
         retried: 0,
       });
 
-      expect(refreshProfile).toHaveBeenCalledWith("octocat");
+      expect(refreshProfile).toHaveBeenCalledWith('octocat');
       expect(mockUpdate).toHaveBeenCalledWith(
-        expect.objectContaining({ status: "completed" }),
+        expect.objectContaining({ status: 'completed' }),
       );
     });
 
-    it("should schedule retry with exponential backoff when refresh fails transiently", async () => {
+    it('should schedule retry with exponential backoff when refresh fails transiently', async () => {
       const mockPendingItems = [
         {
-          id: "item-2",
-          event_type: "push",
-          username: "octocat",
+          id: 'item-2',
+          event_type: 'push',
+          username: 'octocat',
           payload: {},
           retry_count: 1,
           max_retries: 5,
@@ -165,7 +165,7 @@ describe("Webhook Dead-Letter Retry Queue", () => {
       } as never);
 
       vi.mocked(refreshProfile).mockResolvedValue({
-        status: "rate_limited",
+        status: 'rate_limited',
         retryAfterSeconds: 600,
       });
 
@@ -180,7 +180,7 @@ describe("Webhook Dead-Letter Retry Queue", () => {
 
       expect(mockUpdate).toHaveBeenCalledWith(
         expect.objectContaining({
-          status: "pending",
+          status: 'pending',
           retry_count: 2,
         }),
       );

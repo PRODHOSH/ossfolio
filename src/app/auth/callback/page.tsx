@@ -1,9 +1,9 @@
-"use client";
+'use client';
 
-import { useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { supabase } from "@/lib/supabase";
-import type { Session } from "@supabase/supabase-js";
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { supabase } from '@/lib/supabase';
+import type { Session } from '@supabase/supabase-js';
 
 // Cap how long the post-login score sync may delay the redirect. The sync is
 // best-effort (the profile page recomputes the score live as a fallback), so a
@@ -31,10 +31,10 @@ async function requestScoreSync(
   accessToken: string,
   providerToken?: string,
 ): Promise<void> {
-  const res = await fetch("/api/profile/sync", {
-    method: "POST",
+  const res = await fetch('/api/profile/sync', {
+    method: 'POST',
     headers: {
-      "Content-Type": "application/json",
+      'Content-Type': 'application/json',
       Authorization: `Bearer ${accessToken}`,
     },
     // The GitHub OAuth token only widens the rate limit for this user's own lookup; the
@@ -43,7 +43,7 @@ async function requestScoreSync(
   });
 
   if (!res.ok) {
-    console.error("Score sync failed:", res.status);
+    console.error('Score sync failed:', res.status);
   }
 }
 
@@ -67,7 +67,7 @@ export default function AuthCallbackPage() {
       }
 
       if (!cancelled) {
-        router.replace(username ? `/${username}` : "/");
+        router.replace(username ? `/${username}` : '/');
       }
     }
 
@@ -81,7 +81,7 @@ export default function AuthCallbackPage() {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (cancelled || !session) return;
-      if (event === "SIGNED_IN" || event === "INITIAL_SESSION") {
+      if (event === 'SIGNED_IN' || event === 'INITIAL_SESSION') {
         await handleSession(session);
       }
     });
@@ -89,7 +89,7 @@ export default function AuthCallbackPage() {
     // Safety net: if no auth event arrives within AUTH_WAIT_TIMEOUT_MS, redirect
     // home so the user isn't stuck on the spinner indefinitely.
     const timeout = setTimeout(() => {
-      if (!cancelled) router.replace("/");
+      if (!cancelled) router.replace('/');
     }, AUTH_WAIT_TIMEOUT_MS);
 
     return () => {
@@ -102,14 +102,14 @@ export default function AuthCallbackPage() {
   return (
     <div
       style={{
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        minHeight: "100vh",
-        backgroundColor: "#ffffff",
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        minHeight: '100vh',
+        backgroundColor: '#ffffff',
       }}
     >
-      <p style={{ color: "#707070", fontSize: "14px" }}>Signing you in…</p>
+      <p style={{ color: '#707070', fontSize: '14px' }}>Signing you in…</p>
     </div>
   );
 }

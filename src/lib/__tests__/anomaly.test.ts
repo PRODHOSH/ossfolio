@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect } from 'vitest';
 import {
   detectAnomaly,
   applyAnomalyDiscount,
@@ -6,11 +6,13 @@ import {
   ANOMALY_THRESHOLDS,
   ANOMALY_SCORE_MULTIPLIER,
   type AnomalyResult,
-} from "@/lib/anomaly";
-import type { ContributorStats, Repo } from "@/types";
+} from '@/lib/anomaly';
+import type { ContributorStats, Repo } from '@/types';
 
 // Helper fixture factories
-const createStats = (overrides: Partial<ContributorStats> = {}): ContributorStats => ({
+const createStats = (
+  overrides: Partial<ContributorStats> = {},
+): ContributorStats => ({
   totalCommits: 500,
   totalPRs: 20,
   totalIssues: 10,
@@ -19,20 +21,20 @@ const createStats = (overrides: Partial<ContributorStats> = {}): ContributorStat
   ...overrides,
 });
 
-const createRepo = (stars: number, name = "test-repo"): Repo =>
+const createRepo = (stars: number, name = 'test-repo'): Repo =>
   ({
     name,
-    description: "Sample repo",
+    description: 'Sample repo',
     stars,
     forks: 5,
-    language: "TypeScript",
-    languageColor: "#3178c6",
+    language: 'TypeScript',
+    languageColor: '#3178c6',
     url: `https://github.com/user/${name}`,
-    topics: ["typescript"],
+    topics: ['typescript'],
   }) as Repo;
 
-describe("ANOMALY_THRESHOLDS and Constants", () => {
-  it("defines expected threshold constants", () => {
+describe('ANOMALY_THRESHOLDS and Constants', () => {
+  it('defines expected threshold constants', () => {
     expect(ANOMALY_THRESHOLDS.MIN_COMMITS).toBe(1000);
     expect(ANOMALY_THRESHOLDS.MAX_COMMIT_RATIO).toBe(50);
     expect(ANOMALY_THRESHOLDS.CREDIBLE_STARS).toBe(50);
@@ -40,8 +42,8 @@ describe("ANOMALY_THRESHOLDS and Constants", () => {
   });
 });
 
-describe("detectAnomaly", () => {
-  it("does not flag standard balanced open-source contributors", () => {
+describe('detectAnomaly', () => {
+  it('does not flag standard balanced open-source contributors', () => {
     const stats = createStats({
       totalCommits: 800,
       totalPRs: 50,
@@ -55,7 +57,7 @@ describe("detectAnomaly", () => {
     expect(result.commitRatio).toBe(800 / (50 + 20 + 30)); // 8
   });
 
-  it("does not flag accounts with commit volume below MIN_COMMITS threshold (Guard 1)", () => {
+  it('does not flag accounts with commit volume below MIN_COMMITS threshold (Guard 1)', () => {
     const stats = createStats({
       totalCommits: 999, // < 1000
       totalPRs: 0,
@@ -69,7 +71,7 @@ describe("detectAnomaly", () => {
     expect(result.commitRatio).toBe(999);
   });
 
-  it("does not flag high-commit accounts with community validation via stars (Guard 2)", () => {
+  it('does not flag high-commit accounts with community validation via stars (Guard 2)', () => {
     const stats = createStats({
       totalCommits: 5000,
       totalPRs: 2,
@@ -84,7 +86,7 @@ describe("detectAnomaly", () => {
     expect(result.commitRatio).toBe(2500);
   });
 
-  it("does not flag accounts with commit ratio below MAX_COMMIT_RATIO threshold (Guard 3)", () => {
+  it('does not flag accounts with commit ratio below MAX_COMMIT_RATIO threshold (Guard 3)', () => {
     const stats = createStats({
       totalCommits: 2000,
       totalPRs: 30,
@@ -98,7 +100,7 @@ describe("detectAnomaly", () => {
     expect(result.commitRatio).toBe(40);
   });
 
-  it("flags artificially manipulated accounts with high commits, low collaboration, and low stars", () => {
+  it('flags artificially manipulated accounts with high commits, low collaboration, and low stars', () => {
     const stats = createStats({
       totalCommits: 3000,
       totalPRs: 2,
@@ -109,10 +111,12 @@ describe("detectAnomaly", () => {
 
     expect(result.flagged).toBe(true);
     expect(result.commitRatio).toBe(1000);
-    expect(result.reason).toContain("Unusual commit ratio: 3,000 commits vs 3 PRs/issues/reviews (1000:1) with 5 stars");
+    expect(result.reason).toContain(
+      'Unusual commit ratio: 3,000 commits vs 3 PRs/issues/reviews (1000:1) with 5 stars',
+    );
   });
 
-  it("flags high-volume empty-commit spam accounts with zero collaborative activity", () => {
+  it('flags high-volume empty-commit spam accounts with zero collaborative activity', () => {
     const stats = createStats({
       totalCommits: 1500,
       totalPRs: 0,
@@ -123,10 +127,12 @@ describe("detectAnomaly", () => {
 
     expect(result.flagged).toBe(true);
     expect(result.commitRatio).toBe(1500);
-    expect(result.reason).toContain("1,500 commits vs 0 PRs/issues/reviews (1500:1) with 0 stars");
+    expect(result.reason).toContain(
+      '1,500 commits vs 0 PRs/issues/reviews (1500:1) with 0 stars',
+    );
   });
 
-  it("handles prolific review & PR specialists accurately without false positives", () => {
+  it('handles prolific review & PR specialists accurately without false positives', () => {
     const stats = createStats({
       totalCommits: 1200,
       totalPRs: 400,
@@ -140,8 +146,8 @@ describe("detectAnomaly", () => {
     expect(result.commitRatio).toBe(1.2);
   });
 
-  describe("boundary threshold cases", () => {
-    it("flags at exact boundary MIN_COMMITS when ratio is high and stars are low", () => {
+  describe('boundary threshold cases', () => {
+    it('flags at exact boundary MIN_COMMITS when ratio is high and stars are low', () => {
       const stats = createStats({
         totalCommits: 1000, // exact MIN_COMMITS
         totalPRs: 1,
@@ -153,7 +159,7 @@ describe("detectAnomaly", () => {
       expect(result.flagged).toBe(true);
     });
 
-    it("clears flag at exact CREDIBLE_STARS boundary", () => {
+    it('clears flag at exact CREDIBLE_STARS boundary', () => {
       const stats = createStats({
         totalCommits: 2000,
         totalPRs: 1,
@@ -167,7 +173,7 @@ describe("detectAnomaly", () => {
       expect(resultAt50.flagged).toBe(false);
     });
 
-    it("clears flag when ratio is just below MAX_COMMIT_RATIO boundary", () => {
+    it('clears flag when ratio is just below MAX_COMMIT_RATIO boundary', () => {
       const stats = createStats({
         totalCommits: 2450,
         totalPRs: 50,
@@ -182,8 +188,8 @@ describe("detectAnomaly", () => {
   });
 });
 
-describe("applyAnomalyDiscount", () => {
-  it("returns raw score untouched if not flagged", () => {
+describe('applyAnomalyDiscount', () => {
+  it('returns raw score untouched if not flagged', () => {
     const unflagged: AnomalyResult = {
       flagged: false,
       reason: null,
@@ -193,10 +199,10 @@ describe("applyAnomalyDiscount", () => {
     expect(applyAnomalyDiscount(0, unflagged)).toBe(0);
   });
 
-  it("applies 0.25 multiplier discount (rounded) when flagged", () => {
+  it('applies 0.25 multiplier discount (rounded) when flagged', () => {
     const flagged: AnomalyResult = {
       flagged: true,
-      reason: "High ratio",
+      reason: 'High ratio',
       commitRatio: 200,
     };
     expect(applyAnomalyDiscount(1000, flagged)).toBe(250);
@@ -205,8 +211,8 @@ describe("applyAnomalyDiscount", () => {
   });
 });
 
-describe("scoreWithAnomalyCheck", () => {
-  it("returns full raw score for legitimate contributors", () => {
+describe('scoreWithAnomalyCheck', () => {
+  it('returns full raw score for legitimate contributors', () => {
     const stats = createStats({
       totalCommits: 200,
       totalPRs: 10,
@@ -222,7 +228,7 @@ describe("scoreWithAnomalyCheck", () => {
     expect(score).toBeGreaterThan(0);
   });
 
-  it("discounts score for accounts flagged for commit-spam anomaly", () => {
+  it('discounts score for accounts flagged for commit-spam anomaly', () => {
     const stats = createStats({
       totalCommits: 4000,
       totalPRs: 1,

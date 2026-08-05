@@ -1,7 +1,7 @@
-"use client";
+'use client';
 
-import { useState, useEffect, useCallback } from "react";
-import { supabase } from "@/lib/supabase";
+import { useState, useEffect, useCallback } from 'react';
+import { supabase } from '@/lib/supabase';
 
 interface ProviderIntegrationsProps {
   username: string;
@@ -26,8 +26,8 @@ export function ProviderIntegrations({
     Record<string, ProviderStatsItem>
   >({});
   const [isEditing, setIsEditing] = useState(false);
-  const [inputGitlab, setInputGitlab] = useState("");
-  const [inputBitbucket, setInputBitbucket] = useState("");
+  const [inputGitlab, setInputGitlab] = useState('');
+  const [inputBitbucket, setInputBitbucket] = useState('');
   const [isSaving, setIsSaving] = useState(false);
 
   const loadProviders = useCallback(async () => {
@@ -40,11 +40,11 @@ export function ProviderIntegrations({
         setGitlabHandle(json.gitlabUsername || null);
         setBitbucketHandle(json.bitbucketUsername || null);
         setProviderStats(json.providerStats || {});
-        setInputGitlab(json.gitlabUsername || "");
-        setInputBitbucket(json.bitbucketUsername || "");
+        setInputGitlab(json.gitlabUsername || '');
+        setInputBitbucket(json.bitbucketUsername || '');
       }
     } catch (err) {
-      console.error("Failed to load provider integrations:", err);
+      console.error('Failed to load provider integrations:', err);
     }
   }, [username]);
 
@@ -58,10 +58,10 @@ export function ProviderIntegrations({
       const session = (await supabase.auth.getSession()).data.session;
       if (!session) return;
 
-      const res = await fetch("/api/profile/providers", {
-        method: "POST",
+      const res = await fetch('/api/profile/providers', {
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
           Authorization: `Bearer ${session.access_token}`,
         },
         body: JSON.stringify({
@@ -75,7 +75,7 @@ export function ProviderIntegrations({
         await loadProviders();
       }
     } catch (err) {
-      console.error("Error saving provider handles:", err);
+      console.error('Error saving provider handles:', err);
     } finally {
       setIsSaving(false);
     }
@@ -84,27 +84,27 @@ export function ProviderIntegrations({
   return (
     <div
       style={{
-        marginTop: "32px",
-        padding: "20px",
-        borderRadius: "16px",
-        backgroundColor: "var(--color-canvas-soft)",
-        border: "1px solid var(--color-hairline)",
+        marginTop: '32px',
+        padding: '20px',
+        borderRadius: '16px',
+        backgroundColor: 'var(--color-canvas-soft)',
+        border: '1px solid var(--color-hairline)',
       }}
     >
       <div
         style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          marginBottom: "16px",
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          marginBottom: '16px',
         }}
       >
         <div>
           <h3
             style={{
-              fontSize: "15px",
+              fontSize: '15px',
               fontWeight: 600,
-              color: "var(--color-ink)",
+              color: 'var(--color-ink)',
               margin: 0,
             }}
           >
@@ -112,12 +112,13 @@ export function ProviderIntegrations({
           </h3>
           <p
             style={{
-              fontSize: "12px",
-              color: "var(--color-ink-mute)",
-              margin: "2px 0 0 0",
+              fontSize: '12px',
+              color: 'var(--color-ink-mute)',
+              margin: '2px 0 0 0',
             }}
           >
-            Aggregated open-source contribution statistics across code hosting platforms.
+            Aggregated open-source contribution statistics across code hosting
+            platforms.
           </p>
         </div>
 
@@ -126,17 +127,17 @@ export function ProviderIntegrations({
             type="button"
             onClick={() => setIsEditing((prev) => !prev)}
             style={{
-              fontSize: "12px",
+              fontSize: '12px',
               fontWeight: 600,
-              color: "var(--color-primary)",
-              backgroundColor: "transparent",
-              border: "1px solid var(--color-hairline)",
-              borderRadius: "6px",
-              padding: "4px 10px",
-              cursor: "pointer",
+              color: 'var(--color-primary)',
+              backgroundColor: 'transparent',
+              border: '1px solid var(--color-hairline)',
+              borderRadius: '6px',
+              padding: '4px 10px',
+              cursor: 'pointer',
             }}
           >
-            {isEditing ? "Cancel" : "Manage Accounts"}
+            {isEditing ? 'Cancel' : 'Manage Accounts'}
           </button>
         )}
       </div>
@@ -145,22 +146,24 @@ export function ProviderIntegrations({
       {isEditing && (
         <div
           style={{
-            padding: "14px",
-            borderRadius: "10px",
-            backgroundColor: "var(--color-canvas)",
-            border: "1px solid var(--color-hairline-strong)",
-            marginBottom: "16px",
+            padding: '14px',
+            borderRadius: '10px',
+            backgroundColor: 'var(--color-canvas)',
+            border: '1px solid var(--color-hairline-strong)',
+            marginBottom: '16px',
           }}
         >
-          <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+          <div
+            style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}
+          >
             <div>
               <label
                 style={{
-                  display: "block",
-                  fontSize: "12px",
+                  display: 'block',
+                  fontSize: '12px',
                   fontWeight: 600,
-                  color: "var(--color-ink)",
-                  marginBottom: "4px",
+                  color: 'var(--color-ink)',
+                  marginBottom: '4px',
                 }}
               >
                 GitLab Handle
@@ -171,13 +174,13 @@ export function ProviderIntegrations({
                 value={inputGitlab}
                 onChange={(e) => setInputGitlab(e.target.value)}
                 style={{
-                  width: "100%",
-                  padding: "6px 10px",
-                  fontSize: "13px",
-                  borderRadius: "6px",
-                  border: "1px solid var(--color-hairline)",
-                  backgroundColor: "var(--color-canvas-soft)",
-                  color: "var(--color-ink)",
+                  width: '100%',
+                  padding: '6px 10px',
+                  fontSize: '13px',
+                  borderRadius: '6px',
+                  border: '1px solid var(--color-hairline)',
+                  backgroundColor: 'var(--color-canvas-soft)',
+                  color: 'var(--color-ink)',
                 }}
               />
             </div>
@@ -185,11 +188,11 @@ export function ProviderIntegrations({
             <div>
               <label
                 style={{
-                  display: "block",
-                  fontSize: "12px",
+                  display: 'block',
+                  fontSize: '12px',
                   fontWeight: 600,
-                  color: "var(--color-ink)",
-                  marginBottom: "4px",
+                  color: 'var(--color-ink)',
+                  marginBottom: '4px',
                 }}
               >
                 Bitbucket Handle
@@ -200,34 +203,40 @@ export function ProviderIntegrations({
                 value={inputBitbucket}
                 onChange={(e) => setInputBitbucket(e.target.value)}
                 style={{
-                  width: "100%",
-                  padding: "6px 10px",
-                  fontSize: "13px",
-                  borderRadius: "6px",
-                  border: "1px solid var(--color-hairline)",
-                  backgroundColor: "var(--color-canvas-soft)",
-                  color: "var(--color-ink)",
+                  width: '100%',
+                  padding: '6px 10px',
+                  fontSize: '13px',
+                  borderRadius: '6px',
+                  border: '1px solid var(--color-hairline)',
+                  backgroundColor: 'var(--color-canvas-soft)',
+                  color: 'var(--color-ink)',
                 }}
               />
             </div>
 
-            <div style={{ display: "flex", justifyContent: "flex-end", gap: "8px" }}>
+            <div
+              style={{
+                display: 'flex',
+                justifyContent: 'flex-end',
+                gap: '8px',
+              }}
+            >
               <button
                 type="button"
                 disabled={isSaving}
                 onClick={handleSaveProviders}
                 style={{
-                  padding: "6px 14px",
-                  fontSize: "12px",
+                  padding: '6px 14px',
+                  fontSize: '12px',
                   fontWeight: 600,
-                  color: "#ffffff",
-                  backgroundColor: "var(--color-primary)",
-                  border: "none",
-                  borderRadius: "6px",
-                  cursor: isSaving ? "wait" : "pointer",
+                  color: '#ffffff',
+                  backgroundColor: 'var(--color-primary)',
+                  border: 'none',
+                  borderRadius: '6px',
+                  cursor: isSaving ? 'wait' : 'pointer',
                 }}
               >
-                {isSaving ? "Saving..." : "Save Handles"}
+                {isSaving ? 'Saving...' : 'Save Handles'}
               </button>
             </div>
           </div>
@@ -237,45 +246,51 @@ export function ProviderIntegrations({
       {/* Platform Cards Grid */}
       <div
         style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
-          gap: "12px",
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+          gap: '12px',
         }}
       >
         {/* GitHub Card */}
         <div
           style={{
-            padding: "12px 14px",
-            borderRadius: "10px",
-            backgroundColor: "var(--color-canvas)",
-            border: "1px solid var(--color-hairline)",
+            padding: '12px 14px',
+            borderRadius: '10px',
+            backgroundColor: 'var(--color-canvas)',
+            border: '1px solid var(--color-hairline)',
           }}
         >
           <div
             style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              marginBottom: "8px",
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              marginBottom: '8px',
             }}
           >
-            <span style={{ fontSize: "14px", fontWeight: 600, color: "var(--color-ink)" }}>
+            <span
+              style={{
+                fontSize: '14px',
+                fontWeight: 600,
+                color: 'var(--color-ink)',
+              }}
+            >
               🐙 GitHub
             </span>
             <span
               style={{
-                fontSize: "11px",
+                fontSize: '11px',
                 fontWeight: 600,
-                color: "#3ecf8e",
-                backgroundColor: "rgba(62, 207, 142, 0.12)",
-                padding: "2px 6px",
-                borderRadius: "10px",
+                color: '#3ecf8e',
+                backgroundColor: 'rgba(62, 207, 142, 0.12)',
+                padding: '2px 6px',
+                borderRadius: '10px',
               }}
             >
               Primary
             </span>
           </div>
-          <div style={{ fontSize: "12px", color: "var(--color-ink-mute)" }}>
+          <div style={{ fontSize: '12px', color: 'var(--color-ink-mute)' }}>
             @{username}
           </div>
         </div>
@@ -283,55 +298,62 @@ export function ProviderIntegrations({
         {/* GitLab Card */}
         <div
           style={{
-            padding: "12px 14px",
-            borderRadius: "10px",
-            backgroundColor: "var(--color-canvas)",
+            padding: '12px 14px',
+            borderRadius: '10px',
+            backgroundColor: 'var(--color-canvas)',
             border: `1px solid ${
-              gitlabHandle ? "rgba(252, 109, 38, 0.4)" : "var(--color-hairline)"
+              gitlabHandle ? 'rgba(252, 109, 38, 0.4)' : 'var(--color-hairline)'
             }`,
           }}
         >
           <div
             style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              marginBottom: "8px",
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              marginBottom: '8px',
             }}
           >
-            <span style={{ fontSize: "14px", fontWeight: 600, color: "var(--color-ink)" }}>
+            <span
+              style={{
+                fontSize: '14px',
+                fontWeight: 600,
+                color: 'var(--color-ink)',
+              }}
+            >
               🦊 GitLab
             </span>
             <span
               style={{
-                fontSize: "11px",
+                fontSize: '11px',
                 fontWeight: 600,
-                color: gitlabHandle ? "#fc6d26" : "var(--color-ink-mute)",
+                color: gitlabHandle ? '#fc6d26' : 'var(--color-ink-mute)',
                 backgroundColor: gitlabHandle
-                  ? "rgba(252, 109, 38, 0.12)"
-                  : "var(--color-canvas-soft)",
-                padding: "2px 6px",
-                borderRadius: "10px",
+                  ? 'rgba(252, 109, 38, 0.12)'
+                  : 'var(--color-canvas-soft)',
+                padding: '2px 6px',
+                borderRadius: '10px',
               }}
             >
-              {gitlabHandle ? "Connected" : "Not Linked"}
+              {gitlabHandle ? 'Connected' : 'Not Linked'}
             </span>
           </div>
-          <div style={{ fontSize: "12px", color: "var(--color-ink-mute)" }}>
-            {gitlabHandle ? `@${gitlabHandle}` : "No GitLab handle linked"}
+          <div style={{ fontSize: '12px', color: 'var(--color-ink-mute)' }}>
+            {gitlabHandle ? `@${gitlabHandle}` : 'No GitLab handle linked'}
           </div>
 
           {providerStats.gitlab && (
             <div
               style={{
-                fontSize: "11px",
-                color: "var(--color-ink-mute)",
-                marginTop: "6px",
-                paddingTop: "6px",
-                borderTop: "1px solid var(--color-hairline)",
+                fontSize: '11px',
+                color: 'var(--color-ink-mute)',
+                marginTop: '6px',
+                paddingTop: '6px',
+                borderTop: '1px solid var(--color-hairline)',
               }}
             >
-              ⚡ {providerStats.gitlab.commits} commits · 🔀 {providerStats.gitlab.prs} PRs
+              ⚡ {providerStats.gitlab.commits} commits · 🔀{' '}
+              {providerStats.gitlab.prs} PRs
             </div>
           )}
         </div>
@@ -339,55 +361,66 @@ export function ProviderIntegrations({
         {/* Bitbucket Card */}
         <div
           style={{
-            padding: "12px 14px",
-            borderRadius: "10px",
-            backgroundColor: "var(--color-canvas)",
+            padding: '12px 14px',
+            borderRadius: '10px',
+            backgroundColor: 'var(--color-canvas)',
             border: `1px solid ${
-              bitbucketHandle ? "rgba(32, 80, 129, 0.4)" : "var(--color-hairline)"
+              bitbucketHandle
+                ? 'rgba(32, 80, 129, 0.4)'
+                : 'var(--color-hairline)'
             }`,
           }}
         >
           <div
             style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              marginBottom: "8px",
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              marginBottom: '8px',
             }}
           >
-            <span style={{ fontSize: "14px", fontWeight: 600, color: "var(--color-ink)" }}>
+            <span
+              style={{
+                fontSize: '14px',
+                fontWeight: 600,
+                color: 'var(--color-ink)',
+              }}
+            >
               🪣 Bitbucket
             </span>
             <span
               style={{
-                fontSize: "11px",
+                fontSize: '11px',
                 fontWeight: 600,
-                color: bitbucketHandle ? "#205081" : "var(--color-ink-mute)",
+                color: bitbucketHandle ? '#205081' : 'var(--color-ink-mute)',
                 backgroundColor: bitbucketHandle
-                  ? "rgba(32, 80, 129, 0.12)"
-                  : "var(--color-canvas-soft)",
-                padding: "2px 6px",
-                borderRadius: "10px",
+                  ? 'rgba(32, 80, 129, 0.12)'
+                  : 'var(--color-canvas-soft)',
+                padding: '2px 6px',
+                borderRadius: '10px',
               }}
             >
-              {bitbucketHandle ? "Connected" : "Not Linked"}
+              {bitbucketHandle ? 'Connected' : 'Not Linked'}
             </span>
           </div>
-          <div style={{ fontSize: "12px", color: "var(--color-ink-mute)" }}>
-            {bitbucketHandle ? `@${bitbucketHandle}` : "No Bitbucket handle linked"}
+          <div style={{ fontSize: '12px', color: 'var(--color-ink-mute)' }}>
+            {bitbucketHandle
+              ? `@${bitbucketHandle}`
+              : 'No Bitbucket handle linked'}
           </div>
 
           {providerStats.bitbucket && (
             <div
               style={{
-                fontSize: "11px",
-                color: "var(--color-ink-mute)",
-                marginTop: "6px",
-                paddingTop: "6px",
-                borderTop: "1px solid var(--color-hairline)",
+                fontSize: '11px',
+                color: 'var(--color-ink-mute)',
+                marginTop: '6px',
+                paddingTop: '6px',
+                borderTop: '1px solid var(--color-hairline)',
               }}
             >
-              ⚡ {providerStats.bitbucket.commits} commits · 🔀 {providerStats.bitbucket.prs} PRs
+              ⚡ {providerStats.bitbucket.commits} commits · 🔀{' '}
+              {providerStats.bitbucket.prs} PRs
             </div>
           )}
         </div>

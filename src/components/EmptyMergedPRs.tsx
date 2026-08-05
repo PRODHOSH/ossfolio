@@ -1,4 +1,4 @@
-import { GitPullRequest } from "lucide-react";
+import { GitPullRequest } from 'lucide-react';
 
 interface EmptyMergedPRsProps {
   username?: string;
@@ -16,7 +16,7 @@ export function EmptyMergedPRs({ username }: EmptyMergedPRsProps) {
       <p className="text-sm text-gray-500 dark:text-gray-400 max-w-sm mb-4">
         {username
           ? `${username} hasn't had any PRs merged yet. Start contributing to open source to see your merged PRs here.`
-          : "No merged pull requests to display. Once you start contributing, your merged PRs will appear here."}
+          : 'No merged pull requests to display. Once you start contributing, your merged PRs will appear here.'}
       </p>
       <a
         href="https://github.com/explore"

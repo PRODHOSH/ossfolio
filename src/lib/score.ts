@@ -5,7 +5,7 @@ import type {
   PRImpactDetails,
   IssueImpactDetails,
   ImpactBreakdown,
-} from "@/types";
+} from '@/types';
 
 export const SCORE_WEIGHTS = {
   COMMIT: 1,
@@ -57,28 +57,25 @@ export function getLabelMultiplier(labels: string[]): number {
 
   for (const label of normalized) {
     if (
-      label.includes("critical") ||
-      label.includes("security") ||
-      label.includes("urgent")
+      label.includes('critical') ||
+      label.includes('security') ||
+      label.includes('urgent')
     ) {
       maxMultiplier = Math.max(maxMultiplier, 2.0);
     } else if (
-      label.includes("bug") ||
-      label.includes("high-priority") ||
-      label.includes("breaking")
+      label.includes('bug') ||
+      label.includes('high-priority') ||
+      label.includes('breaking')
     ) {
       maxMultiplier = Math.max(maxMultiplier, 1.5);
-    } else if (
-      label.includes("enhancement") ||
-      label.includes("feature")
-    ) {
+    } else if (label.includes('enhancement') || label.includes('feature')) {
       maxMultiplier = Math.max(maxMultiplier, 1.2);
     } else if (
-      label.includes("documentation") ||
-      label.includes("docs") ||
-      label.includes("typo") ||
-      label.includes("chore") ||
-      label.includes("trivial")
+      label.includes('documentation') ||
+      label.includes('docs') ||
+      label.includes('typo') ||
+      label.includes('chore') ||
+      label.includes('trivial')
     ) {
       // Lower impact multiplier for trivial changes if no higher label exists
       if (maxMultiplier === 1.0) {
@@ -106,7 +103,9 @@ export function calculatePRImpactMultiplier(item: PRImpactDetails): number {
   return Math.min(Math.max(roundPrecision(raw), 0.5), 5.0);
 }
 
-export function calculateIssueImpactMultiplier(item: IssueImpactDetails): number {
+export function calculateIssueImpactMultiplier(
+  item: IssueImpactDetails,
+): number {
   const starMult = getRepoStarMultiplier(item.repoStars || 0);
   const labelMult = getLabelMultiplier(item.labels || []);
   const discMult = getDiscussionMultiplier(item.commentsCount || 0);
@@ -168,9 +167,7 @@ export function calculateContributionImpact(
     issues.reduce((sum, i) => sum + (i.repoStars || 0), 0);
   const totalItemsCount = prs.length + issues.length;
   const averageRepoStars =
-    totalItemsCount > 0
-      ? Math.round(totalRepoStarsSum / totalItemsCount)
-      : 0;
+    totalItemsCount > 0 ? Math.round(totalRepoStarsSum / totalItemsCount) : 0;
 
   return {
     impactMultiplier: overallImpactMultiplier,
@@ -203,8 +200,7 @@ export function getScoreBreakdown(
     stats.totalIssues * SCORE_WEIGHTS.ISSUE * impactBreakdown.issueMultiplier,
   );
   const reviewsContribution = stats.totalReviews * SCORE_WEIGHTS.REVIEW;
-  const starsContribution =
-    Math.min(totalStars, STAR_CAP) * SCORE_WEIGHTS.STAR;
+  const starsContribution = Math.min(totalStars, STAR_CAP) * SCORE_WEIGHTS.STAR;
 
   const rawTotal =
     commitsContribution +

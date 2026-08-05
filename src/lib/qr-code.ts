@@ -1,5 +1,5 @@
 export function getProfileUrl(username: string): string {
-  const cleanUsername = username ? username.trim() : "";
+  const cleanUsername = username ? username.trim() : '';
   return `https://ossfolio.qzz.io/${cleanUsername}`;
 }
 

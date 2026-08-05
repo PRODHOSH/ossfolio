@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 const createClientMock = vi.fn((url: string, key: string) => ({
   from: vi.fn(),
@@ -7,7 +7,7 @@ const createClientMock = vi.fn((url: string, key: string) => ({
   key,
 }));
 
-vi.mock("@supabase/supabase-js", () => ({
+vi.mock('@supabase/supabase-js', () => ({
   createClient: (...args: [string, string]) => createClientMock(...args),
 }));
 
@@ -17,20 +17,20 @@ import {
   supabaseAdmin,
   resetSupabaseClientForTesting,
   resetSupabaseAdminClientForTesting,
-} from "../supabase";
+} from '../supabase';
 
-describe("Lazy Supabase Client Initialization", () => {
+describe('Lazy Supabase Client Initialization', () => {
   beforeEach(() => {
     resetSupabaseClientForTesting();
     resetSupabaseAdminClientForTesting();
     createClientMock.mockClear();
   });
 
-  it("should not instantiate createClient upon module import", () => {
+  it('should not instantiate createClient upon module import', () => {
     expect(createClientMock).not.toHaveBeenCalled();
   });
 
-  it("should lazily instantiate createClient on getSupabase() invocation", () => {
+  it('should lazily instantiate createClient on getSupabase() invocation', () => {
     expect(createClientMock).not.toHaveBeenCalled();
     const client = getSupabase();
     expect(createClientMock).toHaveBeenCalledTimes(1);
@@ -41,7 +41,7 @@ describe("Lazy Supabase Client Initialization", () => {
     expect(createClientMock).toHaveBeenCalledTimes(1);
   });
 
-  it("should trigger lazy client creation upon Proxy property access", () => {
+  it('should trigger lazy client creation upon Proxy property access', () => {
     expect(createClientMock).not.toHaveBeenCalled();
     // Accessing property on the proxy triggers getSupabase()
     const _fromFn = supabase.from;
@@ -49,12 +49,12 @@ describe("Lazy Supabase Client Initialization", () => {
     expect(_fromFn).toBeDefined();
   });
 
-  it("should lazily instantiate and cache client in supabaseAdmin()", () => {
+  it('should lazily instantiate and cache client in supabaseAdmin()', () => {
     expect(createClientMock).not.toHaveBeenCalled();
     const client1 = supabaseAdmin();
     expect(createClientMock).toHaveBeenCalledTimes(1);
     const lastCall = createClientMock.mock.calls[0];
-    expect(lastCall[1]).toBe("placeholder-service-key");
+    expect(lastCall[1]).toBe('placeholder-service-key');
 
     // Repeated call reuses cached admin client instance
     const client2 = supabaseAdmin();

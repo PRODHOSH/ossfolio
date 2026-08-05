@@ -1,4 +1,4 @@
-import { POPULAR_LANGUAGES } from "./languages";
+import { POPULAR_LANGUAGES } from './languages';
 
 /**
  * Filter parsing and URL construction for the Explore leaderboard.
@@ -17,11 +17,11 @@ import { POPULAR_LANGUAGES } from "./languages";
 
 /** Minimum-score buckets offered alongside the language filter. */
 export const SCORE_TIERS = [
-  { label: "Any score", value: 0 },
-  { label: "100+", value: 100 },
-  { label: "500+", value: 500 },
-  { label: "1000+", value: 1000 },
-  { label: "2500+", value: 2500 },
+  { label: 'Any score', value: 0 },
+  { label: '100+', value: 100 },
+  { label: '500+', value: 500 },
+  { label: '1000+', value: 1000 },
+  { label: '2500+', value: 2500 },
 ] as const;
 
 const VALID_SCORES = new Set<number>(SCORE_TIERS.map((tier) => tier.value));
@@ -39,9 +39,9 @@ const VALID_SCORES = new Set<number>(SCORE_TIERS.map((tier) => tier.value));
  * `?lang=typescript` should still work.
  */
 export const normalizeLanguage = (raw: unknown): string | null => {
-  if (typeof raw !== "string") return null;
+  if (typeof raw !== 'string') return null;
   const trimmed = raw.trim();
-  if (trimmed === "") return null;
+  if (trimmed === '') return null;
   const match = POPULAR_LANGUAGES.find(
     (lang) => lang.toLowerCase() === trimmed.toLowerCase(),
   );
@@ -55,7 +55,7 @@ export const normalizeLanguage = (raw: unknown): string | null => {
  * keeps an invalid URL showing the full leaderboard rather than an error.
  */
 export const normalizeScoreTier = (raw: unknown): number => {
-  if (typeof raw !== "string") return 0;
+  if (typeof raw !== 'string') return 0;
   const parsed = Number.parseInt(raw.trim(), 10);
   if (!Number.isFinite(parsed)) return 0;
   return VALID_SCORES.has(parsed) ? parsed : 0;
@@ -91,11 +91,14 @@ export const buildExploreQuery = (
   const params = new URLSearchParams();
 
   // 1. Query Parameter Merging: Strictly filter out defaults and empty strings
-  if (merged.type && merged.type !== "users") params.set("type", merged.type);
-  if (merged.q && merged.q.trim() !== "") params.set("q", merged.q.trim());
-  if (merged.sortBy && merged.sortBy !== "score") params.set("sortBy", merged.sortBy);
-  if (merged.lang && merged.lang.trim() !== "") params.set("lang", merged.lang.trim());
-  if (merged.minScore && merged.minScore > 0) params.set("minScore", String(merged.minScore));
+  if (merged.type && merged.type !== 'users') params.set('type', merged.type);
+  if (merged.q && merged.q.trim() !== '') params.set('q', merged.q.trim());
+  if (merged.sortBy && merged.sortBy !== 'score')
+    params.set('sortBy', merged.sortBy);
+  if (merged.lang && merged.lang.trim() !== '')
+    params.set('lang', merged.lang.trim());
+  if (merged.minScore && merged.minScore > 0)
+    params.set('minScore', String(merged.minScore));
 
   // `page` is deliberately never emitted here.
   //
@@ -128,5 +131,5 @@ export const describeFilters = (filters: ExploreFilters): string => {
     filters.q ? `matching “${filters.q}”` : null,
   ]
     .filter(Boolean)
-    .join(" · ");   // U+00B7 middle dot, matching DESIGN.md
+    .join(' · '); // U+00B7 middle dot, matching DESIGN.md
 };

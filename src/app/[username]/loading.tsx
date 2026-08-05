@@ -7,15 +7,14 @@
  * animate-pulse), so the page holds its shape while data loads.
  */
 
-import { ProfileSkeleton } from "@/components/profile/ProfileSkeleton";
+import { ProfileSkeleton } from '@/components/profile/ProfileSkeleton';
 
 export default function ProfileLoading() {
   return (
     <main
-      style={{ backgroundColor: "var(--color-canvas)", minHeight: "100vh" }}
+      style={{ backgroundColor: 'var(--color-canvas)', minHeight: '100vh' }}
     >
       <ProfileSkeleton />
     </main>
   );
 }
-

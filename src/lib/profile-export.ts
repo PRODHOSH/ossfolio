@@ -27,7 +27,7 @@ export interface ProfileExportData {
  * Safely escape values for strict CSV formatting
  */
 function escapeCsv(value: string | number | null | undefined): string {
-  if (value == null) return "";
+  if (value == null) return '';
 
   const text = String(value);
 
@@ -134,7 +134,7 @@ export async function exportProfileData(
     mergedPRs.forEach((pr) => {
       // Robustly escape all dynamic string fields
       csvRows.push(
-        `${escapeCsv(pr.title)},${escapeCsv(pr.repoName)},${escapeCsv(pr.mergedAt)},${escapeCsv(pr.url)}`
+        `${escapeCsv(pr.title)},${escapeCsv(pr.repoName)},${escapeCsv(pr.mergedAt)},${escapeCsv(pr.url)}`,
       );
     });
 
@@ -199,7 +199,7 @@ export async function generateBadgeSvg(
 ): Promise<string> {
   const cleanUsername = username.trim().toLowerCase();
   const safeUsername = escapeXml(cleanUsername); // Sanitize for SVG insertion
-  
+
   const type = options.type || 'score';
   const themeKey = options.theme || 'dark';
   const theme = THEME_STYLES[themeKey] || THEME_STYLES.dark;
@@ -212,7 +212,7 @@ export async function generateBadgeSvg(
     totalReviews: 8,
     totalContributions: 190,
   };
-  
+
   let score = Math.min(
     99,
     Math.max(

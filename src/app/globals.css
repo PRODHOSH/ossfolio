@@ -13,9 +13,9 @@
   /* Text & Typography Core Layer (Adjusted to comply with WCAG AAA 7:1 standards on light canvas) */
   --color-ink: #171717;
   --color-ink-subtle: #212121;
-  --color-ink-mute: #595959;        /* ~7.0:1 contrast on #ffffff */
-  --color-ink-mute-2: #4a4a4a;      /* ~9.2:1 contrast on #ffffff */
-  --color-ink-faint: #3b3b3b;       /* ~12.2:1 contrast on #ffffff */
+  --color-ink-mute: #595959; /* ~7.0:1 contrast on #ffffff */
+  --color-ink-mute-2: #4a4a4a; /* ~9.2:1 contrast on #ffffff */
+  --color-ink-faint: #3b3b3b; /* ~12.2:1 contrast on #ffffff */
   --color-on-dark: #ffffff;
 
   /* Structural Surfaces Mapping Base */
@@ -83,9 +83,9 @@
   /* Invert Typography text visibility scales */
   --color-ink: #ffffff;
   --color-ink-subtle: #f5f5f5;
-  --color-ink-mute: #e0e0e0;       /* High contrast in dark mode */
-  --color-ink-mute-2: #cccccc;     /* High contrast in dark mode */
-  --color-ink-faint: #b3b3b3;      /* High contrast in dark mode */
+  --color-ink-mute: #e0e0e0; /* High contrast in dark mode */
+  --color-ink-mute-2: #cccccc; /* High contrast in dark mode */
+  --color-ink-faint: #b3b3b3; /* High contrast in dark mode */
 
   /* Tighten layout grid contrast dividers */
   --color-hairline: #2e2e2e;
@@ -110,11 +110,11 @@
   --color-canvas: #000000;
   --color-canvas-soft: #0a0a0a;
 
-  --color-ink: #ffffff;             /* 21:1 max contrast */
+  --color-ink: #ffffff; /* 21:1 max contrast */
   --color-ink-subtle: #ffffff;
-  --color-ink-mute: #f0f0f0;        /* >18:1 contrast */
-  --color-ink-mute-2: #e0e0e0;      /* >15:1 contrast */
-  --color-ink-faint: #d4d4d4;       /* >12:1 contrast */
+  --color-ink-mute: #f0f0f0; /* >18:1 contrast */
+  --color-ink-mute-2: #e0e0e0; /* >15:1 contrast */
+  --color-ink-faint: #d4d4d4; /* >12:1 contrast */
   --color-nav-mute: #ffffff;
 
   --color-hairline: #525252;

@@ -1,7 +1,7 @@
-import { supabase } from "@/lib/supabase";
-import { sanitizeUrl } from "@/lib/validators/api";
-import { sanitizeString } from "@/lib/sanitizer";
-import type { FundingLink, SponsorItem } from "@/types";
+import { supabase } from '@/lib/supabase';
+import { sanitizeUrl } from '@/lib/validators/api';
+import { sanitizeString } from '@/lib/sanitizer';
+import type { FundingLink, SponsorItem } from '@/types';
 
 export type { FundingLink, SponsorItem };
 
@@ -12,11 +12,11 @@ export interface SponsorshipData {
 }
 
 export const SUPPORTED_FUNDING_PLATFORMS = [
-  "GitHub Sponsors",
-  "Patreon",
-  "Open Collective",
-  "Buy Me a Coffee",
-  "Custom",
+  'GitHub Sponsors',
+  'Patreon',
+  'Open Collective',
+  'Buy Me a Coffee',
+  'Custom',
 ] as const;
 
 /**
@@ -28,12 +28,14 @@ export function sanitizeFundingLinks(rawLinks: unknown): FundingLink[] {
   return rawLinks
     .slice(0, 10)
     .map((item) => {
-      if (!item || typeof item !== "object") return null;
+      if (!item || typeof item !== 'object') return null;
       const l = item as Record<string, unknown>;
-      const platformRaw = String(l.platform || "Custom");
-      const platform = (SUPPORTED_FUNDING_PLATFORMS as readonly string[]).includes(platformRaw)
-        ? (platformRaw as FundingLink["platform"])
-        : "Custom";
+      const platformRaw = String(l.platform || 'Custom');
+      const platform = (
+        SUPPORTED_FUNDING_PLATFORMS as readonly string[]
+      ).includes(platformRaw)
+        ? (platformRaw as FundingLink['platform'])
+        : 'Custom';
 
       const url = sanitizeUrl(l.url);
       if (!url) return null;
@@ -53,12 +55,12 @@ export function sanitizeSponsors(rawSponsors: unknown): SponsorItem[] {
 
   for (let index = 0; index < Math.min(rawSponsors.length, 20); index++) {
     const item = rawSponsors[index];
-    if (!item || typeof item !== "object") continue;
+    if (!item || typeof item !== 'object') continue;
     const s = item as Record<string, unknown>;
     const name = sanitizeString(s.name, 60);
     if (!name) continue;
 
-    const tier = sanitizeString(s.tier, 40) || "Sponsor";
+    const tier = sanitizeString(s.tier, 40) || 'Sponsor';
     const logoUrl = sanitizeUrl(s.logoUrl) || undefined;
     const url = sanitizeUrl(s.url) || undefined;
 
@@ -78,12 +80,12 @@ export function sanitizeSponsors(rawSponsors: unknown): SponsorItem[] {
  * Fetch public sponsorship and funding data for a given username
  */
 export async function getSponsorshipData(
-  username: string
+  username: string,
 ): Promise<SponsorshipData> {
-  const cleanUsername = username ? username.trim().toLowerCase() : "";
+  const cleanUsername = username ? username.trim().toLowerCase() : '';
   if (!cleanUsername) {
     return {
-      username: "",
+      username: '',
       fundingLinks: [],
       sponsors: [],
     };
@@ -91,9 +93,9 @@ export async function getSponsorshipData(
 
   try {
     const { data: profile, error } = await supabase
-      .from("profiles")
-      .select("funding_links, sponsors")
-      .eq("username", cleanUsername)
+      .from('profiles')
+      .select('funding_links, sponsors')
+      .eq('username', cleanUsername)
       .maybeSingle();
 
     if (!error && profile) {
@@ -104,7 +106,7 @@ export async function getSponsorshipData(
       };
     }
   } catch (err) {
-    console.warn("Failed to fetch sponsorship data from Supabase:", err);
+    console.warn('Failed to fetch sponsorship data from Supabase:', err);
   }
 
   // Fallback defaults (or GitHub Sponsors link if none configured)
@@ -112,7 +114,7 @@ export async function getSponsorshipData(
     username: cleanUsername,
     fundingLinks: [
       {
-        platform: "GitHub Sponsors",
+        platform: 'GitHub Sponsors',
         url: `https://github.com/sponsors/${cleanUsername}`,
       },
     ],

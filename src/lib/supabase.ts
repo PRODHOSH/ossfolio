@@ -1,20 +1,22 @@
-import { createClient, type SupabaseClient } from "@supabase/supabase-js";
-import { isSupabaseConfigured } from "@/lib/env";
+import { createClient, type SupabaseClient } from '@supabase/supabase-js';
+import { isSupabaseConfigured } from '@/lib/env';
 
 function getSupabaseUrl(): string {
-  return process.env.NEXT_PUBLIC_SUPABASE_URL || "https://placeholder.supabase.co";
+  return (
+    process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co'
+  );
 }
 
 function getSupabaseAnonKey(): string {
-  return process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "placeholder-anon-key";
+  return process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder-anon-key';
 }
 
 function warningMissingEnv() {
-  if (typeof window !== "undefined" && !isSupabaseConfigured()) {
+  if (typeof window !== 'undefined' && !isSupabaseConfigured()) {
     console.warn(
-      "[OSSfolio] Supabase is not configured. " +
-        "Copy .env.example to .env.local and fill in your Supabase project details. " +
-        "See CONTRIBUTING.md for setup instructions."
+      '[OSSfolio] Supabase is not configured. ' +
+        'Copy .env.example to .env.local and fill in your Supabase project details. ' +
+        'See CONTRIBUTING.md for setup instructions.',
     );
   }
 }
@@ -44,9 +46,9 @@ export const supabase = new Proxy({} as SupabaseClient, {
   get(_target, prop) {
     const client = getSupabase();
     const value = (client as any)[prop];
-    
+
     // Crucial fix: Bind methods back to the client instance so they don't lose 'this' context
-    return typeof value === "function" ? value.bind(client) : value;
+    return typeof value === 'function' ? value.bind(client) : value;
   },
 });
 
@@ -54,7 +56,7 @@ export function supabaseAdmin(): SupabaseClient {
   if (!_adminClient) {
     warningMissingEnv();
     const serviceKey =
-      process.env.SUPABASE_SERVICE_ROLE_KEY || "placeholder-service-key";
+      process.env.SUPABASE_SERVICE_ROLE_KEY || 'placeholder-service-key';
     _adminClient = createClient(getSupabaseUrl(), serviceKey);
   }
   return _adminClient;

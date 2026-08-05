@@ -1,8 +1,8 @@
-"use client";
+'use client';
 
-import { useMemo, useState } from "react";
-import { AnimatePresence, motion } from "framer-motion";
-import { LANG_COLORS } from "@/lib/languages";
+import { useMemo, useState } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
+import { LANG_COLORS } from '@/lib/languages';
 
 interface GitHubRepo {
   id: number;
@@ -25,18 +25,18 @@ export function ProfileReposSection({
   repos,
   username,
 }: ProfileReposSectionProps) {
-  const [repoSort, setRepoSort] = useState<"stars" | "forks" | "updated">(
-    "stars",
+  const [repoSort, setRepoSort] = useState<'stars' | 'forks' | 'updated'>(
+    'stars',
   );
-  const [repoQuery, setRepoQuery] = useState<string>("");
+  const [repoQuery, setRepoQuery] = useState<string>('');
 
-  const sortOptions = ["stars", "forks", "updated"] as const;
+  const sortOptions = ['stars', 'forks', 'updated'] as const;
 
   const sortedRepos = useMemo(() => {
     return [...repos].sort((a, b) => {
-      if (repoSort === "forks") return b.forks_count - a.forks_count;
-      if (repoSort === "updated")
-        return (b.pushed_at || "").localeCompare(a.pushed_at || "");
+      if (repoSort === 'forks') return b.forks_count - a.forks_count;
+      if (repoSort === 'updated')
+        return (b.pushed_at || '').localeCompare(a.pushed_at || '');
       return b.stargazers_count - a.stargazers_count;
     });
   }, [repos, repoSort]);
@@ -50,24 +50,24 @@ export function ProfileReposSection({
   }, [sortedRepos, trimmedQuery]);
 
   return (
-    <div style={{ marginTop: "40px" }}>
+    <div style={{ marginTop: '40px' }}>
       <div
         style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          margin: "0 0 12px 0",
-          flexWrap: "wrap",
-          gap: "12px",
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          margin: '0 0 12px 0',
+          flexWrap: 'wrap',
+          gap: '12px',
         }}
       >
         <h2
           style={{
-            fontSize: "16px",
+            fontSize: '16px',
             fontWeight: 600,
-            color: "var(--color-ink)",
+            color: 'var(--color-ink)',
             margin: 0,
-            letterSpacing: "-0.2px",
+            letterSpacing: '-0.2px',
           }}
         >
           Popular repositories
@@ -75,21 +75,21 @@ export function ProfileReposSection({
 
         <div
           style={{
-            display: "flex",
-            gap: "10px",
-            flexWrap: "wrap",
-            alignItems: "center",
-            justifyContent: "flex-end",
+            display: 'flex',
+            gap: '10px',
+            flexWrap: 'wrap',
+            alignItems: 'center',
+            justifyContent: 'flex-end',
           }}
         >
           <label
-            style={{ display: "flex", flexDirection: "column", gap: "4px" }}
+            style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}
           >
             <span
               style={{
-                fontSize: "12px",
+                fontSize: '12px',
                 fontWeight: 600,
-                color: "var(--color-ink-mute)",
+                color: 'var(--color-ink-mute)',
               }}
             >
               Search repositories
@@ -101,15 +101,15 @@ export function ProfileReposSection({
               placeholder="Filter by repo name"
               aria-label="Filter repositories by name"
               style={{
-                width: "260px",
-                maxWidth: "80vw",
-                padding: "8px 12px",
-                fontSize: "13px",
-                borderRadius: "10px",
-                border: "1px solid var(--color-hairline)",
-                backgroundColor: "var(--color-canvas)",
-                color: "var(--color-ink)",
-                outline: "none",
+                width: '260px',
+                maxWidth: '80vw',
+                padding: '8px 12px',
+                fontSize: '13px',
+                borderRadius: '10px',
+                border: '1px solid var(--color-hairline)',
+                backgroundColor: 'var(--color-canvas)',
+                color: 'var(--color-ink)',
+                outline: 'none',
               }}
             />
           </label>
@@ -117,7 +117,7 @@ export function ProfileReposSection({
           <div
             role="group"
             aria-label="Sort popular repositories"
-            style={{ display: "flex", gap: "6px" }}
+            style={{ display: 'flex', gap: '6px' }}
           >
             {sortOptions.map((option) => (
               <button
@@ -126,28 +126,28 @@ export function ProfileReposSection({
                 aria-pressed={repoSort === option}
                 onClick={() => setRepoSort(option)}
                 style={{
-                  padding: "4px 10px",
-                  fontSize: "12px",
+                  padding: '4px 10px',
+                  fontSize: '12px',
                   fontWeight: repoSort === option ? 600 : 400,
                   color:
-                    repoSort === option ? "#171717" : "var(--color-ink-mute)",
+                    repoSort === option ? '#171717' : 'var(--color-ink-mute)',
                   backgroundColor:
                     repoSort === option
-                      ? "#3ecf8e"
-                      : "var(--color-canvas-soft)",
+                      ? '#3ecf8e'
+                      : 'var(--color-canvas-soft)',
                   border:
                     repoSort === option
-                      ? "none"
-                      : "1px solid var(--color-hairline)",
-                  borderRadius: "9999px",
-                  cursor: "pointer",
+                      ? 'none'
+                      : '1px solid var(--color-hairline)',
+                  borderRadius: '9999px',
+                  cursor: 'pointer',
                 }}
               >
-                {option === "stars"
-                  ? "Stars"
-                  : option === "forks"
-                    ? "Forks"
-                    : "Recent"}
+                {option === 'stars'
+                  ? 'Stars'
+                  : option === 'forks'
+                    ? 'Forks'
+                    : 'Recent'}
               </button>
             ))}
           </div>
@@ -157,16 +157,16 @@ export function ProfileReposSection({
       {repos.length === 0 ? (
         <div
           style={{
-            padding: "40px",
-            border: "1px dashed var(--color-hairline-strong)",
-            borderRadius: "12px",
-            textAlign: "center",
-            backgroundColor: "var(--color-canvas-soft)",
-            margin: "16px 0",
+            padding: '40px',
+            border: '1px dashed var(--color-hairline-strong)',
+            borderRadius: '12px',
+            textAlign: 'center',
+            backgroundColor: 'var(--color-canvas-soft)',
+            margin: '16px 0',
           }}
         >
           <svg
-            style={{ margin: "0 auto 12px", color: "var(--color-ink-mute-2)" }}
+            style={{ margin: '0 auto 12px', color: 'var(--color-ink-mute-2)' }}
             width="36"
             height="36"
             viewBox="0 0 24 24"
@@ -181,9 +181,9 @@ export function ProfileReposSection({
           </svg>
           <p
             style={{
-              fontSize: "14px",
+              fontSize: '14px',
               fontWeight: 600,
-              color: "var(--color-ink)",
+              color: 'var(--color-ink)',
               margin: 0,
             }}
           >
@@ -191,9 +191,9 @@ export function ProfileReposSection({
           </p>
           <p
             style={{
-              fontSize: "13px",
-              color: "var(--color-ink-mute)",
-              margin: "4px 0 0 0",
+              fontSize: '13px',
+              color: 'var(--color-ink-mute)',
+              margin: '4px 0 0 0',
             }}
           >
             This profile doesn’t have any public repositories yet.
@@ -202,16 +202,16 @@ export function ProfileReposSection({
       ) : filteredRepos.length === 0 ? (
         <div
           style={{
-            padding: "40px",
-            border: "1px dashed var(--color-hairline-strong)",
-            borderRadius: "12px",
-            textAlign: "center",
-            backgroundColor: "var(--color-canvas-soft)",
-            margin: "16px 0",
+            padding: '40px',
+            border: '1px dashed var(--color-hairline-strong)',
+            borderRadius: '12px',
+            textAlign: 'center',
+            backgroundColor: 'var(--color-canvas-soft)',
+            margin: '16px 0',
           }}
         >
           <svg
-            style={{ margin: "0 auto 12px", color: "var(--color-ink-mute-2)" }}
+            style={{ margin: '0 auto 12px', color: 'var(--color-ink-mute-2)' }}
             width="32"
             height="32"
             viewBox="0 0 24 24"
@@ -224,33 +224,33 @@ export function ProfileReposSection({
           </svg>
           <p
             style={{
-              fontSize: "14px",
+              fontSize: '14px',
               fontWeight: 600,
-              color: "var(--color-ink)",
+              color: 'var(--color-ink)',
               margin: 0,
             }}
           >
             {trimmedQuery
-              ? "No repositories match your search"
-              : "No repositories found"}
+              ? 'No repositories match your search'
+              : 'No repositories found'}
           </p>
           <p
             style={{
-              fontSize: "13px",
-              color: "var(--color-ink-mute)",
-              margin: "4px 0 0 0",
+              fontSize: '13px',
+              color: 'var(--color-ink-mute)',
+              margin: '4px 0 0 0',
             }}
           >
-            {trimmedQuery ? "Try a different search term" : ""}
+            {trimmedQuery ? 'Try a different search term' : ''}
           </p>
         </div>
       ) : (
         <>
           <div
             style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
-              gap: "16px",
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
+              gap: '16px',
             }}
           >
             <AnimatePresence mode="popLayout">
@@ -263,7 +263,7 @@ export function ProfileReposSection({
                   animate={{ opacity: 1, scale: 1 }}
                   exit={{ opacity: 0, scale: 0.96 }}
                   transition={{
-                    type: "spring",
+                    type: 'spring',
                     stiffness: 350,
                     damping: 25,
                     opacity: { duration: 0.2 },
@@ -272,27 +272,27 @@ export function ProfileReposSection({
                   target="_blank"
                   rel="noopener noreferrer"
                   style={{
-                    display: "flex",
-                    flexDirection: "column",
-                    gap: "8px",
-                    padding: "20px",
-                    border: "1px solid var(--color-hairline)",
-                    borderRadius: "12px",
-                    textDecoration: "none",
-                    backgroundColor: "var(--color-canvas-soft)",
-                    boxShadow: "0 2px 8px rgba(0, 0, 0, 0.08)",
-                    transition: "border-color 0.15s, box-shadow 0.15s",
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '8px',
+                    padding: '20px',
+                    border: '1px solid var(--color-hairline)',
+                    borderRadius: '12px',
+                    textDecoration: 'none',
+                    backgroundColor: 'var(--color-canvas-soft)',
+                    boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)',
+                    transition: 'border-color 0.15s, box-shadow 0.15s',
                   }}
                 >
                   <p
                     style={{
-                      fontSize: "14px",
+                      fontSize: '14px',
                       fontWeight: 600,
-                      color: "var(--color-ink)",
+                      color: 'var(--color-ink)',
                       margin: 0,
-                      overflow: "hidden",
-                      textOverflow: "ellipsis",
-                      whiteSpace: "nowrap",
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap',
                     }}
                   >
                     {repo.name}
@@ -300,34 +300,34 @@ export function ProfileReposSection({
                   <p
                     className="line-clamp-2"
                     style={{
-                      fontSize: "13px",
-                      color: "var(--color-ink-mute)",
+                      fontSize: '13px',
+                      color: 'var(--color-ink-mute)',
                       margin: 0,
                       lineHeight: 1.45,
-                      minHeight: "38px",
+                      minHeight: '38px',
                     }}
                   >
-                    {repo.description || "No description"}
+                    {repo.description || 'No description'}
                   </p>
                   {repo.topics && repo.topics.length > 0 && (
                     <div
                       style={{
-                        display: "flex",
-                        flexWrap: "wrap",
-                        gap: "4px",
-                        marginTop: "8px",
+                        display: 'flex',
+                        flexWrap: 'wrap',
+                        gap: '4px',
+                        marginTop: '8px',
                       }}
                     >
                       {repo.topics.slice(0, 3).map((topic) => (
                         <span
                           key={topic}
                           style={{
-                            fontSize: "11px",
-                            padding: "2px 8px",
-                            borderRadius: "9999px",
-                            backgroundColor: "var(--color-canvas-soft)",
-                            color: "var(--color-ink-mute)",
-                            border: "1px solid var(--color-hairline)",
+                            fontSize: '11px',
+                            padding: '2px 8px',
+                            borderRadius: '9999px',
+                            backgroundColor: 'var(--color-canvas-soft)',
+                            color: 'var(--color-ink-mute)',
+                            border: '1px solid var(--color-hairline)',
                           }}
                         >
                           {topic}
@@ -336,9 +336,9 @@ export function ProfileReposSection({
                       {repo.topics.length > 3 && (
                         <span
                           style={{
-                            fontSize: "11px",
-                            padding: "2px 6px",
-                            color: "var(--color-ink-mute)",
+                            fontSize: '11px',
+                            padding: '2px 6px',
+                            color: 'var(--color-ink-mute)',
                           }}
                         >
                           +{repo.topics.length - 3} more
@@ -348,30 +348,30 @@ export function ProfileReposSection({
                   )}
                   <div
                     style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "16px",
-                      marginTop: "auto",
-                      paddingTop: "8px",
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '16px',
+                      marginTop: 'auto',
+                      paddingTop: '8px',
                     }}
                   >
                     {repo.language && (
                       <span
                         style={{
-                          display: "flex",
-                          alignItems: "center",
-                          gap: "5px",
-                          fontSize: "12px",
-                          color: "var(--color-ink-mute)",
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '5px',
+                          fontSize: '12px',
+                          color: 'var(--color-ink-mute)',
                         }}
                       >
                         <span
                           style={{
-                            width: "10px",
-                            height: "10px",
-                            borderRadius: "9999px",
+                            width: '10px',
+                            height: '10px',
+                            borderRadius: '9999px',
                             backgroundColor:
-                              LANG_COLORS[repo.language] ?? "#9a9a9a",
+                              LANG_COLORS[repo.language] ?? '#9a9a9a',
                             flexShrink: 0,
                           }}
                         />
@@ -380,11 +380,11 @@ export function ProfileReposSection({
                     )}
                     <span
                       style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "4px",
-                        fontSize: "12px",
-                        color: "var(--color-ink-mute)",
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '4px',
+                        fontSize: '12px',
+                        color: 'var(--color-ink-mute)',
                       }}
                     >
                       <svg
@@ -397,15 +397,15 @@ export function ProfileReposSection({
                       >
                         <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
                       </svg>
-                      {repo.stargazers_count.toLocaleString("en-US")}
+                      {repo.stargazers_count.toLocaleString('en-US')}
                     </span>
                     <span
                       style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "4px",
-                        fontSize: "12px",
-                        color: "var(--color-ink-mute)",
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '4px',
+                        fontSize: '12px',
+                        color: 'var(--color-ink-mute)',
                       }}
                     >
                       <svg
@@ -421,7 +421,7 @@ export function ProfileReposSection({
                         <circle cx="18" cy="6" r="3" />
                         <path d="M18 9a9 9 0 0 1-9 9M6 9a9 9 0 0 0 9 9" />
                       </svg>
-                      {repo.forks_count.toLocaleString("en-US")}
+                      {repo.forks_count.toLocaleString('en-US')}
                     </span>
                   </div>
                 </motion.a>
@@ -429,19 +429,19 @@ export function ProfileReposSection({
             </AnimatePresence>
           </div>
 
-          <div style={{ marginTop: "20px" }}>
+          <div style={{ marginTop: '20px' }}>
             <a
               href={`https://github.com/${username}?tab=repositories`}
               target="_blank"
               rel="noopener noreferrer"
               aria-label="View all repositories on GitHub (opens in a new tab)"
               style={{
-                fontSize: "13px",
-                color: "var(--color-ink-mute)",
-                textDecoration: "none",
-                display: "inline-flex",
-                alignItems: "center",
-                gap: "4px",
+                fontSize: '13px',
+                color: 'var(--color-ink-mute)',
+                textDecoration: 'none',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '4px',
               }}
             >
               View all repositories on GitHub

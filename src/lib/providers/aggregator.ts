@@ -1,4 +1,4 @@
-import type { ContributorStats, Repo } from "@/types";
+import type { ContributorStats, Repo } from '@/types';
 
 export interface ProviderBreakdown {
   commits: number;
@@ -23,15 +23,37 @@ export function aggregateMultiPlatformStats(
   gitlab?: { stats: ContributorStats; repos: Repo[] },
   bitbucket?: { stats: ContributorStats; repos: Repo[] },
 ): MultiProviderResult {
-  const ghStats = github.stats || { totalCommits: 0, totalPRs: 0, totalIssues: 0, totalReviews: 0, totalContributions: 0 };
-  const glStats = gitlab?.stats || { totalCommits: 0, totalPRs: 0, totalIssues: 0, totalReviews: 0, totalContributions: 0 };
-  const bbStats = bitbucket?.stats || { totalCommits: 0, totalPRs: 0, totalIssues: 0, totalReviews: 0, totalContributions: 0 };
+  const ghStats = github.stats || {
+    totalCommits: 0,
+    totalPRs: 0,
+    totalIssues: 0,
+    totalReviews: 0,
+    totalContributions: 0,
+  };
+  const glStats = gitlab?.stats || {
+    totalCommits: 0,
+    totalPRs: 0,
+    totalIssues: 0,
+    totalReviews: 0,
+    totalContributions: 0,
+  };
+  const bbStats = bitbucket?.stats || {
+    totalCommits: 0,
+    totalPRs: 0,
+    totalIssues: 0,
+    totalReviews: 0,
+    totalContributions: 0,
+  };
 
-  const totalCommits = ghStats.totalCommits + glStats.totalCommits + bbStats.totalCommits;
+  const totalCommits =
+    ghStats.totalCommits + glStats.totalCommits + bbStats.totalCommits;
   const totalPRs = ghStats.totalPRs + glStats.totalPRs + bbStats.totalPRs;
-  const totalIssues = ghStats.totalIssues + glStats.totalIssues + bbStats.totalIssues;
-  const totalReviews = ghStats.totalReviews + glStats.totalReviews + bbStats.totalReviews;
-  const totalContributions = totalCommits + totalPRs * 3 + totalIssues * 2 + totalReviews * 2;
+  const totalIssues =
+    ghStats.totalIssues + glStats.totalIssues + bbStats.totalIssues;
+  const totalReviews =
+    ghStats.totalReviews + glStats.totalReviews + bbStats.totalReviews;
+  const totalContributions =
+    totalCommits + totalPRs * 3 + totalIssues * 2 + totalReviews * 2;
 
   const combinedStats: ContributorStats = {
     totalCommits,
@@ -56,7 +78,12 @@ export function aggregateMultiPlatformStats(
         prs: ghStats.totalPRs,
         issues: ghStats.totalIssues,
         reviews: ghStats.totalReviews,
-        totalContributions: ghStats.totalContributions || (ghStats.totalCommits + ghStats.totalPRs * 3 + ghStats.totalIssues * 2 + ghStats.totalReviews * 2),
+        totalContributions:
+          ghStats.totalContributions ||
+          ghStats.totalCommits +
+            ghStats.totalPRs * 3 +
+            ghStats.totalIssues * 2 +
+            ghStats.totalReviews * 2,
       },
 
       ...(gitlab && glStats.totalCommits > 0

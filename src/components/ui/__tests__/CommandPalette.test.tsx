@@ -1,18 +1,21 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
-import React from "react";
-import { CommandPaletteProvider, useCommandPalette } from "@/context/CommandPaletteContext";
-import { CommandPalette } from "../CommandPalette";
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { render, screen, fireEvent } from '@testing-library/react';
+import React from 'react';
+import {
+  CommandPaletteProvider,
+  useCommandPalette,
+} from '@/context/CommandPaletteContext';
+import { CommandPalette } from '../CommandPalette';
 
 // Mock next/navigation
-vi.mock("next/navigation", () => ({
+vi.mock('next/navigation', () => ({
   useRouter: () => ({
     push: vi.fn(),
   }),
 }));
 
 // Mock Supabase
-vi.mock("@/lib/supabase", () => ({
+vi.mock('@/lib/supabase', () => ({
   supabase: {
     auth: {
       getSession: vi.fn().mockResolvedValue({ data: { session: null } }),
@@ -29,12 +32,12 @@ function TestConsumer() {
   );
 }
 
-describe("CommandPalette Component", () => {
+describe('CommandPalette Component', () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
-  it("is hidden by default and opens when triggered via context", () => {
+  it('is hidden by default and opens when triggered via context', () => {
     render(
       <CommandPaletteProvider>
         <TestConsumer />
@@ -42,15 +45,17 @@ describe("CommandPalette Component", () => {
       </CommandPaletteProvider>,
     );
 
-    expect(screen.queryByRole("dialog")).toBeNull();
+    expect(screen.queryByRole('dialog')).toBeNull();
 
-    fireEvent.click(screen.getByTestId("open-btn"));
+    fireEvent.click(screen.getByTestId('open-btn'));
 
-    expect(screen.getByRole("dialog")).not.toBeNull();
-    expect(screen.getByPlaceholderText("Type a command or search contributors...")).not.toBeNull();
+    expect(screen.getByRole('dialog')).not.toBeNull();
+    expect(
+      screen.getByPlaceholderText('Type a command or search contributors...'),
+    ).not.toBeNull();
   });
 
-  it("filters navigation commands as user types query", () => {
+  it('filters navigation commands as user types query', () => {
     render(
       <CommandPaletteProvider>
         <TestConsumer />
@@ -58,12 +63,14 @@ describe("CommandPalette Component", () => {
       </CommandPaletteProvider>,
     );
 
-    fireEvent.click(screen.getByTestId("open-btn"));
+    fireEvent.click(screen.getByTestId('open-btn'));
 
-    const input = screen.getByPlaceholderText("Type a command or search contributors...");
-    fireEvent.change(input, { target: { value: "Explore" } });
+    const input = screen.getByPlaceholderText(
+      'Type a command or search contributors...',
+    );
+    fireEvent.change(input, { target: { value: 'Explore' } });
 
-    expect(screen.getByText("Explore Contributors")).not.toBeNull();
-    expect(screen.queryByText("Profile Settings")).toBeNull();
+    expect(screen.getByText('Explore Contributors')).not.toBeNull();
+    expect(screen.queryByText('Profile Settings')).toBeNull();
   });
 });

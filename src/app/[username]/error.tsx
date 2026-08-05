@@ -1,9 +1,15 @@
-"use client";
+'use client';
 
-import { useEffect } from "react";
-import Link from "next/link";
+import { useEffect } from 'react';
+import Link from 'next/link';
 
-export default function ProfileError({ error, reset }: { error: Error & { digest?: string }; reset: () => void }) {
+export default function ProfileError({
+  error,
+  reset,
+}: {
+  error: Error & { digest?: string };
+  reset: () => void;
+}) {
   useEffect(() => {
     console.error(error);
   }, [error]);
@@ -12,7 +18,8 @@ export default function ProfileError({ error, reset }: { error: Error & { digest
     <div className="flex flex-col items-center justify-center min-h-[50vh] px-4">
       <h2 className="text-2xl font-bold mb-4">Something went wrong!</h2>
       <p className="text-gray-500 mb-6 text-center max-w-md">
-        {error.message || "We encountered an error while loading this profile. The user might not exist or the API rate limit was reached."}
+        {error.message ||
+          'We encountered an error while loading this profile. The user might not exist or the API rate limit was reached.'}
       </p>
       <div className="flex gap-4">
         <button

@@ -1,12 +1,12 @@
-import { describe, it, expect } from "vitest";
-import en from "../../../messages/en.json";
-import es from "../../../messages/es.json";
+import { describe, it, expect } from 'vitest';
+import en from '../../../messages/en.json';
+import es from '../../../messages/es.json';
 
-function getKeypaths(obj: Record<string, any>, prefix = ""): string[] {
+function getKeypaths(obj: Record<string, any>, prefix = ''): string[] {
   let keys: string[] = [];
   for (const [key, value] of Object.entries(obj)) {
     const keypath = prefix ? `${prefix}.${key}` : key;
-    if (value && typeof value === "object" && !Array.isArray(value)) {
+    if (value && typeof value === 'object' && !Array.isArray(value)) {
       keys = keys.concat(getKeypaths(value, keypath));
     } else {
       keys.push(keypath);
@@ -16,13 +16,13 @@ function getKeypaths(obj: Record<string, any>, prefix = ""): string[] {
 }
 
 function getValueType(obj: Record<string, any>, keypath: string): string {
-  const parts = keypath.split(".");
+  const parts = keypath.split('.');
   let current: any = obj;
   for (const part of parts) {
-    if (current == null) return "undefined";
+    if (current == null) return 'undefined';
     current = current[part];
   }
-  return Array.isArray(current) ? "array" : typeof current;
+  return Array.isArray(current) ? 'array' : typeof current;
 }
 
 function getInterpolationVariables(str: string): string[] {
@@ -30,25 +30,27 @@ function getInterpolationVariables(str: string): string[] {
   return matches.sort();
 }
 
-describe("i18n Translation Schema Parity", () => {
+describe('i18n Translation Schema Parity', () => {
   const enKeys = getKeypaths(en);
   const esKeys = getKeypaths(es);
 
-  it("has exact structural key parity between en.json and es.json", () => {
+  it('has exact structural key parity between en.json and es.json', () => {
     expect(esKeys).toEqual(enKeys);
   });
 
-  it("ensures no missing keys in Spanish dictionary", () => {
+  it('ensures no missing keys in Spanish dictionary', () => {
     const missingInEs = enKeys.filter((k) => !esKeys.includes(k));
     expect(missingInEs).toEqual([]);
   });
 
-  it("ensures no un-namespaced extra keys in Spanish dictionary", () => {
-    const extraInEs = esKeys.filter((k) => !enKeys.filter((e) => e === k).length);
+  it('ensures no un-namespaced extra keys in Spanish dictionary', () => {
+    const extraInEs = esKeys.filter(
+      (k) => !enKeys.filter((e) => e === k).length,
+    );
     expect(extraInEs).toEqual([]);
   });
 
-  it("matches value types for every dictionary keypath", () => {
+  it('matches value types for every dictionary keypath', () => {
     for (const keypath of enKeys) {
       const enType = getValueType(en, keypath);
       const esType = getValueType(es, keypath);
@@ -56,12 +58,12 @@ describe("i18n Translation Schema Parity", () => {
     }
   });
 
-  it("matches interpolation placeholder variables across locales", () => {
+  it('matches interpolation placeholder variables across locales', () => {
     for (const keypath of enKeys) {
-      const enVal = keypath.split(".").reduce((o: any, i) => o?.[i], en);
-      const esVal = keypath.split(".").reduce((o: any, i) => o?.[i], es);
+      const enVal = keypath.split('.').reduce((o: any, i) => o?.[i], en);
+      const esVal = keypath.split('.').reduce((o: any, i) => o?.[i], es);
 
-      if (typeof enVal === "string" && typeof esVal === "string") {
+      if (typeof enVal === 'string' && typeof esVal === 'string') {
         const enVars = getInterpolationVariables(enVal);
         const esVars = getInterpolationVariables(esVal);
         expect(esVars).toEqual(enVars);

@@ -1,7 +1,7 @@
-"use client";
+'use client';
 
-import { ImpactNetwork } from "./ImpactNetwork";
-import type { MergedPR, Org, CoContributor } from "@/types";
+import { ImpactNetwork } from './ImpactNetwork';
+import type { MergedPR, Org, CoContributor } from '@/types';
 
 export interface ImpactNetworkGraphProps {
   user: {

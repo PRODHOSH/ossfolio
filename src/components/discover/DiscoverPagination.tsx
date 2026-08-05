@@ -1,9 +1,9 @@
-"use client";
+'use client';
 
-import Link from "next/link";
-import { motion } from "framer-motion";
-import { Button, buttonVariants } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
+import Link from 'next/link';
+import { motion } from 'framer-motion';
+import { Button, buttonVariants } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 
 interface DiscoverPaginationProps {
   currentPage: number;
@@ -22,19 +22,19 @@ export function DiscoverPagination({
 }: DiscoverPaginationProps) {
   const buildUrl = (page: number) => {
     const params = new URLSearchParams(searchParams);
-    params.set("page", String(page));
+    params.set('page', String(page));
     return `${baseUrl}?${params.toString()}`;
   };
 
-  const pageNumbers: (number | "...")[] = [];
+  const pageNumbers: (number | '...')[] = [];
   const total = hasNext ? currentPage + 2 : currentPage;
   const start = Math.max(1, currentPage - 2);
   const end = Math.min(total, currentPage + 2);
 
   if (start > 1) pageNumbers.push(1);
-  if (start > 2) pageNumbers.push("...");
+  if (start > 2) pageNumbers.push('...');
   for (let i = start; i <= end; i++) pageNumbers.push(i);
-  if (end < total - 1) pageNumbers.push("...");
+  if (end < total - 1) pageNumbers.push('...');
   if (end < total) pageNumbers.push(total);
 
   return (
@@ -80,7 +80,7 @@ export function DiscoverPagination({
 
       <div className="flex items-center gap-1.5">
         {pageNumbers.map((page, i) =>
-          page === "..." ? (
+          page === '...' ? (
             <span
               key={`ellipsis-${i}`}
               className="text-xs text-ink-mute-2 px-1"
@@ -93,19 +93,20 @@ export function DiscoverPagination({
               href={buildUrl(page)}
               className={cn(
                 buttonVariants({
-                  variant: page === currentPage ? "default" : "outline",
-                  size: "sm",
+                  variant: page === currentPage ? 'default' : 'outline',
+                  size: 'sm',
                 }),
-                "min-w-9 h-9 relative no-underline",
-                page !== currentPage && "border-hairline bg-transparent text-ink font-normal"
+                'min-w-9 h-9 relative no-underline',
+                page !== currentPage &&
+                  'border-hairline bg-transparent text-ink font-normal',
               )}
-              aria-current={page === currentPage ? "page" : undefined}
+              aria-current={page === currentPage ? 'page' : undefined}
             >
               {page === currentPage && (
                 <motion.div
                   layoutId="active-page"
                   className="absolute inset-0 bg-primary rounded-sm z-[-1]"
-                  transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                  transition={{ type: 'spring', stiffness: 300, damping: 30 }}
                 />
               )}
               {page}

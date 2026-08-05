@@ -30,12 +30,12 @@
  */
 export async function computeETag(payload: string): Promise<string> {
   const digest = await crypto.subtle.digest(
-    "SHA-256",
+    'SHA-256',
     new TextEncoder().encode(payload),
   );
   const hex = Array.from(new Uint8Array(digest))
-    .map((byte) => byte.toString(16).padStart(2, "0"))
-    .join("");
+    .map((byte) => byte.toString(16).padStart(2, '0'))
+    .join('');
   return `"${hex.slice(0, 32)}"`;
 }
 
@@ -47,7 +47,7 @@ export async function computeETag(payload: string): Promise<string> {
  * and must be an uppercase `W` followed by a solidus, per the grammar.
  */
 function stripWeakPrefix(entityTag: string): string {
-  return entityTag.startsWith("W/") ? entityTag.slice(2) : entityTag;
+  return entityTag.startsWith('W/') ? entityTag.slice(2) : entityTag;
 }
 
 /**
@@ -61,16 +61,16 @@ function stripWeakPrefix(entityTag: string): string {
  */
 function splitEntityTags(header: string): string[] {
   const tags: string[] = [];
-  let current = "";
+  let current = '';
   let inQuotes = false;
 
   for (const character of header) {
     if (character === '"') {
       inQuotes = !inQuotes;
       current += character;
-    } else if (character === "," && !inQuotes) {
+    } else if (character === ',' && !inQuotes) {
       tags.push(current);
-      current = "";
+      current = '';
     } else {
       current += character;
     }
@@ -102,13 +102,15 @@ export function isNotModified(
   if (!ifNoneMatch) return false;
 
   const header = ifNoneMatch.trim();
-  if (header === "") return false;
-  if (header === "*") return true;
+  if (header === '') return false;
+  if (header === '*') return true;
 
   // Strict RFC 9110 validation: the origin ETag must be enclosed in double quotes.
   // If quotes were accidentally stripped upstream, fail closed and warn.
   if (!etag.includes('"')) {
-    console.warn(`[http-cache] Rejected malformed origin ETag (missing quotes): ${etag}`);
+    console.warn(
+      `[http-cache] Rejected malformed origin ETag (missing quotes): ${etag}`,
+    );
     return false;
   }
 
@@ -116,5 +118,5 @@ export function isNotModified(
 
   return splitEntityTags(header)
     .map((candidate) => stripWeakPrefix(candidate.trim()))
-    .some((candidate) => candidate !== "" && candidate === current);
+    .some((candidate) => candidate !== '' && candidate === current);
 }

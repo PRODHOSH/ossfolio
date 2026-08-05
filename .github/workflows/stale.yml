@@ -1,8 +1,8 @@
-name: "Mark stale issues and PRs"
+name: 'Mark stale issues and PRs'
 
 on:
   schedule:
-    - cron: "0 0 * * *"
+    - cron: '0 0 * * *'
   workflow_dispatch:
 
 permissions:
@@ -17,20 +17,20 @@ jobs:
         uses: actions/stale@v9
         with:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
-          stale-issue-message: "This issue has seen no activity for 30 days. It has been marked as stale and will be closed in 7 days if no further activity occurs."
-          stale-pr-message: "This pull request has seen no activity for 30 days. It has been marked as stale and will be closed in 7 days if no further activity occurs. Thank you for your contributions!"
-          close-issue-message: "This issue has been automatically closed due to inactivity."
-          close-pr-message: "This pull request has been automatically closed due to inactivity."
+          stale-issue-message: 'This issue has seen no activity for 30 days. It has been marked as stale and will be closed in 7 days if no further activity occurs.'
+          stale-pr-message: 'This pull request has seen no activity for 30 days. It has been marked as stale and will be closed in 7 days if no further activity occurs. Thank you for your contributions!'
+          close-issue-message: 'This issue has been automatically closed due to inactivity.'
+          close-pr-message: 'This pull request has been automatically closed due to inactivity.'
           days-before-stale: 30
           days-before-close: 7
-          stale-issue-label: "stale"
-          stale-pr-label: "stale"
+          stale-issue-label: 'stale'
+          stale-pr-label: 'stale'
           # Newcomer-facing and deliberately-parked work must survive the sweep.
           # A "good first issue" is meant to sit unclaimed until someone new picks
           # it up, so the 30-day timer would close exactly the issues the repo
           # wants to keep open. Comma-separated, per the action's input format.
-          exempt-issue-labels: "good first issue,pinned"
-          exempt-pr-labels: "pinned"
+          exempt-issue-labels: 'good first issue,pinned'
+          exempt-pr-labels: 'pinned'
           # Already the action's default; stated explicitly because closing a
           # stale PR must never destroy the contributor's branch.
           delete-branch: false

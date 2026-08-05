@@ -31,7 +31,7 @@ jobs:
       # SECTION 1 - FAILING UNIT TESTS (confirmed by running npm test locally)
       # -----------------------------------------------------------------------
 
-      - name: "Issue 1 - hashVisitorIp test calls async function without await"
+      - name: 'Issue 1 - hashVisitorIp test calls async function without await'
         continue-on-error: true
         run: |
           cat > /tmp/body.md << 'ENDBODY'
@@ -66,7 +66,7 @@ jobs:
             --label "ADVENTURER,ELUSOC,bug,testing" \
             --body-file /tmp/body.md
 
-      - name: "Issue 2 - buildExploreQuery leaks page param into filter links"
+      - name: 'Issue 2 - buildExploreQuery leaks page param into filter links'
         continue-on-error: true
         run: |
           cat > /tmp/body.md << 'ENDBODY'
@@ -101,7 +101,7 @@ jobs:
             --label "ADVENTURER,ELUSOC,bug,frontend" \
             --body-file /tmp/body.md
 
-      - name: "Issue 3 - describeFilters uses the wrong Unicode separator character"
+      - name: 'Issue 3 - describeFilters uses the wrong Unicode separator character'
         continue-on-error: true
         run: |
           cat > /tmp/body.md << 'ENDBODY'
@@ -136,7 +136,7 @@ jobs:
             --label "ADVENTURER,ELUSOC,bug,frontend,testing" \
             --body-file /tmp/body.md
 
-      - name: "Issue 4 - CSV export quotes all values but test expects username unquoted"
+      - name: 'Issue 4 - CSV export quotes all values but test expects username unquoted'
         continue-on-error: true
         run: |
           cat > /tmp/body.md << 'ENDBODY'
@@ -172,7 +172,7 @@ jobs:
             --label "ADVENTURER,ELUSOC,bug,testing,backend" \
             --body-file /tmp/body.md
 
-      - name: "Issue 5 - webhook-dead-letter tests fail because mock is missing a chained eq call"
+      - name: 'Issue 5 - webhook-dead-letter tests fail because mock is missing a chained eq call'
         continue-on-error: true
         run: |
           cat > /tmp/body.md << 'ENDBODY'
@@ -207,7 +207,7 @@ jobs:
             --label "ADVENTURER,ELUSOC,bug,testing,backend" \
             --body-file /tmp/body.md
 
-      - name: "Issue 6 - v1 users API tests read profile fields off the wrong level of the response"
+      - name: 'Issue 6 - v1 users API tests read profile fields off the wrong level of the response'
         continue-on-error: true
         run: |
           cat > /tmp/body.md << 'ENDBODY'
@@ -248,7 +248,7 @@ jobs:
       # SECTION 2 - DOCS BUGS (broken links and inaccurate content)
       # -----------------------------------------------------------------------
 
-      - name: "Issue 7 - CONTRIBUTING.md has hardcoded absolute file paths from another dev machine"
+      - name: 'Issue 7 - CONTRIBUTING.md has hardcoded absolute file paths from another dev machine'
         continue-on-error: true
         run: |
           cat > /tmp/body.md << 'ENDBODY'
@@ -280,7 +280,7 @@ jobs:
             --label "ADVENTURER,ELUSOC,documentation" \
             --body-file /tmp/body.md
 
-      - name: "Issue 8 - README lists shadcn/ui and wrong Node version"
+      - name: 'Issue 8 - README lists shadcn/ui and wrong Node version'
         continue-on-error: true
         run: |
           cat > /tmp/body.md << 'ENDBODY'
@@ -312,7 +312,7 @@ jobs:
       # SECTION 3 - CI AND WORKFLOW ISSUES
       # -----------------------------------------------------------------------
 
-      - name: "Issue 9 - E2E workflow runtime env vars for the server are implicit and undocumented"
+      - name: 'Issue 9 - E2E workflow runtime env vars for the server are implicit and undocumented'
         continue-on-error: true
         run: |
           cat > /tmp/body.md << 'ENDBODY'
@@ -354,7 +354,7 @@ jobs:
       # SECTION 4 - PERFORMANCE AND ARCHITECTURE
       # -----------------------------------------------------------------------
 
-      - name: "Issue 10 - supabaseAdmin creates a new client on every call instead of caching it"
+      - name: 'Issue 10 - supabaseAdmin creates a new client on every call instead of caching it'
         continue-on-error: true
         run: |
           cat > /tmp/body.md << 'ENDBODY'

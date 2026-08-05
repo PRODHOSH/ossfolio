@@ -1,9 +1,9 @@
-"use client";
+'use client';
 
-import { useEffect, useState, useCallback } from "react";
-import type { TechEntry } from "@/types";
-import type { SkillEndorsementSummary } from "@/lib/endorsements";
-import { supabase } from "@/lib/supabase";
+import { useEffect, useState, useCallback } from 'react';
+import type { TechEntry } from '@/types';
+import type { SkillEndorsementSummary } from '@/lib/endorsements';
+import { supabase } from '@/lib/supabase';
 
 interface SkillEndorsementsProps {
   username: string;
@@ -12,16 +12,16 @@ interface SkillEndorsementsProps {
 }
 
 const DEFAULT_CUSTOM_SKILLS = [
-  "Code Review",
-  "Technical Writing",
-  "Architecture",
-  "React",
-  "TypeScript",
-  "Go",
-  "Rust",
-  "Python",
-  "Docker",
-  "DevOps",
+  'Code Review',
+  'Technical Writing',
+  'Architecture',
+  'React',
+  'TypeScript',
+  'Go',
+  'Rust',
+  'Python',
+  'Docker',
+  'DevOps',
 ];
 
 export function SkillEndorsements({
@@ -37,7 +37,7 @@ export function SkillEndorsements({
   const [activeSkillAction, setActiveSkillAction] = useState<string | null>(
     null,
   );
-  const [customSkillInput, setCustomSkillInput] = useState("");
+  const [customSkillInput, setCustomSkillInput] = useState('');
   const [showCustomModal, setShowCustomModal] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
@@ -78,7 +78,7 @@ export function SkillEndorsements({
         setEndorsements(json.endorsements || {});
       }
     } catch (err) {
-      console.error("Failed to load endorsements:", err);
+      console.error('Failed to load endorsements:', err);
     } finally {
       setIsLoading(false);
     }
@@ -93,13 +93,13 @@ export function SkillEndorsements({
 
   const handleEndorseToggle = async (skill: string) => {
     if (isSelfProfile) {
-      setErrorMsg("You cannot endorse skills on your own profile.");
+      setErrorMsg('You cannot endorse skills on your own profile.');
       return;
     }
 
     const session = (await supabase.auth.getSession()).data.session;
     if (!session) {
-      setErrorMsg("Please sign in to endorse skills.");
+      setErrorMsg('Please sign in to endorse skills.');
       return;
     }
 
@@ -107,10 +107,10 @@ export function SkillEndorsements({
     setActiveSkillAction(skill);
 
     try {
-      const res = await fetch("/api/profile/endorse", {
-        method: "POST",
+      const res = await fetch('/api/profile/endorse', {
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
           Authorization: `Bearer ${session.access_token}`,
         },
         body: JSON.stringify({
@@ -129,11 +129,11 @@ export function SkillEndorsements({
         }
       } else {
         const json = await res.json().catch(() => ({}));
-        setErrorMsg(json.error || "Failed to update endorsement");
+        setErrorMsg(json.error || 'Failed to update endorsement');
       }
     } catch (err) {
-      console.error("Error toggling endorsement:", err);
-      setErrorMsg("Failed to update endorsement");
+      console.error('Error toggling endorsement:', err);
+      setErrorMsg('Failed to update endorsement');
     } finally {
       setActiveSkillAction(null);
     }
@@ -142,7 +142,7 @@ export function SkillEndorsements({
   const handleAddCustomSkill = async () => {
     if (!customSkillInput.trim()) return;
     const newSkill = customSkillInput.trim();
-    setCustomSkillInput("");
+    setCustomSkillInput('');
     setShowCustomModal(false);
     await handleEndorseToggle(newSkill);
   };
@@ -155,24 +155,24 @@ export function SkillEndorsements({
   const allSkills = Array.from(allSkillsSet);
 
   return (
-    <div style={{ marginTop: "24px" }}>
+    <div style={{ marginTop: '24px' }}>
       <div
         style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          flexWrap: "wrap",
-          gap: "12px",
-          marginBottom: "12px",
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          flexWrap: 'wrap',
+          gap: '12px',
+          marginBottom: '12px',
         }}
       >
         <h3
           style={{
-            fontSize: "14px",
+            fontSize: '14px',
             fontWeight: 600,
-            color: "var(--color-ink)",
+            color: 'var(--color-ink)',
             margin: 0,
-            letterSpacing: "-0.1px",
+            letterSpacing: '-0.1px',
           }}
         >
           Skill Endorsements
@@ -183,14 +183,14 @@ export function SkillEndorsements({
             type="button"
             onClick={() => setShowCustomModal(true)}
             style={{
-              fontSize: "12px",
+              fontSize: '12px',
               fontWeight: 600,
-              color: "var(--color-primary)",
-              backgroundColor: "transparent",
-              border: "1px solid var(--color-hairline)",
-              borderRadius: "6px",
-              padding: "4px 10px",
-              cursor: "pointer",
+              color: 'var(--color-primary)',
+              backgroundColor: 'transparent',
+              border: '1px solid var(--color-hairline)',
+              borderRadius: '6px',
+              padding: '4px 10px',
+              cursor: 'pointer',
             }}
           >
             + Endorse Custom Skill
@@ -201,13 +201,13 @@ export function SkillEndorsements({
       {errorMsg && (
         <div
           style={{
-            fontSize: "12px",
-            color: "#ef4444",
-            backgroundColor: "rgba(239, 68, 68, 0.1)",
-            border: "1px solid rgba(239, 68, 68, 0.2)",
-            borderRadius: "6px",
-            padding: "6px 10px",
-            marginBottom: "12px",
+            fontSize: '12px',
+            color: '#ef4444',
+            backgroundColor: 'rgba(239, 68, 68, 0.1)',
+            border: '1px solid rgba(239, 68, 68, 0.2)',
+            borderRadius: '6px',
+            padding: '6px 10px',
+            marginBottom: '12px',
           }}
         >
           {errorMsg}
@@ -217,10 +217,10 @@ export function SkillEndorsements({
       {/* Skills list */}
       <div
         style={{
-          display: "flex",
-          flexWrap: "wrap",
-          gap: "8px",
-          alignItems: "center",
+          display: 'flex',
+          flexWrap: 'wrap',
+          gap: '8px',
+          alignItems: 'center',
         }}
       >
         {allSkills.map((skill) => {
@@ -235,27 +235,27 @@ export function SkillEndorsements({
             <div
               key={skill}
               style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: "6px",
-                padding: "4px 10px",
-                borderRadius: "20px",
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '6px',
+                padding: '4px 10px',
+                borderRadius: '20px',
                 border: `1px solid ${
                   endorsement.userHasEndorsed
-                    ? "var(--color-primary)"
-                    : "var(--color-hairline)"
+                    ? 'var(--color-primary)'
+                    : 'var(--color-hairline)'
                 }`,
                 backgroundColor: endorsement.userHasEndorsed
-                  ? "rgba(62, 207, 142, 0.12)"
-                  : "var(--color-canvas-soft)",
-                transition: "all 0.15s ease",
+                  ? 'rgba(62, 207, 142, 0.12)'
+                  : 'var(--color-canvas-soft)',
+                transition: 'all 0.15s ease',
               }}
             >
               <span
                 style={{
-                  fontSize: "13px",
+                  fontSize: '13px',
                   fontWeight: 500,
-                  color: "var(--color-ink)",
+                  color: 'var(--color-ink)',
                 }}
               >
                 {skill}
@@ -264,14 +264,14 @@ export function SkillEndorsements({
               {endorsement.count > 0 && (
                 <span
                   style={{
-                    fontSize: "11px",
+                    fontSize: '11px',
                     fontWeight: 600,
                     color: endorsement.userHasEndorsed
-                      ? "var(--color-primary)"
-                      : "var(--color-ink-mute)",
-                    backgroundColor: "var(--color-canvas)",
-                    padding: "1px 6px",
-                    borderRadius: "10px",
+                      ? 'var(--color-primary)'
+                      : 'var(--color-ink-mute)',
+                    backgroundColor: 'var(--color-canvas)',
+                    padding: '1px 6px',
+                    borderRadius: '10px',
                   }}
                 >
                   👍 {endorsement.count}
@@ -286,27 +286,27 @@ export function SkillEndorsements({
                   onClick={() => handleEndorseToggle(skill)}
                   title={
                     endorsement.userHasEndorsed
-                      ? "Click to remove your endorsement"
+                      ? 'Click to remove your endorsement'
                       : `Endorse ${username} for ${skill}`
                   }
                   style={{
-                    fontSize: "11px",
+                    fontSize: '11px',
                     fontWeight: 600,
                     color: endorsement.userHasEndorsed
-                      ? "var(--color-primary)"
-                      : "var(--color-ink-mute)",
-                    backgroundColor: "transparent",
-                    border: "none",
-                    padding: "2px 4px",
-                    cursor: isPending ? "wait" : "pointer",
-                    borderRadius: "4px",
+                      ? 'var(--color-primary)'
+                      : 'var(--color-ink-mute)',
+                    backgroundColor: 'transparent',
+                    border: 'none',
+                    padding: '2px 4px',
+                    cursor: isPending ? 'wait' : 'pointer',
+                    borderRadius: '4px',
                   }}
                 >
                   {isPending
-                    ? "..."
+                    ? '...'
                     : endorsement.userHasEndorsed
-                    ? "Endorsed ✓"
-                    : "+ Endorse"}
+                      ? 'Endorsed ✓'
+                      : '+ Endorse'}
                 </button>
               )}
             </div>
@@ -316,9 +316,9 @@ export function SkillEndorsements({
         {allSkills.length === 0 && !isLoading && (
           <span
             style={{
-              fontSize: "13px",
-              color: "var(--color-ink-mute)",
-              fontStyle: "italic",
+              fontSize: '13px',
+              color: 'var(--color-ink-mute)',
+              fontStyle: 'italic',
             }}
           >
             No skills listed or endorsed yet.
@@ -330,35 +330,35 @@ export function SkillEndorsements({
       {showCustomModal && (
         <div
           style={{
-            position: "fixed",
+            position: 'fixed',
             inset: 0,
             zIndex: 100,
-            backgroundColor: "rgba(0,0,0,0.6)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            padding: "16px",
+            backgroundColor: 'rgba(0,0,0,0.6)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '16px',
           }}
           onClick={() => setShowCustomModal(false)}
         >
           <div
             style={{
-              backgroundColor: "var(--color-canvas)",
-              border: "1px solid var(--color-hairline)",
-              borderRadius: "12px",
-              padding: "20px",
-              maxWidth: "380px",
-              width: "100%",
-              boxShadow: "0 10px 25px rgba(0,0,0,0.3)",
+              backgroundColor: 'var(--color-canvas)',
+              border: '1px solid var(--color-hairline)',
+              borderRadius: '12px',
+              padding: '20px',
+              maxWidth: '380px',
+              width: '100%',
+              boxShadow: '0 10px 25px rgba(0,0,0,0.3)',
             }}
             onClick={(e) => e.stopPropagation()}
           >
             <h4
               style={{
-                fontSize: "16px",
+                fontSize: '16px',
                 fontWeight: 600,
-                color: "var(--color-ink)",
-                margin: "0 0 12px 0",
+                color: 'var(--color-ink)',
+                margin: '0 0 12px 0',
               }}
             >
               Endorse {username} for a Skill
@@ -366,10 +366,10 @@ export function SkillEndorsements({
 
             <div
               style={{
-                display: "flex",
-                flexWrap: "wrap",
-                gap: "6px",
-                marginBottom: "16px",
+                display: 'flex',
+                flexWrap: 'wrap',
+                gap: '6px',
+                marginBottom: '16px',
               }}
             >
               {DEFAULT_CUSTOM_SKILLS.map((skillSuggestion) => (
@@ -380,13 +380,13 @@ export function SkillEndorsements({
                     setCustomSkillInput(skillSuggestion);
                   }}
                   style={{
-                    fontSize: "12px",
-                    padding: "3px 8px",
-                    borderRadius: "12px",
-                    border: "1px solid var(--color-hairline)",
-                    backgroundColor: "var(--color-canvas-soft)",
-                    color: "var(--color-ink-mute)",
-                    cursor: "pointer",
+                    fontSize: '12px',
+                    padding: '3px 8px',
+                    borderRadius: '12px',
+                    border: '1px solid var(--color-hairline)',
+                    backgroundColor: 'var(--color-canvas-soft)',
+                    color: 'var(--color-ink-mute)',
+                    cursor: 'pointer',
                   }}
                 >
                   {skillSuggestion}
@@ -400,36 +400,36 @@ export function SkillEndorsements({
               value={customSkillInput}
               onChange={(e) => setCustomSkillInput(e.target.value)}
               style={{
-                width: "100%",
-                padding: "8px 12px",
-                fontSize: "13px",
-                borderRadius: "6px",
-                border: "1px solid var(--color-hairline-strong)",
-                backgroundColor: "var(--color-canvas-soft)",
-                color: "var(--color-ink)",
-                marginBottom: "16px",
-                outline: "none",
+                width: '100%',
+                padding: '8px 12px',
+                fontSize: '13px',
+                borderRadius: '6px',
+                border: '1px solid var(--color-hairline-strong)',
+                backgroundColor: 'var(--color-canvas-soft)',
+                color: 'var(--color-ink)',
+                marginBottom: '16px',
+                outline: 'none',
               }}
             />
 
             <div
               style={{
-                display: "flex",
-                justifyContent: "flex-end",
-                gap: "8px",
+                display: 'flex',
+                justifyContent: 'flex-end',
+                gap: '8px',
               }}
             >
               <button
                 type="button"
                 onClick={() => setShowCustomModal(false)}
                 style={{
-                  padding: "6px 12px",
-                  fontSize: "13px",
-                  color: "var(--color-ink-mute)",
-                  backgroundColor: "transparent",
-                  border: "1px solid var(--color-hairline)",
-                  borderRadius: "6px",
-                  cursor: "pointer",
+                  padding: '6px 12px',
+                  fontSize: '13px',
+                  color: 'var(--color-ink-mute)',
+                  backgroundColor: 'transparent',
+                  border: '1px solid var(--color-hairline)',
+                  borderRadius: '6px',
+                  cursor: 'pointer',
                 }}
               >
                 Cancel
@@ -438,14 +438,14 @@ export function SkillEndorsements({
                 type="button"
                 onClick={handleAddCustomSkill}
                 style={{
-                  padding: "6px 12px",
-                  fontSize: "13px",
+                  padding: '6px 12px',
+                  fontSize: '13px',
                   fontWeight: 600,
-                  color: "#ffffff",
-                  backgroundColor: "var(--color-primary)",
-                  border: "none",
-                  borderRadius: "6px",
-                  cursor: "pointer",
+                  color: '#ffffff',
+                  backgroundColor: 'var(--color-primary)',
+                  border: 'none',
+                  borderRadius: '6px',
+                  cursor: 'pointer',
                 }}
               >
                 Endorse Skill

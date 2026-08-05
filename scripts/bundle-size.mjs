@@ -1,6 +1,6 @@
-import { readdir, readFile, stat, writeFile } from "node:fs/promises";
-import { gzipSync } from "node:zlib";
-import path from "node:path";
+import { readdir, readFile, stat, writeFile } from 'node:fs/promises';
+import { gzipSync } from 'node:zlib';
+import path from 'node:path';
 
 /**
  * Bundle size measurement and comparison.
@@ -30,16 +30,16 @@ import path from "node:path";
  */
 export const stripContentHash = (file) =>
   file
-    .replace(/[-.][a-f0-9]{8,}(?=\.[a-z]+$)/gi, "")
-    .replace(/[-.][a-z0-9]{16,}(?=\.[a-z]+$)/gi, "")
+    .replace(/[-.][a-f0-9]{8,}(?=\.[a-z]+$)/gi, '')
+    .replace(/[-.][a-z0-9]{16,}(?=\.[a-z]+$)/gi, '')
     // Build-id directories arrive without a leading slash, because paths are
     // relative to .next/static. Anchoring at the start as well as after a
     // slash is what makes _buildManifest.js match across builds instead of
     // showing as removed-and-added on every PR.
-    .replace(/(^|\/)[a-zA-Z0-9_-]{21}\//g, "$1[buildId]/");
+    .replace(/(^|\/)[a-zA-Z0-9_-]{21}\//g, '$1[buildId]/');
 
 /** Recursively lists every `.js` file beneath `root`. */
-const listJsFiles = async (root, prefix = "") => {
+const listJsFiles = async (root, prefix = '') => {
   let entries;
   try {
     entries = await readdir(root, { withFileTypes: true });
@@ -53,7 +53,7 @@ const listJsFiles = async (root, prefix = "") => {
     const abs = path.join(root, entry.name);
     if (entry.isDirectory()) {
       found.push(...(await listJsFiles(abs, rel)));
-    } else if (entry.isFile() && entry.name.endsWith(".js")) {
+    } else if (entry.isFile() && entry.name.endsWith('.js')) {
       found.push(rel);
     }
   }
@@ -122,7 +122,8 @@ export const diffBundles = (before, after) => {
 
     changes.push({
       file: name,
-      status: beforeGzip === 0 ? "added" : afterGzip === 0 ? "removed" : "changed",
+      status:
+        beforeGzip === 0 ? 'added' : afterGzip === 0 ? 'removed' : 'changed',
       beforeGzip,
       afterGzip,
       deltaGzip: afterGzip - beforeGzip,
@@ -161,8 +162,8 @@ export const formatBytes = (bytes) => {
 
 /** Signed size, so a reader can tell growth from shrinkage at a glance. */
 export const formatDelta = (bytes) => {
-  if (bytes === 0) return "—";
-  const sign = bytes > 0 ? "+" : "";
+  if (bytes === 0) return '—';
+  const sign = bytes > 0 ? '+' : '';
   return `${sign}${formatBytes(bytes)}`;
 };
 
@@ -178,14 +179,14 @@ const escapeTableCell = (value) =>
     // Backslashes first: escaping the pipe before the backslash leaves
     // "a\\|b" rendering as a literal backslash followed by an *unescaped*
     // pipe, which breaks the cell the escaping was meant to protect.
-    .replace(/\\/g, "\\\\")
-    .replace(/\|/g, "\\|")
+    .replace(/\\/g, '\\\\')
+    .replace(/\|/g, '\\|')
     // A backtick cannot be escaped inside a code span — it can only be
     // replaced — so this substitutes rather than escapes.
     .replace(/`/g, "'");
 
 /** Marker used to find and replace this workflow's previous comment. */
-export const COMMENT_MARKER = "<!-- ossfolio-bundle-size-report -->";
+export const COMMENT_MARKER = '<!-- ossfolio-bundle-size-report -->';
 
 /**
  * Renders the diff as the Markdown comment body.
@@ -197,38 +198,38 @@ export const renderMarkdownReport = (diff, options = {}) => {
   const maxRows = options.maxRows ?? 15;
   const threshold = options.thresholdBytes ?? 0;
 
-  const lines = [COMMENT_MARKER, "## Bundle size report", ""];
+  const lines = [COMMENT_MARKER, '## Bundle size report', ''];
 
   if (diff.totalGzipBefore === 0) {
     lines.push(
-      "No baseline bundle was available for the base branch, so only the current total is shown.",
-      "",
+      'No baseline bundle was available for the base branch, so only the current total is shown.',
+      '',
       `**Total (gzipped):** ${formatBytes(diff.totalGzipAfter)}`,
-      "",
+      '',
     );
-    return lines.join("\n");
+    return lines.join('\n');
   }
 
   const percent =
     diff.percentChange === null
-      ? "—"
-      : `${diff.percentChange >= 0 ? "+" : ""}${diff.percentChange.toFixed(2)}%`;
+      ? '—'
+      : `${diff.percentChange >= 0 ? '+' : ''}${diff.percentChange.toFixed(2)}%`;
 
   const verdict =
     diff.totalGzipDelta === 0
-      ? "No change to the client bundle."
+      ? 'No change to the client bundle.'
       : diff.totalGzipDelta > 0
         ? `Client bundle grew by **${formatBytes(diff.totalGzipDelta)}** gzipped.`
         : `Client bundle shrank by **${formatBytes(Math.abs(diff.totalGzipDelta))}** gzipped.`;
 
   lines.push(
     verdict,
-    "",
-    "| | Base | This PR | Change |",
-    "| --- | ---: | ---: | ---: |",
+    '',
+    '| | Base | This PR | Change |',
+    '| --- | ---: | ---: | ---: |',
     `| **Total (gzipped)** | ${formatBytes(diff.totalGzipBefore)} | ${formatBytes(diff.totalGzipAfter)} | ${formatDelta(diff.totalGzipDelta)} (${percent}) |`,
     `| Total (raw) | ${formatBytes(diff.totalBytesBefore)} | ${formatBytes(diff.totalBytesAfter)} | ${formatDelta(diff.totalBytesDelta)} |`,
-    "",
+    '',
   );
 
   const notable = diff.changes.filter(
@@ -236,30 +237,30 @@ export const renderMarkdownReport = (diff, options = {}) => {
   );
 
   if (notable.length === 0) {
-    lines.push("No individual chunk changed size.", "");
-    return lines.join("\n");
+    lines.push('No individual chunk changed size.', '');
+    return lines.join('\n');
   }
 
   const shown = notable.slice(0, maxRows);
   const hidden = notable.length - shown.length;
 
   lines.push(
-    "<details>",
+    '<details>',
     `<summary>Per-chunk changes (${notable.length})</summary>`,
-    "",
-    "| Chunk | Base | This PR | Change |",
-    "| --- | ---: | ---: | ---: |",
+    '',
+    '| Chunk | Base | This PR | Change |',
+    '| --- | ---: | ---: | ---: |',
   );
 
   for (const change of shown) {
     // The suffix sits outside the code span: Markdown does not interpret
     // underscores inside backticks, so "_(new)_" would render literally.
     const suffix =
-      change.status === "added"
-        ? " _(new)_"
-        : change.status === "removed"
-          ? " _(removed)_"
-          : "";
+      change.status === 'added'
+        ? ' _(new)_'
+        : change.status === 'removed'
+          ? ' _(removed)_'
+          : '';
     lines.push(
       `| \`${escapeTableCell(change.file)}\`${suffix} | ${formatBytes(change.beforeGzip)} | ` +
         `${formatBytes(change.afterGzip)} | ${formatDelta(change.deltaGzip)} |`,
@@ -267,15 +268,15 @@ export const renderMarkdownReport = (diff, options = {}) => {
   }
 
   if (hidden > 0) {
-    lines.push("", `_…and ${hidden} more._`);
+    lines.push('', `_…and ${hidden} more._`);
   }
 
-  lines.push("", "</details>", "");
+  lines.push('', '</details>', '');
   lines.push(
-    "<sub>Measured from `.next/static`, gzipped. Content hashes are stripped so chunks match across builds.</sub>",
+    '<sub>Measured from `.next/static`, gzipped. Content hashes are stripped so chunks match across builds.</sub>',
   );
 
-  return lines.join("\n");
+  return lines.join('\n');
 };
 
 // ---------------------------------------------------------------------------
@@ -292,8 +293,8 @@ export const renderMarkdownReport = (diff, options = {}) => {
 // text it was handed.
 // ---------------------------------------------------------------------------
 
-import { fileURLToPath } from "node:url";
-import process from "node:process";
+import { fileURLToPath } from 'node:url';
+import process from 'node:process';
 
 const isDirectRun =
   process.argv[1] &&
@@ -301,7 +302,7 @@ const isDirectRun =
 
 const readJson = async (file) => {
   try {
-    return JSON.parse(await readFile(file, "utf-8"));
+    return JSON.parse(await readFile(file, 'utf-8'));
   } catch {
     // A missing or unreadable baseline is normal — the base branch may have
     // failed to build. Treat it as "no bundle" rather than crashing.
@@ -312,13 +313,13 @@ const readJson = async (file) => {
 const main = async () => {
   const [command, ...args] = process.argv.slice(2);
 
-  if (command === "measure") {
+  if (command === 'measure') {
     const [staticDir, outFile] = args;
     if (!staticDir || !outFile) {
-      throw new Error("usage: bundle-size.mjs measure <staticDir> <outFile>");
+      throw new Error('usage: bundle-size.mjs measure <staticDir> <outFile>');
     }
     const report = await measureBundle(staticDir);
-    await writeFile(outFile, JSON.stringify(report, null, 2), "utf-8");
+    await writeFile(outFile, JSON.stringify(report, null, 2), 'utf-8');
     console.log(
       `[bundle-size] ${report.files.length} JS files, ` +
         `${formatBytes(report.totalGzipBytes)} gzipped -> ${outFile}`,
@@ -326,22 +327,25 @@ const main = async () => {
     return;
   }
 
-  if (command === "report") {
+  if (command === 'report') {
     const [baseFile, headFile, outFile] = args;
     if (!baseFile || !headFile || !outFile) {
       throw new Error(
-        "usage: bundle-size.mjs report <baseJson> <headJson> <outFile>",
+        'usage: bundle-size.mjs report <baseJson> <headJson> <outFile>',
       );
     }
-    const diff = diffBundles(await readJson(baseFile), await readJson(headFile));
-    await writeFile(outFile, renderMarkdownReport(diff), "utf-8");
+    const diff = diffBundles(
+      await readJson(baseFile),
+      await readJson(headFile),
+    );
+    await writeFile(outFile, renderMarkdownReport(diff), 'utf-8');
     console.log(
       `[bundle-size] delta ${formatDelta(diff.totalGzipDelta)} gzipped -> ${outFile}`,
     );
     return;
   }
 
-  throw new Error(`Unknown command: ${command ?? "(none)"}`);
+  throw new Error(`Unknown command: ${command ?? '(none)'}`);
 };
 
 if (isDirectRun) {

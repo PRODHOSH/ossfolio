@@ -1,9 +1,16 @@
-"use client";
+'use client';
 
-import { useState } from "react";
-import { Download, Code, FileJson, FileSpreadsheet, QrCode, ChevronDown } from "lucide-react";
-import { EmbedModal } from "./EmbedModal";
-import { QRCodeModal } from "./QRCodeModal";
+import { useState } from 'react';
+import {
+  Download,
+  Code,
+  FileJson,
+  FileSpreadsheet,
+  QrCode,
+  ChevronDown,
+} from 'lucide-react';
+import { EmbedModal } from './EmbedModal';
+import { QRCodeModal } from './QRCodeModal';
 
 interface ExportMenuProps {
   username: string;
@@ -15,40 +22,40 @@ export function ExportMenu({ username }: ExportMenuProps) {
   const [isQROpen, setIsQROpen] = useState(false);
 
   const btnStyle: React.CSSProperties = {
-    display: "inline-flex",
-    alignItems: "center",
-    gap: "6px",
-    padding: "7px 14px",
-    fontSize: "13px",
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '6px',
+    padding: '7px 14px',
+    fontSize: '13px',
     fontWeight: 500,
-    color: "var(--color-ink, #f8fafc)",
-    backgroundColor: "var(--color-canvas-soft, rgba(255, 255, 255, 0.05))",
-    border: "1px solid var(--color-hairline-strong, rgba(255, 255, 255, 0.12))",
-    borderRadius: "6px",
-    cursor: "pointer",
+    color: 'var(--color-ink, #f8fafc)',
+    backgroundColor: 'var(--color-canvas-soft, rgba(255, 255, 255, 0.05))',
+    border: '1px solid var(--color-hairline-strong, rgba(255, 255, 255, 0.12))',
+    borderRadius: '6px',
+    cursor: 'pointer',
     lineHeight: 1,
-    transition: "all 0.15s ease",
+    transition: 'all 0.15s ease',
   };
 
   const itemStyle: React.CSSProperties = {
-    display: "flex",
-    alignItems: "center",
-    gap: "8px",
-    width: "100%",
-    padding: "8px 12px",
-    fontSize: "13px",
-    color: "var(--color-ink, #f8fafc)",
-    backgroundColor: "transparent",
-    border: "none",
-    borderRadius: "6px",
-    cursor: "pointer",
-    textAlign: "left",
-    textDecoration: "none",
-    boxSizing: "border-box",
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px',
+    width: '100%',
+    padding: '8px 12px',
+    fontSize: '13px',
+    color: 'var(--color-ink, #f8fafc)',
+    backgroundColor: 'transparent',
+    border: 'none',
+    borderRadius: '6px',
+    cursor: 'pointer',
+    textAlign: 'left',
+    textDecoration: 'none',
+    boxSizing: 'border-box',
   };
 
   return (
-    <div style={{ position: "relative", display: "inline-block" }}>
+    <div style={{ position: 'relative', display: 'inline-block' }}>
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
@@ -57,22 +64,29 @@ export function ExportMenu({ username }: ExportMenuProps) {
       >
         <Download size={13} />
         <span>Export / Embed</span>
-        <ChevronDown size={13} style={{ transform: isOpen ? "rotate(180deg)" : "none", transition: "transform 0.15s" }} />
+        <ChevronDown
+          size={13}
+          style={{
+            transform: isOpen ? 'rotate(180deg)' : 'none',
+            transition: 'transform 0.15s',
+          }}
+        />
       </button>
 
       {isOpen && (
         <div
           style={{
-            position: "absolute",
-            top: "100%",
+            position: 'absolute',
+            top: '100%',
             right: 0,
-            marginTop: "6px",
-            width: "200px",
-            backgroundColor: "var(--color-canvas-soft, #0d1117)",
-            border: "1px solid var(--color-hairline-strong, rgba(255, 255, 255, 0.12))",
-            borderRadius: "10px",
-            padding: "6px",
-            boxShadow: "0 10px 25px rgba(0, 0, 0, 0.5)",
+            marginTop: '6px',
+            width: '200px',
+            backgroundColor: 'var(--color-canvas-soft, #0d1117)',
+            border:
+              '1px solid var(--color-hairline-strong, rgba(255, 255, 255, 0.12))',
+            borderRadius: '10px',
+            padding: '6px',
+            boxShadow: '0 10px 25px rgba(0, 0, 0, 0.5)',
             zIndex: 50,
           }}
         >

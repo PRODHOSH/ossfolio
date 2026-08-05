@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import {
   createContext,
@@ -7,7 +7,7 @@ import {
   useCallback,
   useEffect,
   type ReactNode,
-} from "react";
+} from 'react';
 
 interface CommandPaletteContextType {
   isOpen: boolean;
@@ -33,14 +33,14 @@ export function CommandPaletteProvider({ children }: { children: ReactNode }) {
   // Global CMD+K / Ctrl+K keyboard shortcut listener
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
-      if ((e.metaKey || e.ctrlKey) && (e.key === "k" || e.key === "K")) {
+      if ((e.metaKey || e.ctrlKey) && (e.key === 'k' || e.key === 'K')) {
         e.preventDefault();
         toggle();
       }
     }
 
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
   }, [toggle]);
 
   return (

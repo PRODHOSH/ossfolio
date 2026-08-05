@@ -1,14 +1,16 @@
-import type { ContributorStats, BadgeItem } from "@/types";
-import { createClient } from "@supabase/supabase-js";
+import type { ContributorStats, BadgeItem } from '@/types';
+import { createClient } from '@supabase/supabase-js';
 
 export interface AutomatedBadgeInput {
-  stats?: ContributorStats | {
-    totalCommits?: number;
-    totalPRs?: number;
-    totalIssues?: number;
-    totalReviews?: number;
-    totalContributions?: number;
-  };
+  stats?:
+    | ContributorStats
+    | {
+        totalCommits?: number;
+        totalPRs?: number;
+        totalIssues?: number;
+        totalReviews?: number;
+        totalContributions?: number;
+      };
   repos?: Array<{
     stars?: number;
     language?: string | null;
@@ -29,33 +31,34 @@ export interface AutomatedBadgeCriterion {
   name: string;
   description: string;
   icon: string;
-  category: "commits" | "prs" | "languages" | "bugs" | "time" | "stars" | "reviews";
+  category:
+    'commits' | 'prs' | 'languages' | 'bugs' | 'time' | 'stars' | 'reviews';
   evaluate: (input: AutomatedBadgeInput) => boolean;
 }
 
 export const AUTOMATED_BADGE_CRITERIA: readonly AutomatedBadgeCriterion[] = [
   {
-    id: "first_100_commits",
-    name: "First 100 Commits",
-    description: "Reached 100 total commits in open source",
-    icon: "💻",
-    category: "commits",
+    id: 'first_100_commits',
+    name: 'First 100 Commits',
+    description: 'Reached 100 total commits in open source',
+    icon: '💻',
+    category: 'commits',
     evaluate: ({ stats }) => (stats?.totalCommits ?? 0) >= 100,
   },
   {
-    id: "century_prs",
-    name: "Century PRs",
-    description: "Merged 100 pull requests",
-    icon: "🚀",
-    category: "prs",
+    id: 'century_prs',
+    name: 'Century PRs',
+    description: 'Merged 100 pull requests',
+    icon: '🚀',
+    category: 'prs',
     evaluate: ({ stats }) => (stats?.totalPRs ?? 0) >= 100,
   },
   {
-    id: "polyglot",
-    name: "Polyglot",
-    description: "Contributed code across 5+ distinct programming languages",
-    icon: "🌐",
-    category: "languages",
+    id: 'polyglot',
+    name: 'Polyglot',
+    description: 'Contributed code across 5+ distinct programming languages',
+    icon: '🌐',
+    category: 'languages',
     evaluate: ({ repos = [], topLanguages = [] }) => {
       const langs = new Set<string>();
       repos.forEach((r) => {
@@ -68,28 +71,28 @@ export const AUTOMATED_BADGE_CRITERIA: readonly AutomatedBadgeCriterion[] = [
     },
   },
   {
-    id: "bug_squasher",
-    name: "Bug Squasher",
-    description: "Closed or resolved 10+ bug issues and pull requests",
-    icon: "🐛",
-    category: "bugs",
+    id: 'bug_squasher',
+    name: 'Bug Squasher',
+    description: 'Closed or resolved 10+ bug issues and pull requests',
+    icon: '🐛',
+    category: 'bugs',
     evaluate: ({ stats, issues = [], prs = [] }) => {
       const bugItemsCount =
         issues.filter((i) =>
-          i?.labels?.some((l) => l.toLowerCase().includes("bug")),
+          i?.labels?.some((l) => l.toLowerCase().includes('bug')),
         ).length +
         prs.filter((p) =>
-          p?.labels?.some((l) => l.toLowerCase().includes("bug")),
+          p?.labels?.some((l) => l.toLowerCase().includes('bug')),
         ).length;
       return (stats?.totalIssues ?? 0) >= 10 || bugItemsCount >= 10;
     },
   },
   {
-    id: "night_owl",
-    name: "Night Owl",
-    description: "Merged a pull request between 12 AM and 4 AM UTC",
-    icon: "🦉",
-    category: "time",
+    id: 'night_owl',
+    name: 'Night Owl',
+    description: 'Merged a pull request between 12 AM and 4 AM UTC',
+    icon: '🦉',
+    category: 'time',
     evaluate: ({ prs = [] }) => {
       return prs.some((pr) => {
         const dateStr = pr?.mergedAt || pr?.createdAt;
@@ -104,22 +107,22 @@ export const AUTOMATED_BADGE_CRITERIA: readonly AutomatedBadgeCriterion[] = [
     },
   },
   {
-    id: "star_magnet",
-    name: "Star Magnet",
-    description: "Earned 100+ total repository stars",
-    icon: "⭐",
-    category: "stars",
+    id: 'star_magnet',
+    name: 'Star Magnet',
+    description: 'Earned 100+ total repository stars',
+    icon: '⭐',
+    category: 'stars',
     evaluate: ({ repos = [] }) => {
       const starsSum = repos.reduce((sum, r) => sum + (r?.stars || 0), 0);
       return starsSum >= 100;
     },
   },
   {
-    id: "review_master",
-    name: "Review Master",
-    description: "Completed 50+ pull request code reviews",
-    icon: "👀",
-    category: "reviews",
+    id: 'review_master',
+    name: 'Review Master',
+    description: 'Completed 50+ pull request code reviews',
+    icon: '👀',
+    category: 'reviews',
     evaluate: ({ stats }) => (stats?.totalReviews ?? 0) >= 50,
   },
 ];
@@ -144,7 +147,9 @@ function evaluateAndAward(
     if (criterion.evaluate(input)) {
       const existing = existingBadges.find((b) => b.program === criterion.name);
       const years =
-        existing?.years && Array.isArray(existing.years) && existing.years.length > 0
+        existing?.years &&
+        Array.isArray(existing.years) &&
+        existing.years.length > 0
           ? existing.years
           : [currentYear];
 
@@ -178,12 +183,14 @@ export function awardBadges(
   firstArg: BadgeItem[] | string,
   secondArg: AutomatedBadgeInput | ContributorStats,
 ): BadgeItem[] | Promise<BadgeItem[]> {
-  if (typeof firstArg === "string") {
+  if (typeof firstArg === 'string') {
     return (async () => {
       const userId = firstArg;
-      const input = ("totalCommits" in secondArg && typeof secondArg.totalCommits === "number")
-        ? { stats: secondArg as ContributorStats }
-        : (secondArg as AutomatedBadgeInput);
+      const input =
+        'totalCommits' in secondArg &&
+        typeof secondArg.totalCommits === 'number'
+          ? { stats: secondArg as ContributorStats }
+          : (secondArg as AutomatedBadgeInput);
 
       let existingBadges: BadgeItem[] = [];
       const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -191,9 +198,9 @@ export function awardBadges(
       if (url && serviceKey) {
         const admin = createClient(url, serviceKey);
         const { data } = await admin
-          .from("profiles")
-          .select("badges")
-          .eq("id", userId)
+          .from('profiles')
+          .select('badges')
+          .eq('id', userId)
           .single();
         if (data?.badges && Array.isArray(data.badges)) {
           existingBadges = data.badges;
@@ -203,9 +210,10 @@ export function awardBadges(
     })();
   }
 
-  const input = ("totalCommits" in secondArg && typeof secondArg.totalCommits === "number")
-    ? { stats: secondArg as ContributorStats }
-    : (secondArg as AutomatedBadgeInput);
+  const input =
+    'totalCommits' in secondArg && typeof secondArg.totalCommits === 'number'
+      ? { stats: secondArg as ContributorStats }
+      : (secondArg as AutomatedBadgeInput);
 
   return evaluateAndAward(firstArg, input);
 }

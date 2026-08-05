@@ -1,7 +1,7 @@
-import type { ContributorStats, Org, Repo, TechEntry, MergedPR } from "@/types";
-import { LANG_COLORS } from "@/lib/languages";
-import { fetchWithTimeout } from "@/lib/fetch-with-timeout";
-import { GitHubRateLimitError } from "@/lib/errors";
+import type { ContributorStats, Org, Repo, TechEntry, MergedPR } from '@/types';
+import { LANG_COLORS } from '@/lib/languages';
+import { fetchWithTimeout } from '@/lib/fetch-with-timeout';
+import { GitHubRateLimitError } from '@/lib/errors';
 import { GITHUB_API_BASE } from './constants';
 
 /**
@@ -14,8 +14,8 @@ async function throwIfRateLimited(res: Response): Promise<void> {
   try {
     const err = await res.clone().json();
     if (
-      typeof err?.message === "string" &&
-      err.message.toLowerCase().includes("rate limit")
+      typeof err?.message === 'string' &&
+      err.message.toLowerCase().includes('rate limit')
     ) {
       throw new GitHubRateLimitError(err.message);
     }
@@ -41,31 +41,31 @@ async function throwIfRateLimited(res: Response): Promise<void> {
  * 0 rather than guessed.
  */
 const LANGUAGE_DISPLAY_NAMES: Record<string, string> = {
-  javascript: "JavaScript",
-  typescript: "TypeScript",
-  python: "Python",
-  java: "Java",
-  go: "Go",
-  rust: "Rust",
-  php: "PHP",
-  html: "HTML",
-  css: "CSS",
-  shell: "Shell",
-  kotlin: "Kotlin",
-  swift: "Swift",
-  dart: "Dart",
-  ruby: "Ruby",
-  vue: "Vue",
-  svelte: "Svelte",
-  dockerfile: "Dockerfile",
-  "jupyter notebook": "Jupyter Notebook",
-  c: "C",
-  "c++": "C++",
-  "c#": "C#",
+  javascript: 'JavaScript',
+  typescript: 'TypeScript',
+  python: 'Python',
+  java: 'Java',
+  go: 'Go',
+  rust: 'Rust',
+  php: 'PHP',
+  html: 'HTML',
+  css: 'CSS',
+  shell: 'Shell',
+  kotlin: 'Kotlin',
+  swift: 'Swift',
+  dart: 'Dart',
+  ruby: 'Ruby',
+  vue: 'Vue',
+  svelte: 'Svelte',
+  dockerfile: 'Dockerfile',
+  'jupyter notebook': 'Jupyter Notebook',
+  c: 'C',
+  'c++': 'C++',
+  'c#': 'C#',
 };
 
 export function normalizeLanguageName(language: string): string {
-  if (!language) return "";
+  if (!language) return '';
   const clean = language.trim();
   return LANGUAGE_DISPLAY_NAMES[clean.toLowerCase()] ?? clean;
 }
@@ -73,7 +73,7 @@ export function normalizeLanguageName(language: string): string {
 /** Return the hex colour for a programming language name, or null if the language is not in the built-in map. */
 export function languageColor(language: string | null): string | null {
   if (!language) return null;
-  return LANG_COLORS[normalizeLanguageName(language)] ?? "#9a9a9a";
+  return LANG_COLORS[normalizeLanguageName(language)] ?? '#9a9a9a';
 }
 
 export interface GitHubRepoLike {
@@ -133,7 +133,7 @@ async function searchCount(query: string, accept?: string): Promise<number> {
       `${GITHUB_API_BASE}/search/${query}&per_page=1`,
       {
         headers: {
-          Accept: accept ?? "application/vnd.github.v3+json",
+          Accept: accept ?? 'application/vnd.github.v3+json',
         },
         next: { revalidate: 3600 },
       },
@@ -145,7 +145,7 @@ async function searchCount(query: string, accept?: string): Promise<number> {
       return 0;
     }
     const json = await res.json();
-    return typeof json.total_count === "number" ? json.total_count : 0;
+    return typeof json.total_count === 'number' ? json.total_count : 0;
   } catch (e) {
     // 1. Explicitly throw rate limits so they aren't cached as "0 contributions"
     if (e instanceof GitHubRateLimitError) throw e;
@@ -169,7 +169,7 @@ export async function fetchLiveStats(
     searchCount(`issues?q=author:${u}+type:issue`),
     searchCount(
       `commits?q=author:${u}`,
-      "application/vnd.github.cloak-preview+json",
+      'application/vnd.github.cloak-preview+json',
     ),
   ]);
   return {
@@ -193,8 +193,8 @@ export async function fetchOrganizations(username: string): Promise<Org[]> {
     const res = await fetchWithTimeout(
       `${GITHUB_API_BASE}/users/${encodeURIComponent(username)}/orgs`,
       {
-        headers: { Accept: "application/vnd.github.v3+json" },
-        cache: "no-store",
+        headers: { Accept: 'application/vnd.github.v3+json' },
+        cache: 'no-store',
       },
       10_000,
     );
@@ -229,8 +229,8 @@ export async function fetchMergedPRs(
     const res = await fetchWithTimeout(
       `${GITHUB_API_BASE}/${query}`,
       {
-        headers: { Accept: "application/vnd.github.v3+json" },
-        cache: "no-store",
+        headers: { Accept: 'application/vnd.github.v3+json' },
+        cache: 'no-store',
       },
       10_000,
     );
@@ -244,11 +244,11 @@ export async function fetchMergedPRs(
     return json.items.map((item: any) => {
       const isMerged = !!item.pull_request?.merged_at;
       const prState =
-        item.state === "open" ? "open" : isMerged ? "merged" : "closed";
+        item.state === 'open' ? 'open' : isMerged ? 'merged' : 'closed';
       return {
         title: item.title,
         url: item.html_url,
-        repoName: item.repository_url.split("/").slice(-1)[0],
+        repoName: item.repository_url.split('/').slice(-1)[0],
         mergedAt:
           item.pull_request?.merged_at || item.closed_at || item.created_at,
         state: prState,
@@ -287,17 +287,17 @@ export async function fetchGitHubUser(
     const res = await fetchWithTimeout(
       `${GITHUB_API_BASE}/users/${username}`,
       {
-        headers: { Accept: "application/vnd.github.v3+json" },
-        cache: "no-store",
+        headers: { Accept: 'application/vnd.github.v3+json' },
+        cache: 'no-store',
       },
       10_000,
     );
-    
+
     if (!res.ok) {
       await throwIfRateLimited(res);
       return null;
     }
-    
+
     return (await res.json()) as GitHubUser;
   } catch (e) {
     // Gracefully handle network timeouts while strictly re-throwing rate limits
@@ -313,18 +313,20 @@ export async function fetchGitHubRepos(
     const res = await fetchWithTimeout(
       `${GITHUB_API_BASE}/users/${username}/repos?sort=stars&per_page=100&type=owner`,
       {
-        headers: { Accept: "application/vnd.github.mercy-preview+json" },
-        cache: "no-store",
+        headers: { Accept: 'application/vnd.github.mercy-preview+json' },
+        cache: 'no-store',
       },
       10_000,
     );
-    
+
     if (!res.ok) {
       await throwIfRateLimited(res);
       return [];
     }
-    
-    const repos = (await res.json()) as (GitHubRepoPayload & { fork: boolean })[];
+
+    const repos = (await res.json()) as (GitHubRepoPayload & {
+      fork: boolean;
+    })[];
     return repos.filter((r) => !r.fork).slice(0, 6);
   } catch (e) {
     if (e instanceof GitHubRateLimitError) throw e;

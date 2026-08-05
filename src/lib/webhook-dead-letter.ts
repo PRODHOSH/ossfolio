@@ -1,5 +1,5 @@
-import { supabaseAdmin } from "@/lib/supabase";
-import { refreshProfile } from "@/lib/refresh-profile";
+import { supabaseAdmin } from '@/lib/supabase';
+import { refreshProfile } from '@/lib/refresh-profile';
 
 export interface DeadLetterPayloadInput {
   eventType: string;
@@ -21,7 +21,7 @@ export interface WebhookDeadLetterRow {
   username: string;
   payload: unknown;
   error_reason: string | null;
-  status: "pending" | "processing" | "completed" | "failed";
+  status: 'pending' | 'processing' | 'completed' | 'failed';
   retry_count: number;
   max_retries: number;
   received_at: string;
@@ -42,13 +42,13 @@ export async function enqueueDeadLetterPayload(
     const now = new Date().toISOString();
 
     const { data, error } = await adminClient
-      .from("webhook_dead_letter_queue")
+      .from('webhook_dead_letter_queue')
       .insert({
         event_type: input.eventType,
         username: input.username,
         payload: input.payload ?? {},
-        error_reason: input.errorReason ?? "transient_write_failure",
-        status: "pending",
+        error_reason: input.errorReason ?? 'transient_write_failure',
+        status: 'pending',
         retry_count: 0,
         max_retries: 5,
         received_at: now,
@@ -56,17 +56,17 @@ export async function enqueueDeadLetterPayload(
         created_at: now,
         updated_at: now,
       })
-      .select("id")
+      .select('id')
       .single();
 
     if (error) {
-      console.error("[webhook-dead-letter] Insert error:", error);
+      console.error('[webhook-dead-letter] Insert error:', error);
       return { success: false, error };
     }
 
     return { success: true, id: data?.id };
   } catch (err) {
-    console.error("[webhook-dead-letter] Failed to enqueue dead letter:", err);
+    console.error('[webhook-dead-letter] Failed to enqueue dead letter:', err);
     return { success: false, error: err };
   }
 }
@@ -89,11 +89,11 @@ export async function processDeadLetterQueue(
     const nowIso = new Date().toISOString();
 
     const { data: items, error: fetchError } = await adminClient
-      .from("webhook_dead_letter_queue")
-      .select("*")
-      .eq("status", "pending")
-      .lte("next_retry_at", nowIso)
-      .order("next_retry_at", { ascending: true })
+      .from('webhook_dead_letter_queue')
+      .select('*')
+      .eq('status', 'pending')
+      .lte('next_retry_at', nowIso)
+      .order('next_retry_at', { ascending: true })
       .limit(batchSize);
 
     if (fetchError || !items || items.length === 0) {
@@ -105,15 +105,15 @@ export async function processDeadLetterQueue(
 
       // Atomically lock row from pending -> processing to prevent race conditions
       const { data: lockData, error: lockError } = await adminClient
-        .from("webhook_dead_letter_queue")
+        .from('webhook_dead_letter_queue')
         .update({
-          status: "processing",
+          status: 'processing',
           last_retry_at: currentNow,
           updated_at: currentNow,
         })
-        .eq("id", item.id)
-        .eq("status", "pending")
-        .select("id")
+        .eq('id', item.id)
+        .eq('status', 'pending')
+        .select('id')
         .maybeSingle();
 
       if (lockError || !lockData) {
@@ -125,15 +125,15 @@ export async function processDeadLetterQueue(
 
       const refreshRes = await refreshProfile(item.username);
 
-      if (refreshRes.status === "refreshed") {
+      if (refreshRes.status === 'refreshed') {
         const finishNow = new Date().toISOString();
         await adminClient
-          .from("webhook_dead_letter_queue")
+          .from('webhook_dead_letter_queue')
           .update({
-            status: "completed",
+            status: 'completed',
             updated_at: finishNow,
           })
-          .eq("id", item.id);
+          .eq('id', item.id);
         result.succeeded++;
       } else {
         const nextRetryCount = item.retry_count + 1;
@@ -141,14 +141,14 @@ export async function processDeadLetterQueue(
 
         if (nextRetryCount >= item.max_retries) {
           await adminClient
-            .from("webhook_dead_letter_queue")
+            .from('webhook_dead_letter_queue')
             .update({
-              status: "failed",
+              status: 'failed',
               retry_count: nextRetryCount,
               error_reason: `max_retries_exceeded: ${String(refreshRes.status)}`,
               updated_at: finishNow,
             })
-            .eq("id", item.id);
+            .eq('id', item.id);
           result.failed++;
         } else {
           // Exponential backoff: 5m, 10m, 20m, 40m...
@@ -158,15 +158,15 @@ export async function processDeadLetterQueue(
           ).toISOString();
 
           await adminClient
-            .from("webhook_dead_letter_queue")
+            .from('webhook_dead_letter_queue')
             .update({
-              status: "pending",
+              status: 'pending',
               retry_count: nextRetryCount,
               next_retry_at: nextRetryDate,
               error_reason: `retry_scheduled: ${String(refreshRes.status)}`,
               updated_at: finishNow,
             })
-            .eq("id", item.id);
+            .eq('id', item.id);
           result.retried++;
         }
       }
@@ -174,7 +174,7 @@ export async function processDeadLetterQueue(
 
     return result;
   } catch (err) {
-    console.error("[webhook-dead-letter] Queue processing failed:", err);
+    console.error('[webhook-dead-letter] Queue processing failed:', err);
     return result;
   }
 }

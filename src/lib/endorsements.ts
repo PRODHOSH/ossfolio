@@ -1,5 +1,5 @@
-import { supabase } from "@/lib/supabase";
-import { createClient } from "@supabase/supabase-js";
+import { supabase } from '@/lib/supabase';
+import { createClient } from '@supabase/supabase-js';
 
 export interface SkillEndorsementSummary {
   skill: string;
@@ -9,7 +9,7 @@ export interface SkillEndorsementSummary {
 
 export interface EndorseToggleResult {
   success: boolean;
-  action?: "added" | "removed";
+  action?: 'added' | 'removed';
   error?: string;
   count?: number;
 }
@@ -38,9 +38,9 @@ export async function fetchProfileEndorsements(
   try {
     const normalizedUsername = username.toLowerCase();
     const { data, error } = await supabase
-      .from("endorsements")
-      .select("skill, endorser_user_id")
-      .eq("endorsed_username", normalizedUsername);
+      .from('endorsements')
+      .select('skill, endorser_user_id')
+      .eq('endorsed_username', normalizedUsername);
 
     if (error || !data) {
       return {};
@@ -65,7 +65,7 @@ export async function fetchProfileEndorsements(
 
     return summaryMap;
   } catch (err) {
-    console.error("Error fetching profile endorsements:", err);
+    console.error('Error fetching profile endorsements:', err);
     return {};
   }
 }
@@ -84,73 +84,79 @@ export async function toggleEndorsement(
   const normalizedUsername = endorsedUsername.toLowerCase();
 
   if (!endorserUserId || !normalizedUsername || !normalizedSkill) {
-    return { success: false, error: "Invalid parameters" };
+    return { success: false, error: 'Invalid parameters' };
   }
 
   // Prevent self-endorsement
   if (endorsedProfileUserId && endorserUserId === endorsedProfileUserId) {
-    return { success: false, error: "You cannot endorse your own skills" };
+    return { success: false, error: 'You cannot endorse your own skills' };
   }
 
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
   if (!supabaseUrl) {
-    return { success: false, error: "Database misconfigured" };
+    return { success: false, error: 'Database misconfigured' };
   }
 
   // Use service role if available, or client with user token
   const dbClient = serviceKey
     ? createClient(supabaseUrl, serviceKey)
     : userAccessToken
-    ? createClient(supabaseUrl, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "", {
-        global: { headers: { Authorization: `Bearer ${userAccessToken}` } },
-      })
-    : supabase;
+      ? createClient(
+          supabaseUrl,
+          process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '',
+          {
+            global: { headers: { Authorization: `Bearer ${userAccessToken}` } },
+          },
+        )
+      : supabase;
 
   try {
     // Check if endorsement already exists
     const { data: existing, error: findError } = await dbClient
-      .from("endorsements")
-      .select("id")
-      .eq("endorser_user_id", endorserUserId)
-      .eq("endorsed_username", normalizedUsername)
-      .eq("skill", normalizedSkill)
+      .from('endorsements')
+      .select('id')
+      .eq('endorser_user_id', endorserUserId)
+      .eq('endorsed_username', normalizedUsername)
+      .eq('skill', normalizedSkill)
       .maybeSingle();
 
     if (findError) {
-      console.error("Error checking endorsement:", findError.message);
+      console.error('Error checking endorsement:', findError.message);
     }
 
     if (existing) {
       // Remove existing endorsement (toggle off)
       const { error: deleteError } = await dbClient
-        .from("endorsements")
+        .from('endorsements')
         .delete()
-        .eq("id", existing.id);
+        .eq('id', existing.id);
 
       if (deleteError) {
         return { success: false, error: deleteError.message };
       }
 
-      return { success: true, action: "removed" };
+      return { success: true, action: 'removed' };
     } else {
       // Insert new endorsement (toggle on)
-      const { error: insertError } = await dbClient.from("endorsements").insert({
-        endorser_user_id: endorserUserId,
-        endorsed_user_id: endorsedProfileUserId ?? null,
-        endorsed_username: normalizedUsername,
-        skill: normalizedSkill,
-      });
+      const { error: insertError } = await dbClient
+        .from('endorsements')
+        .insert({
+          endorser_user_id: endorserUserId,
+          endorsed_user_id: endorsedProfileUserId ?? null,
+          endorsed_username: normalizedUsername,
+          skill: normalizedSkill,
+        });
 
       if (insertError) {
         return { success: false, error: insertError.message };
       }
 
-      return { success: true, action: "added" };
+      return { success: true, action: 'added' };
     }
   } catch (err) {
-    console.error("Failed to toggle endorsement:", err);
-    return { success: false, error: "Server error" };
+    console.error('Failed to toggle endorsement:', err);
+    return { success: false, error: 'Server error' };
   }
 }

@@ -1,1 +1,1 @@
-export * from "./badges.config";
+export * from './badges.config';

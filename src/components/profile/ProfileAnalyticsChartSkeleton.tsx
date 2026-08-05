@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 export function ProfileAnalyticsChartSkeleton() {
   return (
@@ -6,16 +6,16 @@ export function ProfileAnalyticsChartSkeleton() {
       role="status"
       aria-label="Loading traffic analytics chart"
       style={{
-        width: "100%",
-        height: "220px",
-        borderRadius: "8px",
-        backgroundColor: "var(--color-canvas, #121212)",
-        display: "flex",
-        flexDirection: "column",
-        justifyContent: "center",
-        alignItems: "center",
-        position: "relative",
-        overflow: "hidden",
+        width: '100%',
+        height: '220px',
+        borderRadius: '8px',
+        backgroundColor: 'var(--color-canvas, #121212)',
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'center',
+        alignItems: 'center',
+        position: 'relative',
+        overflow: 'hidden',
       }}
     >
       <style>{`
@@ -31,7 +31,7 @@ export function ProfileAnalyticsChartSkeleton() {
         preserveAspectRatio="none"
         style={{
           opacity: 0.4,
-          animation: "sk-area-pulse 1.8s ease-in-out infinite",
+          animation: 'sk-area-pulse 1.8s ease-in-out infinite',
         }}
       >
         <path
@@ -47,9 +47,9 @@ export function ProfileAnalyticsChartSkeleton() {
       </svg>
       <span
         style={{
-          position: "absolute",
-          fontSize: "12px",
-          color: "var(--color-ink-mute, #94a3b8)",
+          position: 'absolute',
+          fontSize: '12px',
+          color: 'var(--color-ink-mute, #94a3b8)',
           fontWeight: 500,
         }}
       >

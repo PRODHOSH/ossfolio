@@ -1,11 +1,11 @@
-import type { Org, PRImpactDetails, IssueImpactDetails, Repo } from "@/types";
+import type { Org, PRImpactDetails, IssueImpactDetails, Repo } from '@/types';
 
 /**
  * Extracts repository owner login from full repository string (e.g. "facebook/react" -> "facebook")
  */
 export function extractOwnerFromRepo(repoFullName: string): string | null {
-  if (!repoFullName || !repoFullName.includes("/")) return null;
-  const parts = repoFullName.split("/");
+  if (!repoFullName || !repoFullName.includes('/')) return null;
+  const parts = repoFullName.split('/');
   return parts[0].trim();
 }
 

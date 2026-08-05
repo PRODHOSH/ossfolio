@@ -14,9 +14,9 @@ name: SQL Migration Checks
 on:
   pull_request:
     paths:
-      - "supabase/**"
-      - "scripts/sql-lint.mjs"
-      - ".github/workflows/sql-lint.yml"
+      - 'supabase/**'
+      - 'scripts/sql-lint.mjs'
+      - '.github/workflows/sql-lint.yml'
 
 permissions:
   contents: read
@@ -36,12 +36,12 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "22"
+          node-version: '22'
 
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.12"
+          python-version: '3.12'
 
       - name: Install sqlfluff
         # Pinned so the parser cannot change underneath the repository without a

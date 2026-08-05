@@ -1,8 +1,8 @@
-"use client";
+'use client';
 
-import React, { useEffect, useCallback } from "react";
-import confetti from "canvas-confetti";
-import type { Achievement } from "@/lib/achievements";
+import React, { useEffect, useCallback } from 'react';
+import confetti from 'canvas-confetti';
+import type { Achievement } from '@/lib/achievements';
 
 interface MilestoneCelebrationProps {
   achievement: Achievement | null;
@@ -12,7 +12,7 @@ interface MilestoneCelebrationProps {
 }
 
 export function triggerConfettiBurst() {
-  if (typeof window === "undefined") return;
+  if (typeof window === 'undefined') return;
 
   try {
     // Left cannon
@@ -21,7 +21,7 @@ export function triggerConfettiBurst() {
       angle: 60,
       spread: 55,
       origin: { x: 0.1, y: 0.7 },
-      colors: ["#3b82f6", "#10b981", "#f59e0b", "#ec4899", "#8b5cf6"],
+      colors: ['#3b82f6', '#10b981', '#f59e0b', '#ec4899', '#8b5cf6'],
     });
 
     // Right cannon
@@ -30,7 +30,7 @@ export function triggerConfettiBurst() {
       angle: 120,
       spread: 55,
       origin: { x: 0.9, y: 0.7 },
-      colors: ["#3b82f6", "#10b981", "#f59e0b", "#ec4899", "#8b5cf6"],
+      colors: ['#3b82f6', '#10b981', '#f59e0b', '#ec4899', '#8b5cf6'],
     });
 
     // Center star explosion
@@ -39,12 +39,12 @@ export function triggerConfettiBurst() {
         particleCount: 80,
         spread: 100,
         origin: { y: 0.5 },
-        shapes: ["star", "circle"],
-        colors: ["#fbbf24", "#f43f5e", "#6366f1"],
+        shapes: ['star', 'circle'],
+        colors: ['#fbbf24', '#f43f5e', '#6366f1'],
       });
     }, 250);
   } catch (err) {
-    console.warn("Canvas confetti failed to render:", err);
+    console.warn('Canvas confetti failed to render:', err);
   }
 }
 
@@ -76,20 +76,21 @@ export function MilestoneCelebration({
 
   if (!isOpen || !achievement) return null;
 
-  const shareUrl = typeof window !== "undefined"
-    ? `${window.location.origin}/api/milestones/${achievement.id}/share?username=${encodeURIComponent(username)}`
-    : "";
+  const shareUrl =
+    typeof window !== 'undefined'
+      ? `${window.location.origin}/api/milestones/${achievement.id}/share?username=${encodeURIComponent(username)}`
+      : '';
 
   const shareText = `🏆 I unlocked the "${achievement.name}" milestone on OSSfolio (${achievement.tagline})! Check out my open-source profile:`;
 
   const handleTwitterShare = () => {
     const url = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareUrl)}`;
-    window.open(url, "_blank", "noopener,noreferrer");
+    window.open(url, '_blank', 'noopener,noreferrer');
   };
 
   const handleLinkedInShare = () => {
     const url = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareUrl)}`;
-    window.open(url, "_blank", "noopener,noreferrer");
+    window.open(url, '_blank', 'noopener,noreferrer');
   };
 
   const handleNativeShare = async () => {
@@ -122,15 +123,15 @@ export function MilestoneCelebration({
       aria-modal="true"
       aria-labelledby="milestone-celebration-title"
       style={{
-        position: "fixed",
+        position: 'fixed',
         inset: 0,
         zIndex: 9999,
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        backgroundColor: "rgba(0, 0, 0, 0.65)",
-        backdropFilter: "blur(4px)",
-        padding: "16px",
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: 'rgba(0, 0, 0, 0.65)',
+        backdropFilter: 'blur(4px)',
+        padding: '16px',
       }}
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
@@ -138,32 +139,32 @@ export function MilestoneCelebration({
     >
       <div
         style={{
-          position: "relative",
-          width: "100%",
-          maxWidth: "460px",
-          backgroundColor: "var(--color-canvas, #0d1117)",
-          border: "1px solid var(--color-hairline-strong, #30363d)",
-          borderRadius: "16px",
-          padding: "32px 24px 24px",
-          textAlign: "center",
-          boxShadow: "0 20px 40px rgba(0, 0, 0, 0.4)",
-          animation: "milestonePopIn 0.3s cubic-bezier(0.16, 1, 0.3, 1)",
+          position: 'relative',
+          width: '100%',
+          maxWidth: '460px',
+          backgroundColor: 'var(--color-canvas, #0d1117)',
+          border: '1px solid var(--color-hairline-strong, #30363d)',
+          borderRadius: '16px',
+          padding: '32px 24px 24px',
+          textAlign: 'center',
+          boxShadow: '0 20px 40px rgba(0, 0, 0, 0.4)',
+          animation: 'milestonePopIn 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
         }}
       >
         <button
           onClick={onClose}
           aria-label="Close modal"
           style={{
-            position: "absolute",
-            top: "16px",
-            right: "16px",
-            background: "none",
-            border: "none",
-            color: "var(--color-ink-mute, #8b949e)",
-            fontSize: "20px",
-            cursor: "pointer",
-            padding: "4px 8px",
-            borderRadius: "6px",
+            position: 'absolute',
+            top: '16px',
+            right: '16px',
+            background: 'none',
+            border: 'none',
+            color: 'var(--color-ink-mute, #8b949e)',
+            fontSize: '20px',
+            cursor: 'pointer',
+            padding: '4px 8px',
+            borderRadius: '6px',
           }}
         >
           ✕
@@ -172,30 +173,30 @@ export function MilestoneCelebration({
         {/* Badge Banner */}
         <div
           style={{
-            display: "inline-flex",
-            alignItems: "center",
-            justifyContent: "center",
-            width: "84px",
-            height: "84px",
-            borderRadius: "50%",
-            backgroundColor: "var(--color-canvas-soft, #161b22)",
-            border: "3px solid var(--color-primary, #3b82f6)",
-            fontSize: "42px",
-            marginBottom: "16px",
-            boxShadow: "0 0 24px rgba(59, 130, 246, 0.4)",
+            display: 'inline-flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            width: '84px',
+            height: '84px',
+            borderRadius: '50%',
+            backgroundColor: 'var(--color-canvas-soft, #161b22)',
+            border: '3px solid var(--color-primary, #3b82f6)',
+            fontSize: '42px',
+            marginBottom: '16px',
+            boxShadow: '0 0 24px rgba(59, 130, 246, 0.4)',
           }}
         >
-          {achievement.icon || "🏆"}
+          {achievement.icon || '🏆'}
         </div>
 
         <div
           style={{
-            fontSize: "12px",
+            fontSize: '12px',
             fontWeight: 700,
-            textTransform: "uppercase",
-            letterSpacing: "1.2px",
-            color: "var(--color-primary, #3b82f6)",
-            marginBottom: "6px",
+            textTransform: 'uppercase',
+            letterSpacing: '1.2px',
+            color: 'var(--color-primary, #3b82f6)',
+            marginBottom: '6px',
           }}
         >
           Milestone Unlocked! 🎉
@@ -204,10 +205,10 @@ export function MilestoneCelebration({
         <h2
           id="milestone-celebration-title"
           style={{
-            fontSize: "22px",
+            fontSize: '22px',
             fontWeight: 700,
-            color: "var(--color-ink, #f0f6fc)",
-            margin: "0 0 8px",
+            color: 'var(--color-ink, #f0f6fc)',
+            margin: '0 0 8px',
           }}
         >
           {achievement.name}
@@ -215,10 +216,10 @@ export function MilestoneCelebration({
 
         <p
           style={{
-            fontSize: "14px",
-            color: "var(--color-ink-mute, #8b949e)",
-            margin: "0 0 20px",
-            lineHeight: "1.5",
+            fontSize: '14px',
+            color: 'var(--color-ink-mute, #8b949e)',
+            margin: '0 0 20px',
+            lineHeight: '1.5',
           }}
         >
           {achievement.tagline}
@@ -228,19 +229,19 @@ export function MilestoneCelebration({
         <button
           onClick={fireConfetti}
           style={{
-            display: "inline-flex",
-            alignItems: "center",
-            gap: "6px",
-            padding: "8px 16px",
-            fontSize: "13px",
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '6px',
+            padding: '8px 16px',
+            fontSize: '13px',
             fontWeight: 600,
-            borderRadius: "20px",
-            backgroundColor: "rgba(59, 130, 246, 0.15)",
-            color: "var(--color-primary, #3b82f6)",
-            border: "1px solid rgba(59, 130, 246, 0.3)",
-            cursor: "pointer",
-            marginBottom: "24px",
-            transition: "all 0.2s ease",
+            borderRadius: '20px',
+            backgroundColor: 'rgba(59, 130, 246, 0.15)',
+            color: 'var(--color-primary, #3b82f6)',
+            border: '1px solid rgba(59, 130, 246, 0.3)',
+            cursor: 'pointer',
+            marginBottom: '24px',
+            transition: 'all 0.2s ease',
           }}
         >
           ✨ Celebrate Again!
@@ -249,16 +250,16 @@ export function MilestoneCelebration({
         {/* Social Sharing Section */}
         <div
           style={{
-            borderTop: "1px solid var(--color-hairline, #21262d)",
-            paddingTop: "20px",
+            borderTop: '1px solid var(--color-hairline, #21262d)',
+            paddingTop: '20px',
           }}
         >
           <div
             style={{
-              fontSize: "12px",
+              fontSize: '12px',
               fontWeight: 600,
-              color: "var(--color-ink-mute, #8b949e)",
-              marginBottom: "12px",
+              color: 'var(--color-ink-mute, #8b949e)',
+              marginBottom: '12px',
             }}
           >
             Share your achievement
@@ -266,26 +267,26 @@ export function MilestoneCelebration({
 
           <div
             style={{
-              display: "flex",
-              gap: "10px",
-              justifyContent: "center",
-              flexWrap: "wrap",
+              display: 'flex',
+              gap: '10px',
+              justifyContent: 'center',
+              flexWrap: 'wrap',
             }}
           >
             <button
               onClick={handleTwitterShare}
               style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: "6px",
-                padding: "8px 14px",
-                fontSize: "13px",
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '6px',
+                padding: '8px 14px',
+                fontSize: '13px',
                 fontWeight: 600,
-                borderRadius: "8px",
-                backgroundColor: "#1da1f2",
-                color: "#ffffff",
-                border: "none",
-                cursor: "pointer",
+                borderRadius: '8px',
+                backgroundColor: '#1da1f2',
+                color: '#ffffff',
+                border: 'none',
+                cursor: 'pointer',
               }}
             >
               Post on 𝕏
@@ -294,17 +295,17 @@ export function MilestoneCelebration({
             <button
               onClick={handleLinkedInShare}
               style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: "6px",
-                padding: "8px 14px",
-                fontSize: "13px",
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '6px',
+                padding: '8px 14px',
+                fontSize: '13px',
                 fontWeight: 600,
-                borderRadius: "8px",
-                backgroundColor: "#0a66c2",
-                color: "#ffffff",
-                border: "none",
-                cursor: "pointer",
+                borderRadius: '8px',
+                backgroundColor: '#0a66c2',
+                color: '#ffffff',
+                border: 'none',
+                cursor: 'pointer',
               }}
             >
               LinkedIn
@@ -313,20 +314,20 @@ export function MilestoneCelebration({
             <button
               onClick={handleNativeShare}
               style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: "6px",
-                padding: "8px 14px",
-                fontSize: "13px",
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '6px',
+                padding: '8px 14px',
+                fontSize: '13px',
                 fontWeight: 600,
-                borderRadius: "8px",
-                backgroundColor: "var(--color-canvas-soft, #21262d)",
-                color: "var(--color-ink, #f0f6fc)",
-                border: "1px solid var(--color-hairline-strong, #30363d)",
-                cursor: "pointer",
+                borderRadius: '8px',
+                backgroundColor: 'var(--color-canvas-soft, #21262d)',
+                color: 'var(--color-ink, #f0f6fc)',
+                border: '1px solid var(--color-hairline-strong, #30363d)',
+                cursor: 'pointer',
               }}
             >
-              {copied ? "Link Copied! ✓" : "Share / Copy"}
+              {copied ? 'Link Copied! ✓' : 'Share / Copy'}
             </button>
           </div>
         </div>

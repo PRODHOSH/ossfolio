@@ -1,6 +1,6 @@
-import { ProfileHeaderSkeleton } from "@/components/profile/ProfileHeaderSkeleton";
-import { StatsGridSkeleton } from "@/components/profile/StatsGridSkeleton";
-import { TopReposSkeleton } from "@/components/profile/TopReposSkeleton";
+import { ProfileHeaderSkeleton } from '@/components/profile/ProfileHeaderSkeleton';
+import { StatsGridSkeleton } from '@/components/profile/StatsGridSkeleton';
+import { TopReposSkeleton } from '@/components/profile/TopReposSkeleton';
 
 /**
  * ProfileSkeleton
@@ -16,24 +16,24 @@ export function ProfileSkeleton() {
       role="status"
       aria-busy="true"
       aria-label="Loading profile"
-      style={{ maxWidth: "56rem", margin: "0 auto", padding: "48px 20px 80px" }}
+      style={{ maxWidth: '56rem', margin: '0 auto', padding: '48px 20px 80px' }}
     >
       <ProfileHeaderSkeleton />
 
       <TopReposSkeleton />
 
-      <div style={{ marginTop: "44px" }}>
+      <div style={{ marginTop: '44px' }}>
         <StatsGridSkeleton />
       </div>
 
       {/* Tech stack */}
-      <div style={{ marginTop: "44px" }}>
+      <div style={{ marginTop: '44px' }}>
         <div
           className="bg-neutral-800 animate-pulse rounded"
           style={{ width: 96, height: 16, marginBottom: 16 }}
           aria-hidden="true"
         />
-        <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
           {[72, 90, 68, 80, 64, 88, 74, 66].map((w, i) => (
             <div
               key={i}
@@ -46,24 +46,24 @@ export function ProfileSkeleton() {
       </div>
 
       {/* Organizations */}
-      <div style={{ marginTop: "44px" }}>
+      <div style={{ marginTop: '44px' }}>
         <div
           className="bg-neutral-800 animate-pulse rounded"
           style={{ width: 118, height: 16, marginBottom: 16 }}
           aria-hidden="true"
         />
-        <div style={{ display: "flex", flexWrap: "wrap", gap: "12px" }}>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px' }}>
           {[80, 96, 72, 88, 76].map((w, i) => (
             <div
               key={i}
               style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "8px",
-                padding: "6px 12px 6px 6px",
-                border: "1px solid var(--color-hairline)",
-                borderRadius: "8px",
-                backgroundColor: "var(--color-canvas-soft)",
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                padding: '6px 12px 6px 6px',
+                border: '1px solid var(--color-hairline)',
+                borderRadius: '8px',
+                backgroundColor: 'var(--color-canvas-soft)',
               }}
             >
               <div
@@ -82,7 +82,7 @@ export function ProfileSkeleton() {
       </div>
 
       {/* Contribution heatmap */}
-      <div style={{ marginTop: "44px" }}>
+      <div style={{ marginTop: '44px' }}>
         <div
           className="bg-neutral-800 animate-pulse rounded"
           style={{ width: 178, height: 16, marginBottom: 16 }}
@@ -90,11 +90,10 @@ export function ProfileSkeleton() {
         />
         <div
           className="bg-neutral-800 animate-pulse rounded"
-          style={{ width: "100%", height: 88 }}
+          style={{ width: '100%', height: 88 }}
           aria-hidden="true"
         />
       </div>
     </div>
   );
 }
-

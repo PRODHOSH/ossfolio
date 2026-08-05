@@ -1,7 +1,12 @@
-import type { ContributorStats, Repo, CoContributor, ContributionImpactContext } from "@/types";
-import { redis } from "./redis";
-import { fetchWithTimeout, FetchTimeoutError } from "@/lib/fetch-with-timeout";
-import { GitHubRateLimitError } from "@/lib/errors";
+import type {
+  ContributorStats,
+  Repo,
+  CoContributor,
+  ContributionImpactContext,
+} from '@/types';
+import { redis } from './redis';
+import { fetchWithTimeout, FetchTimeoutError } from '@/lib/fetch-with-timeout';
+import { GitHubRateLimitError } from '@/lib/errors';
 import { GITHUB_API_BASE } from './constants';
 
 const GITHUB_GRAPHQL_URL = `${GITHUB_API_BASE}/graphql`;
@@ -28,10 +33,10 @@ async function githubGraphQL<T>(
       const res = await fetchWithTimeout(
         GITHUB_GRAPHQL_URL,
         {
-          method: "POST",
+          method: 'POST',
           headers: {
             Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
+            'Content-Type': 'application/json',
           },
           body: JSON.stringify({ query, variables }),
           next: { revalidate: 3600 },
@@ -42,8 +47,8 @@ async function githubGraphQL<T>(
       if (!res.ok) {
         if (res.status === 403) {
           const isRateLimit =
-            res.headers.get("x-ratelimit-remaining") === "0" ||
-            res.headers.has("retry-after");
+            res.headers.get('x-ratelimit-remaining') === '0' ||
+            res.headers.has('retry-after');
           if (isRateLimit) {
             throw new GitHubRateLimitError();
           }
@@ -66,12 +71,15 @@ async function githubGraphQL<T>(
       const json = await res.json();
       if (json.errors?.length) {
         const firstErr = json.errors[0];
-        
+
         // 1. GraphQL Error Interception: Catch structured AND string-based rate limits
-        if (firstErr.type === "RATE_LIMITED" || /rate limit/i.test(firstErr.message)) {
+        if (
+          firstErr.type === 'RATE_LIMITED' ||
+          /rate limit/i.test(firstErr.message)
+        ) {
           throw new GitHubRateLimitError(firstErr.message);
         }
-        
+
         lastError = new Error(firstErr.message);
         // Some GitHub errors are retryable (e.g. secondary rate limit)
         if (attempt < RETRY_CONFIG.maxRetries) {
@@ -101,7 +109,7 @@ async function githubGraphQL<T>(
     }
   }
 
-  throw lastError ?? new Error("GitHub API request failed after retries");
+  throw lastError ?? new Error('GitHub API request failed after retries');
 }
 
 export const CONTRIBUTOR_QUERY = `
@@ -281,7 +289,7 @@ export async function fetchContributorProfile(
       return cachedData;
     }
   } catch (err) {
-    console.error("Redis read error gracefully bypassed:", err);
+    console.error('Redis read error gracefully bypassed:', err);
   }
 
   const data = await githubGraphQL<{ user: GitHubContributor }>(
@@ -294,7 +302,7 @@ export async function fetchContributorProfile(
     try {
       await redis.set(cacheKey, data.user, { ex: 7200 });
     } catch (err) {
-      console.error("Redis write error gracefully bypassed:", err);
+      console.error('Redis write error gracefully bypassed:', err);
     }
   }
 
@@ -348,12 +356,11 @@ export function contributorToScoreInputs(c: GitHubContributor): {
   return { stats, repos, impactContext };
 }
 
-
 /* -------------------------------------------------------------------------- */
 /* Public contribution calendar (no token required)                           */
 /* -------------------------------------------------------------------------- */
 
-const HEATMAP_COLORS = ["#ebedf0", "#9be9a8", "#40c463", "#30a14e", "#216e39"];
+const HEATMAP_COLORS = ['#ebedf0', '#9be9a8', '#40c463', '#30a14e', '#216e39'];
 
 function colorForCount(count: number): string {
   if (count === 0) return HEATMAP_COLORS[0];
@@ -382,13 +389,13 @@ export async function fetchContributionCalendar(
   username: string,
   from?: string,
 ): Promise<ContributionCalendar | null> {
-  const cacheKey = `github:calendar:${username.toLowerCase()}${from ? `:${from}` : ""}`;
+  const cacheKey = `github:calendar:${username.toLowerCase()}${from ? `:${from}` : ''}`;
 
   try {
     const cachedCalendar = await redis.get<ContributionCalendar>(cacheKey);
     if (cachedCalendar) return cachedCalendar;
   } catch (err) {
-    console.error("Redis calendar read error gracefully bypassed:", err);
+    console.error('Redis calendar read error gracefully bypassed:', err);
   }
 
   try {
@@ -400,8 +407,8 @@ export async function fetchContributionCalendar(
       url,
       {
         headers: {
-          Accept: "text/html",
-          "User-Agent": "ossfolio (+https://ossfolio.qzz.io)",
+          Accept: 'text/html',
+          'User-Agent': 'ossfolio (+https://ossfolio.qzz.io)',
         },
         next: { revalidate: 3600 },
       },
@@ -412,7 +419,7 @@ export async function fetchContributionCalendar(
 
     const html = await res.text();
     const countById = new Map<string, number>();
-    
+
     // 2. Scraper Regex Parsing: Robust tooltip matching independent of specific ID structures
     const tipRe = /<tool-tip[^>]*\bfor="([^"]+)"[^>]*>([\s\S]*?)<\/tool-tip>/gi;
     let tip: RegExpExecArray | null;
@@ -420,22 +427,22 @@ export async function fetchContributionCalendar(
       const id = tip[1];
       const label = tip[2].trim();
       const numMatch = label.match(/^([\d,]+)\s+contribution/i);
-      const count = numMatch ? parseInt(numMatch[1].replace(/,/g, ""), 10) : 0;
+      const count = numMatch ? parseInt(numMatch[1].replace(/,/g, ''), 10) : 0;
       countById.set(id, count);
     }
 
     const weekMap = new Map<number, { row: number; day: ContributionDay }[]>();
-    
-    // Robust cell parsing: Matches ANY table data cell that has a data-date attribute 
+
+    // Robust cell parsing: Matches ANY table data cell that has a data-date attribute
     // instead of relying on a fragile CSS class name
     const cellRe = /<td\b[^>]*data-date="([0-9-]+)"[^>]*>/gi;
     let cell: RegExpExecArray | null;
-    
+
     while ((cell = cellRe.exec(html)) !== null) {
       const tag = cell[0];
       const dateMatch = tag.match(/data-date="([0-9-]+)"/);
       const idMatch = tag.match(/id="([^"]+)"/);
-      
+
       if (!dateMatch || !idMatch) continue;
 
       const date = dateMatch[1];
@@ -444,9 +451,11 @@ export async function fetchContributionCalendar(
 
       // Extract row/col safely, fallback to epoch calculation if id shifts
       const coordMatch = id.match(/-(\d+)-(\d+)$/);
-      const row = coordMatch ? parseInt(coordMatch[1], 10) : new Date(date).getUTCDay();
-      const col = coordMatch 
-        ? parseInt(coordMatch[2], 10) 
+      const row = coordMatch
+        ? parseInt(coordMatch[1], 10)
+        : new Date(date).getUTCDay();
+      const col = coordMatch
+        ? parseInt(coordMatch[2], 10)
         : Math.floor(new Date(date).getTime() / (7 * 24 * 3600 * 1000));
 
       if (!weekMap.has(col)) weekMap.set(col, []);
@@ -477,7 +486,7 @@ export async function fetchContributionCalendar(
     try {
       await redis.set(cacheKey, result, { ex: 7200 });
     } catch (err) {
-      console.error("Redis calendar write error gracefully bypassed:", err);
+      console.error('Redis calendar write error gracefully bypassed:', err);
     }
 
     return result;
@@ -519,7 +528,7 @@ export async function fetchCoContributors(
     const cached = await redis.get<CoContributor[]>(cacheKey);
     if (cached) return cached;
   } catch (err) {
-    console.error("Redis co-contributors read bypassed:", err);
+    console.error('Redis co-contributors read bypassed:', err);
   }
 
   try {
@@ -568,7 +577,7 @@ export async function fetchCoContributors(
     try {
       await redis.set(cacheKey, result, { ex: 7200 });
     } catch (err) {
-      console.error("Redis co-contributors write bypassed:", err);
+      console.error('Redis co-contributors write bypassed:', err);
     }
 
     return result;

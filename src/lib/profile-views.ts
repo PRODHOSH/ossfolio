@@ -1,5 +1,5 @@
-import { supabase } from "@/lib/supabase";
-import { createClient } from "@supabase/supabase-js";
+import { supabase } from '@/lib/supabase';
+import { createClient } from '@supabase/supabase-js';
 
 /** Fetch current view_count for a profile username */
 export async function fetchProfileViewCount(username: string): Promise<number> {
@@ -9,15 +9,15 @@ export async function fetchProfileViewCount(username: string): Promise<number> {
 
   try {
     const { data, error } = await supabase
-      .from("profiles")
-      .select("view_count")
-      .eq("username", username.toLowerCase())
+      .from('profiles')
+      .select('view_count')
+      .eq('username', username.toLowerCase())
       .single();
 
     if (error || !data) return 0;
     return Number(data.view_count) || 0;
   } catch (err) {
-    console.error("Error fetching view_count:", err);
+    console.error('Error fetching view_count:', err);
     return 0;
   }
 }
@@ -36,11 +36,11 @@ export async function incrementProfileView(username: string): Promise<number> {
       : supabase;
 
     // First attempt to call RPC function
-    const { data, error } = await client.rpc("increment_profile_view_count", {
+    const { data, error } = await client.rpc('increment_profile_view_count', {
       target_username: username.toLowerCase(),
     });
 
-    if (!error && typeof data === "number") {
+    if (!error && typeof data === 'number') {
       return data;
     }
 
@@ -49,18 +49,18 @@ export async function incrementProfileView(username: string): Promise<number> {
     const newCount = current + 1;
 
     const { error: updateError } = await client
-      .from("profiles")
+      .from('profiles')
       .update({ view_count: newCount })
-      .eq("username", username.toLowerCase());
+      .eq('username', username.toLowerCase());
 
     if (updateError) {
-      console.error("Fallback view_count update failed:", updateError.message);
+      console.error('Fallback view_count update failed:', updateError.message);
       return current;
     }
 
     return newCount;
   } catch (err) {
-    console.error("Failed to increment profile view:", err);
+    console.error('Failed to increment profile view:', err);
     return 0;
   }
 }

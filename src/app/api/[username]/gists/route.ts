@@ -1,6 +1,6 @@
-import { NextRequest } from "next/server";
-import { fetchUserGists } from "@/lib/gists";
-import { createApiResponse, createErrorResponse } from "@/lib/validators/api";
+import { NextRequest } from 'next/server';
+import { fetchUserGists } from '@/lib/gists';
+import { createApiResponse, createErrorResponse } from '@/lib/validators/api';
 
 // Runtime managed by @opennextjs/cloudflare
 
@@ -15,7 +15,7 @@ export async function GET(_request: NextRequest, { params }: RouteParams) {
   try {
     const { username } = await params;
     if (!username) {
-      return createErrorResponse("Username is required", 400);
+      return createErrorResponse('Username is required', 400);
     }
 
     const gists = await fetchUserGists(username);
@@ -27,7 +27,7 @@ export async function GET(_request: NextRequest, { params }: RouteParams) {
       gists,
     });
   } catch (err) {
-    console.error("[api/[username]/gists] GET error:", err);
-    return createErrorResponse("Could not load user gists", 500);
+    console.error('[api/[username]/gists] GET error:', err);
+    return createErrorResponse('Could not load user gists', 500);
   }
 }

@@ -1,6 +1,6 @@
-import { cache } from "react";
-import { createClient, type SupabaseClient } from "@supabase/supabase-js";
-import { supabase } from "@/lib/supabase";
+import { cache } from 'react';
+import { createClient, type SupabaseClient } from '@supabase/supabase-js';
+import { supabase } from '@/lib/supabase';
 import {
   fetchGitHubUser,
   fetchGitHubRepos,
@@ -9,13 +9,13 @@ import {
   fetchMergedPRs,
   type GitHubUser,
   type GitHubRepoPayload,
-} from "@/lib/profile-data";
+} from '@/lib/profile-data';
 import {
   fetchContributionCalendar,
   type ContributionCalendar,
-} from "@/lib/github";
-import type { ContributorStats, Org, MergedPR } from "@/types";
-import { GitHubRateLimitError } from "@/lib/errors";
+} from '@/lib/github';
+import type { ContributorStats, Org, MergedPR } from '@/types';
+import { GitHubRateLimitError } from '@/lib/errors';
 
 /**
  * DB-first profile data.
@@ -77,9 +77,9 @@ export const getProfileSnapshot = cache(async function getProfileSnapshot(
   username: string,
 ): Promise<SnapshotRow | null> {
   const { data, error } = await supabase
-    .from("profile_snapshots")
-    .select("snapshot, synced_at")
-    .eq("username", username.toLowerCase())
+    .from('profile_snapshots')
+    .select('snapshot, synced_at')
+    .eq('username', username.toLowerCase())
     .maybeSingle();
 
   if (error || !data) return null;
@@ -116,22 +116,27 @@ async function claimSync(
   // First, attempt PostgreSQL transactional advisory locking via RPC to halt concurrent workers immediately
   try {
     const { data: lockAcquired, error: rpcError } = await admin.rpc(
-      "try_acquire_profile_refresh_lock",
+      'try_acquire_profile_refresh_lock',
       { p_username: username },
     );
     if (!rpcError && lockAcquired === false) {
-      console.warn(`[snapshot] advisory lock already held for username: ${username}`);
+      console.warn(
+        `[snapshot] advisory lock already held for username: ${username}`,
+      );
       return false;
     }
   } catch (err) {
-    console.warn("[snapshot] RPC try_acquire_profile_refresh_lock failed or unconfigured:", err);
+    console.warn(
+      '[snapshot] RPC try_acquire_profile_refresh_lock failed or unconfigured:',
+      err,
+    );
   }
 
   const now = new Date();
   const lockCutoff = new Date(now.getTime() - SYNC_LOCK_MS).toISOString();
 
   const { error: insertError } = await admin
-    .from("profile_snapshots")
+    .from('profile_snapshots')
     .insert({ username, sync_started_at: now.toISOString() });
 
   // No conflict: the row is new and we just created it, so the claim is ours.
@@ -141,18 +146,18 @@ async function claimSync(
   // failure is a real problem — a transient DB or network error, say — and must not
   // be silently reinterpreted as "another sync owns the claim", which would skip this
   // sync without a trace.
-  if (insertError.code !== "23505") {
-    console.error("[snapshot] could not claim sync:", insertError.message);
+  if (insertError.code !== '23505') {
+    console.error('[snapshot] could not claim sync:', insertError.message);
     return false;
   }
 
   // A row already existed. Take the claim only if the previous sync is stale.
   const { data } = await admin
-    .from("profile_snapshots")
+    .from('profile_snapshots')
     .update({ sync_started_at: now.toISOString() })
-    .eq("username", username)
-    .lt("sync_started_at", lockCutoff)
-    .select("username")
+    .eq('username', username)
+    .lt('sync_started_at', lockCutoff)
+    .select('username')
     .maybeSingle();
 
   return Boolean(data);
@@ -174,7 +179,7 @@ export async function syncProfileSnapshot(rawUsername: string): Promise<void> {
 
   const admin = adminClient();
   if (!admin) {
-    console.error("[snapshot] service-role key missing; cannot sync");
+    console.error('[snapshot] service-role key missing; cannot sync');
     return;
   }
 
@@ -194,7 +199,7 @@ export async function syncProfileSnapshot(rawUsername: string): Promise<void> {
     ]);
 
   const wasRateLimited = (r: PromiseSettledResult<unknown>) =>
-    r.status === "rejected" && r.reason instanceof GitHubRateLimitError;
+    r.status === 'rejected' && r.reason instanceof GitHubRateLimitError;
 
   const rateLimited = [
     user,
@@ -210,8 +215,10 @@ export async function syncProfileSnapshot(rawUsername: string): Promise<void> {
   // FetchTimeoutError on timeout and rethrows other transport errors, so narrowing this
   // to the rate-limit case would let a single transient blip persist `user: null` with a
   // fresh `synced_at` — caching a false 404 for a real account for a full TTL hour.
-  if (user.status === "rejected") {
-    console.error(`[snapshot] primary user fetch failed for ${username}, aborting sync to prevent caching a false 404.`);
+  if (user.status === 'rejected') {
+    console.error(
+      `[snapshot] primary user fetch failed for ${username}, aborting sync to prevent caching a false 404.`,
+    );
     return;
   }
 
@@ -221,33 +228,35 @@ export async function syncProfileSnapshot(rawUsername: string): Promise<void> {
   // a limit hit by any of them means the whole snapshot is untrustworthy. Leaving the row
   // unwritten keeps the page in its syncing state, which then retries — the honest outcome.
   if (rateLimited) {
-    console.warn(`[snapshot] rate limit hit during sync for ${username}, aborting snapshot save to prevent cache corruption.`);
+    console.warn(
+      `[snapshot] rate limit hit during sync for ${username}, aborting snapshot save to prevent cache corruption.`,
+    );
     return;
   }
 
   const snapshot: ProfileSnapshot = {
-    user: user.status === "fulfilled" ? user.value : null,
-    repos: repos.status === "fulfilled" ? repos.value : [],
-    liveStats: liveStats.status === "fulfilled" ? liveStats.value : null,
-    mergedPRs: mergedPRs.status === "fulfilled" ? mergedPRs.value : [],
-    orgs: orgs.status === "fulfilled" ? orgs.value : [],
+    user: user.status === 'fulfilled' ? user.value : null,
+    repos: repos.status === 'fulfilled' ? repos.value : [],
+    liveStats: liveStats.status === 'fulfilled' ? liveStats.value : null,
+    mergedPRs: mergedPRs.status === 'fulfilled' ? mergedPRs.value : [],
+    orgs: orgs.status === 'fulfilled' ? orgs.value : [],
     contributionCalendar:
-      contributionCalendar.status === "fulfilled"
+      contributionCalendar.status === 'fulfilled'
         ? contributionCalendar.value
         : null,
     rateLimited,
   };
 
-  const { error } = await admin.from("profile_snapshots").upsert(
+  const { error } = await admin.from('profile_snapshots').upsert(
     {
       username,
       snapshot,
       synced_at: new Date().toISOString(),
     },
-    { onConflict: "username" },
+    { onConflict: 'username' },
   );
 
   if (error) {
-    console.error("[snapshot] failed to store snapshot:", error.message);
+    console.error('[snapshot] failed to store snapshot:', error.message);
   }
 }

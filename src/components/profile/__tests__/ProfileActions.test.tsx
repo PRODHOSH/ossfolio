@@ -1,8 +1,8 @@
-import "@testing-library/jest-dom/vitest";
-import { describe, it, expect, vi } from "vitest";
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
-import { ProfileActions } from "../ProfileActions";
-import type { ContributorStats } from "@/types";
+import '@testing-library/jest-dom/vitest';
+import { describe, it, expect, vi } from 'vitest';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { ProfileActions } from '../ProfileActions';
+import type { ContributorStats } from '@/types';
 
 const mockStats: ContributorStats = {
   totalCommits: 100,
@@ -12,8 +12,8 @@ const mockStats: ContributorStats = {
   totalContributions: 135,
 };
 
-describe("ProfileActions Accessibility Live Regions", () => {
-  it("renders an ARIA live region container for screen reader announcements", () => {
+describe('ProfileActions Accessibility Live Regions', () => {
+  it('renders an ARIA live region container for screen reader announcements', () => {
     const { container } = render(
       <ProfileActions
         username="octocat"
@@ -26,11 +26,11 @@ describe("ProfileActions Accessibility Live Regions", () => {
 
     const liveRegion = container.querySelector('[aria-live="polite"]');
     expect(liveRegion).toBeInTheDocument();
-    expect(liveRegion).toHaveAttribute("role", "status");
-    expect(liveRegion).toHaveAttribute("aria-atomic", "true");
+    expect(liveRegion).toHaveAttribute('role', 'status');
+    expect(liveRegion).toHaveAttribute('aria-atomic', 'true');
   });
 
-  it("announces progress and success with score string when refresh succeeds", async () => {
+  it('announces progress and success with score string when refresh succeeds', async () => {
     const onRefreshMock = vi.fn().mockResolvedValue(undefined);
 
     const { container } = render(
@@ -43,20 +43,24 @@ describe("ProfileActions Accessibility Live Regions", () => {
       />,
     );
 
-    const syncBtn = screen.getByRole("button", { name: /refresh github profile statistics/i });
+    const syncBtn = screen.getByRole('button', {
+      name: /refresh github profile statistics/i,
+    });
     fireEvent.click(syncBtn);
 
     const liveRegion = container.querySelector('[aria-live="polite"]');
 
     await waitFor(() => {
       expect(liveRegion).toHaveTextContent(
-        "Profile stats refreshed successfully. New score: 1,450.",
+        'Profile stats refreshed successfully. New score: 1,450.',
       );
     });
   });
 
-  it("announces error string when refresh fails", async () => {
-    const onRefreshMock = vi.fn().mockRejectedValue(new Error("API rate limit exceeded"));
+  it('announces error string when refresh fails', async () => {
+    const onRefreshMock = vi
+      .fn()
+      .mockRejectedValue(new Error('API rate limit exceeded'));
 
     const { container } = render(
       <ProfileActions
@@ -68,14 +72,16 @@ describe("ProfileActions Accessibility Live Regions", () => {
       />,
     );
 
-    const syncBtn = screen.getByRole("button", { name: /refresh github profile statistics/i });
+    const syncBtn = screen.getByRole('button', {
+      name: /refresh github profile statistics/i,
+    });
     fireEvent.click(syncBtn);
 
     const liveRegion = container.querySelector('[aria-live="polite"]');
 
     await waitFor(() => {
       expect(liveRegion).toHaveTextContent(
-        "Failed to refresh profile stats: API rate limit exceeded.",
+        'Failed to refresh profile stats: API rate limit exceeded.',
       );
     });
   });

@@ -14,16 +14,16 @@ export function ProfileHeaderSkeleton() {
       aria-busy="true"
       aria-label="Loading profile header"
       style={{
-        display: "flex",
-        alignItems: "flex-start",
-        gap: "24px",
-        flexWrap: "wrap",
-        padding: "24px",
-        marginBottom: "40px",
-        background: "var(--color-canvas-soft)",
-        border: "1px solid var(--color-hairline)",
-        borderRadius: "12px",
-        boxShadow: "0 1px 3px rgba(0,0,0,0.06)",
+        display: 'flex',
+        alignItems: 'flex-start',
+        gap: '24px',
+        flexWrap: 'wrap',
+        padding: '24px',
+        marginBottom: '40px',
+        background: 'var(--color-canvas-soft)',
+        border: '1px solid var(--color-hairline)',
+        borderRadius: '12px',
+        boxShadow: '0 1px 3px rgba(0,0,0,0.06)',
       }}
     >
       {/* Avatar — 88×88 circle matching ProfileView's Image dimensions */}
@@ -33,7 +33,7 @@ export function ProfileHeaderSkeleton() {
         aria-hidden="true"
       />
 
-      <div style={{ flex: 1, minWidth: "200px" }}>
+      <div style={{ flex: 1, minWidth: '200px' }}>
         {/* Display name — h1 24px */}
         <div
           className="bg-neutral-800 animate-pulse rounded"
@@ -49,18 +49,23 @@ export function ProfileHeaderSkeleton() {
         {/* Bio — two lines */}
         <div
           className="bg-neutral-800 animate-pulse rounded"
-          style={{ width: "90%", height: 14, marginTop: 12 }}
+          style={{ width: '90%', height: 14, marginTop: 12 }}
           aria-hidden="true"
         />
         <div
           className="bg-neutral-800 animate-pulse rounded"
-          style={{ width: "65%", height: 14, marginTop: 6 }}
+          style={{ width: '65%', height: 14, marginTop: 6 }}
           aria-hidden="true"
         />
 
         {/* Location / website / twitter / github link row */}
         <div
-          style={{ display: "flex", flexWrap: "wrap", gap: "16px", marginTop: 14 }}
+          style={{
+            display: 'flex',
+            flexWrap: 'wrap',
+            gap: '16px',
+            marginTop: 14,
+          }}
         >
           {[88, 110, 78, 68].map((w, i) => (
             <div
@@ -73,7 +78,7 @@ export function ProfileHeaderSkeleton() {
         </div>
 
         {/* Followers · following · repos row */}
-        <div style={{ display: "flex", gap: "20px", marginTop: 14 }}>
+        <div style={{ display: 'flex', gap: '20px', marginTop: 14 }}>
           {[72, 72, 56].map((w, i) => (
             <div
               key={i}
@@ -87,4 +92,3 @@ export function ProfileHeaderSkeleton() {
     </div>
   );
 }
-
