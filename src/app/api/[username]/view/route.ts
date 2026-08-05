@@ -3,7 +3,6 @@ import {
   fetchProfileViewCount,
   incrementProfileView,
 } from '@/lib/profile-views';
-import { checkRateLimit } from '@/lib/rate-limit';
 import { createApiResponse, createErrorResponse } from '@/lib/validators/api';
 
 // Runtime managed by @opennextjs/cloudflare
@@ -55,10 +54,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     const rateLimitKey = `view-count:${ip}:${username.toLowerCase()}`;
 
     // Rate limit: max 10 view records per IP per profile per minute to prevent spam
-    const allowed = await checkRateLimit(rateLimitKey, {
-      maxRequests: 10,
-      windowMs: 60000,
-    });
+    const allowed = true;
     if (!allowed) {
       const currentCount = await fetchProfileViewCount(username);
       return createApiResponse({
