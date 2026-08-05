@@ -16,11 +16,13 @@ import {
   supabase,
   supabaseAdmin,
   resetSupabaseClientForTesting,
+  resetSupabaseAdminClientForTesting,
 } from "../supabase";
 
 describe("Lazy Supabase Client Initialization", () => {
   beforeEach(() => {
     resetSupabaseClientForTesting();
+    resetSupabaseAdminClientForTesting();
     createClientMock.mockClear();
   });
 
@@ -47,10 +49,16 @@ describe("Lazy Supabase Client Initialization", () => {
     expect(_fromFn).toBeDefined();
   });
 
-  it("should dynamically evaluate service role key in supabaseAdmin()", () => {
-    supabaseAdmin();
+  it("should lazily instantiate and cache client in supabaseAdmin()", () => {
+    expect(createClientMock).not.toHaveBeenCalled();
+    const client1 = supabaseAdmin();
     expect(createClientMock).toHaveBeenCalledTimes(1);
     const lastCall = createClientMock.mock.calls[0];
     expect(lastCall[1]).toBe("placeholder-service-key");
+
+    // Repeated call reuses cached admin client instance
+    const client2 = supabaseAdmin();
+    expect(createClientMock).toHaveBeenCalledTimes(1);
+    expect(client2).toBe(client1);
   });
 });
