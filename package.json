@@ -68,6 +68,7 @@
     "jsdom": "^29.1.1",
     "lint-staged": "^17.0.8",
     "postcss": "^8",
+    "prettier": "^3.9.6",
     "tailwindcss": "^4",
     "typescript": "^5",
     "vitest": "^4.1.10",
