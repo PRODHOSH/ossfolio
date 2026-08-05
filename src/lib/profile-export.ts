@@ -27,9 +27,25 @@ export interface ProfileExportData {
  * Safely escape values for strict CSV formatting
  */
 function escapeCsv(value: string | number | null | undefined): string {
-  if (value == null) return '""';
-  // Always wrap in quotes and escape internal double quotes to prevent delimiter collisions
-  return `"${String(value).replace(/"/g, '""')}"`;
+  if (value == null) return "";
+
+  const text = String(value);
+
+  // Quote only when the value would otherwise be ambiguous.
+  //
+  // RFC 4180 makes quoting optional unless the field contains a comma, a double
+  // quote, or a line break. Quoting unconditionally is valid CSV but noisy: a
+  // GitHub username, a commit count and a language name can none of them
+  // contain a delimiter, so wrapping them adds characters a reader and a
+  // spreadsheet both have to strip back off.
+  //
+  // A leading or trailing space is included in the test because some parsers
+  // treat it as significant only inside quotes.
+  if (/[",\n\r]/.test(text) || text !== text.trim()) {
+    return `"${text.replace(/"/g, '""')}"`;
+  }
+
+  return text;
 }
 
 /**
