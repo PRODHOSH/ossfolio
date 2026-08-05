@@ -39,6 +39,10 @@ jobs:
       # not expose secrets to pull requests from forks, so a suite that needed them would
       # fail for every outside contributor. The database is stood in for by
       # e2e/mock-supabase.mjs, which Playwright starts via `webServer`.
+      #
+      # NOTE: Runtime environment variables for the Next.js server in CI are configured inside
+      # `playwright.config.ts` under `webServer[1].env`. If you add a new server-side env var
+      # used at request time, configure it there rather than in this workflow file.
       - name: Run E2E tests
         run: npx playwright test
         env:
