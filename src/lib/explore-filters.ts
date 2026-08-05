@@ -97,16 +97,16 @@ export const buildExploreQuery = (
   if (merged.lang && merged.lang.trim() !== "") params.set("lang", merged.lang.trim());
   if (merged.minScore && merged.minScore > 0) params.set("minScore", String(merged.minScore));
 
-  // Ensure stale pagination resets if other filter criteria actively changed
-  const filterChanged = ["type", "q", "sortBy", "lang", "minScore"].some(
-    (key) =>
-      key in patch &&
-      patch[key as keyof ExploreFilters] !== current[key as keyof ExploreFilters]
-  );
-
-  if (!filterChanged && merged.page > 1) {
-    params.set("page", String(merged.page));
-  }
+  // `page` is deliberately never emitted here.
+  //
+  // These links are filter navigation, and following one should always land the
+  // reader on page 1 — results change, so page 3 of the old result set is
+  // meaningless against the new one. Pagination sets its own `page` param
+  // separately.
+  //
+  // The previous version forwarded `page` whenever no filter value actually
+  // changed, which meant re-selecting the filter you were already on kept you
+  // deep in a result set that had just been recomputed.
 
   return Object.fromEntries(params.entries());
 };
@@ -128,5 +128,5 @@ export const describeFilters = (filters: ExploreFilters): string => {
     filters.q ? `matching “${filters.q}”` : null,
   ]
     .filter(Boolean)
-    .join(" • ");
+    .join(" · ");   // U+00B7 middle dot, matching DESIGN.md
 };
