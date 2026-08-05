@@ -38,6 +38,7 @@ import { ProfileActions } from "@/components/profile/ProfileActions";
 import { OrganizationSection } from "@/components/profile/OrganizationSection";
 import { ProfileReposSection } from "@/components/profile/ProfileReposSection";
 import { ProfileBadgeModal } from "@/components/profile/ProfileBadgeModal";
+import { AUTOMATED_BADGE_CRITERIA } from "@/lib/badges.config";
 import { DeveloperInsightsCard } from "@/components/profile/DeveloperInsightsCard";
 import { SponsorshipSection } from "@/components/profile/SponsorshipSection";
 import { SkillEndorsements } from "@/components/profile/SkillEndorsements";
@@ -1658,8 +1659,15 @@ export function ProfileView({
                       ? progKey
                       : "default"
                   ) as "gsoc" | "gssoc" | "hacktoberfest" | "elusoc" | "swoc" | "default";
-                  const fullName =
-                    PROGRAM_FULL_NAMES[badge.program] ?? badge.program;
+                  const criterion = AUTOMATED_BADGE_CRITERIA.find(
+                    (c) => c.name === badge.program,
+                  );
+                  const fullName = criterion
+                    ? `${criterion.icon} ${criterion.name}: ${criterion.description}`
+                    : (PROGRAM_FULL_NAMES[badge.program] ?? badge.program);
+                  const displayName = criterion
+                    ? `${criterion.icon} ${badge.program}`
+                    : badge.program;
                   return (
                     <Tooltip.Root key={badge.program}>
                       <Tooltip.Trigger asChild>
@@ -1668,7 +1676,7 @@ export function ProfileView({
                           aria-label={fullName}
                           program={progVariant}
                         >
-                          <span>{badge.program}</span>
+                          <span>{displayName}</span>
                           <span
                             className="bg-white/25 px-1.5 py-0.5 rounded-full text-[11px] font-medium"
                           >
