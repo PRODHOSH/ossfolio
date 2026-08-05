@@ -8,6 +8,8 @@ import { PwaInitializer } from "@/components/ui/PwaInitializer";
 import "./globals.css";
 import { JsonLd } from "@/components/ui/json-ld";
 import { ThemeProvider } from "@/context/ThemeContext";
+import { CommandPaletteProvider } from "@/context/CommandPaletteContext";
+import { CommandPalette } from "@/components/ui/CommandPalette";
 import { EnvValidationBanner } from "@/components/ui/EnvValidationBanner";
 
 const inter = Inter({
@@ -146,10 +148,13 @@ export default async function RootLayout({
       <body className={inter.className} suppressHydrationWarning>
         <NextIntlClientProvider locale={locale} messages={messages}>
           <ThemeProvider>
-            <SkipToContent />
-            <PwaInitializer />
-            <EnvValidationBanner />
-            {children}
+            <CommandPaletteProvider>
+              <SkipToContent />
+              <PwaInitializer />
+              <EnvValidationBanner />
+              {children}
+              <CommandPalette />
+            </CommandPaletteProvider>
           </ThemeProvider>
         </NextIntlClientProvider>
       </body>
