@@ -86,6 +86,18 @@ const ImpactNetwork = dynamic(
   },
 );
 
+const SimilarProfiles = dynamic(
+  () =>
+    import("@/components/profile/SimilarProfiles").then(
+      (mod) => mod.SimilarProfiles,
+    ),
+  {
+    ssr: false,
+    // SimilarProfiles has its own skeleton state, so no external fallback needed.
+    loading: () => null,
+  },
+);
+
 interface GitHubUser {
   login: string;
   name: string | null;
@@ -2646,6 +2658,9 @@ export function ProfileView({
 
       {/* Multi-Platform Integrations */}
       <ProviderIntegrations username={user.login} isOwner={isOwner} />
+
+      {/* Similar profiles — "You might also like..." */}
+      <SimilarProfiles username={user.login} currentUserScore={score} />
 
       {/* Contribution heatmap with year navigation */}
       <HeatmapWithYearNav
