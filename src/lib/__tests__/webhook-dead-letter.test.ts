@@ -97,8 +97,19 @@ describe("Webhook Dead-Letter Retry Queue", () => {
       const mockEqSelect = vi.fn().mockReturnValue({ lte: mockLte });
       const mockSelect = vi.fn().mockReturnValue({ eq: mockEqSelect });
 
-      const mockUpdateEq = vi.fn().mockResolvedValue({ error: null });
-      const mockUpdate = vi.fn().mockReturnValue({ eq: mockUpdateEq });
+      // The real code chains: .update().eq("id", ...).eq("status", "pending").select().maybeSingle()
+      // to atomically claim the row. We must mock the full chain.
+      const mockMaybeSingle = vi.fn().mockResolvedValue({ data: { id: "item-1" }, error: null });
+      const mockUpdateSelect = vi.fn().mockReturnValue({ maybeSingle: mockMaybeSingle });
+      const mockUpdateEqStatus = vi.fn().mockReturnValue({ select: mockUpdateSelect });
+      const mockUpdateEqId = vi.fn().mockReturnValue({ eq: mockUpdateEqStatus });
+      // Subsequent updates (completed/failed/retry) only chain one .eq() and resolve.
+      const mockUpdateEqFinal = vi.fn().mockResolvedValue({ error: null });
+      const mockUpdate = vi.fn()
+        // First call: the atomic lock → needs the full two-.eq() + .select() + .maybeSingle() chain.
+        .mockReturnValueOnce({ eq: mockUpdateEqId })
+        // Subsequent calls: status update after refresh → single .eq() resolves.
+        .mockReturnValue({ eq: mockUpdateEqFinal });
 
       const mockFrom = vi.fn().mockImplementation((table: string) => {
         if (table === "webhook_dead_letter_queue") {
@@ -154,8 +165,19 @@ describe("Webhook Dead-Letter Retry Queue", () => {
       const mockEqSelect = vi.fn().mockReturnValue({ lte: mockLte });
       const mockSelect = vi.fn().mockReturnValue({ eq: mockEqSelect });
 
-      const mockUpdateEq = vi.fn().mockResolvedValue({ error: null });
-      const mockUpdate = vi.fn().mockReturnValue({ eq: mockUpdateEq });
+      // The real code chains: .update().eq("id", ...).eq("status", "pending").select().maybeSingle()
+      // to atomically claim the row. We must mock the full chain.
+      const mockMaybeSingle = vi.fn().mockResolvedValue({ data: { id: "item-2" }, error: null });
+      const mockUpdateSelect = vi.fn().mockReturnValue({ maybeSingle: mockMaybeSingle });
+      const mockUpdateEqStatus = vi.fn().mockReturnValue({ select: mockUpdateSelect });
+      const mockUpdateEqId = vi.fn().mockReturnValue({ eq: mockUpdateEqStatus });
+      // Subsequent updates (completed/failed/retry) only chain one .eq() and resolve.
+      const mockUpdateEqFinal = vi.fn().mockResolvedValue({ error: null });
+      const mockUpdate = vi.fn()
+        // First call: the atomic lock → needs the full two-.eq() + .select() + .maybeSingle() chain.
+        .mockReturnValueOnce({ eq: mockUpdateEqId })
+        // Subsequent calls: status update after refresh → single .eq() resolves.
+        .mockReturnValue({ eq: mockUpdateEqFinal });
 
       vi.mocked(supabaseAdmin).mockReturnValue({
         from: vi.fn().mockReturnValue({
