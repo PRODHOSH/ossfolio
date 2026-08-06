@@ -185,6 +185,11 @@ dialog::backdrop {
   outline-offset: 2px;
   box-shadow: 0 0 0 3px var(--color-primary);
 }
+.similar-profile-card:hover {
+  border-color: var(--color-primary);
+  box-shadow: 0 6px 20px rgba(62, 207, 142, 0.08);
+  transform: translateY(-2px);
+}
 .footer-social-link {
   transition: color 0.2s ease;
 }
