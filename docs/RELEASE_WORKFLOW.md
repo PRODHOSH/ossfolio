@@ -57,8 +57,10 @@ To trigger this workflow and publish a new release:
 1. Update your `package.json` version.
 2. Commit your changes to `main`.
 3. Create and push a new tag following semantic versioning (e.g., `v1.0.0`):
+
    ```bash
    git tag v1.0.0
    git push origin v1.0.0
    ```
+
 4. The GitHub Action will automatically run tests and generate a changelog using `softprops/action-gh-release`.
