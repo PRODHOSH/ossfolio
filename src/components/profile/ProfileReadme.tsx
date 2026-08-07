@@ -16,11 +16,14 @@ function renderInlineMarkdown(text: string): React.ReactNode[] {
   let remaining = text;
   let keyIdx = 0;
 
+  // Helper to strip any residual raw HTML tag constructs from plain text nodes
+  const sanitizeTextNode = (str: string) => str.replace(/<[^>]*>/g, "");
+
   while (remaining.length > 0) {
     // 1. Image: ![alt](url)
     const imgMatch = remaining.match(/^!\[([^\]]*)\]\(([^)]+)\)/);
     if (imgMatch) {
-      const alt = imgMatch[1];
+      const alt = sanitizeTextNode(imgMatch[1]);
       const url = imgMatch[2];
       if (isSafeUrl(url)) {
         elements.push(
@@ -66,7 +69,7 @@ function renderInlineMarkdown(text: string): React.ReactNode[] {
           </a>,
         );
       } else {
-        elements.push(<span key={`txt-${keyIdx++}`}>{linkText}</span>);
+        elements.push(<span key={`txt-${keyIdx++}`}>{sanitizeTextNode(linkText)}</span>);
       }
       remaining = remaining.slice(linkMatch[0].length);
       continue;
@@ -134,16 +137,16 @@ function renderInlineMarkdown(text: string): React.ReactNode[] {
     // Plain text character
     const nextCharIndex = remaining.search(/[!\[`*_~]/);
     if (nextCharIndex === -1) {
-      elements.push(<span key={`txt-${keyIdx++}`}>{remaining}</span>);
+      elements.push(<span key={`txt-${keyIdx++}`}>{sanitizeTextNode(remaining)}</span>);
       break;
     } else if (nextCharIndex > 0) {
       elements.push(
-        <span key={`txt-${keyIdx++}`}>{remaining.slice(0, nextCharIndex)}</span>,
+        <span key={`txt-${keyIdx++}`}>{sanitizeTextNode(remaining.slice(0, nextCharIndex))}</span>,
       );
       remaining = remaining.slice(nextCharIndex);
     } else {
       // Unmatched special char, push as plain text
-      elements.push(<span key={`txt-${keyIdx++}`}>{remaining[0]}</span>);
+      elements.push(<span key={`txt-${keyIdx++}`}>{sanitizeTextNode(remaining[0])}</span>);
       remaining = remaining.slice(1);
     }
   }
