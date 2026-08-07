@@ -20,6 +20,7 @@ function warningMissingEnv() {
 }
 
 let _client: SupabaseClient | null = null;
+let _adminClient: SupabaseClient | null = null;
 
 export function getSupabase(): SupabaseClient {
   if (!_client) {
@@ -31,6 +32,10 @@ export function getSupabase(): SupabaseClient {
 
 export function resetSupabaseClientForTesting() {
   _client = null;
+}
+
+export function resetSupabaseAdminClientForTesting() {
+  _adminClient = null;
 }
 
 // Lazy proxy — avoids running createClient() at module-load time (which crashes
@@ -46,8 +51,11 @@ export const supabase = new Proxy({} as SupabaseClient, {
 });
 
 export function supabaseAdmin(): SupabaseClient {
-  warningMissingEnv();
-  const serviceKey =
-    process.env.SUPABASE_SERVICE_ROLE_KEY || "placeholder-service-key";
-  return createClient(getSupabaseUrl(), serviceKey);
+  if (!_adminClient) {
+    warningMissingEnv();
+    const serviceKey =
+      process.env.SUPABASE_SERVICE_ROLE_KEY || "placeholder-service-key";
+    _adminClient = createClient(getSupabaseUrl(), serviceKey);
+  }
+  return _adminClient;
 }

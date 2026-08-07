@@ -38,7 +38,7 @@ import { ProfileActions } from "@/components/profile/ProfileActions";
 import { OrganizationSection } from "@/components/profile/OrganizationSection";
 import { ProfileReposSection } from "@/components/profile/ProfileReposSection";
 import { ProfileBadgeModal } from "@/components/profile/ProfileBadgeModal";
-import { ProfileReadme } from "@/components/profile/ProfileReadme";
+import { AUTOMATED_BADGE_CRITERIA } from "@/lib/badges.config";
 import { DeveloperInsightsCard } from "@/components/profile/DeveloperInsightsCard";
 import { SponsorshipSection } from "@/components/profile/SponsorshipSection";
 import { SkillEndorsements } from "@/components/profile/SkillEndorsements";
@@ -83,6 +83,18 @@ const ImpactNetwork = dynamic(
   {
     ssr: false,
     loading: () => <ImpactNetworkSkeleton />,
+  },
+);
+
+const SimilarProfiles = dynamic(
+  () =>
+    import("@/components/profile/SimilarProfiles").then(
+      (mod) => mod.SimilarProfiles,
+    ),
+  {
+    ssr: false,
+    // SimilarProfiles has its own skeleton state, so no external fallback needed.
+    loading: () => null,
   },
 );
 
@@ -466,6 +478,7 @@ function ProfileDownloadCard({
                   width={64}
                   height={64}
                   unoptimized
+                  priority
                   style={{
                     width: "64px",
                     height: "64px",
@@ -1190,6 +1203,7 @@ export function ProfileView({
           alt={displayName}
           width={88}
           height={88}
+          priority
           style={{
             borderRadius: "9999px",
             border: "1px solid var(--color-hairline)",
@@ -1664,8 +1678,15 @@ export function ProfileView({
                       ? progKey
                       : "default"
                   ) as "gsoc" | "gssoc" | "hacktoberfest" | "elusoc" | "swoc" | "default";
-                  const fullName =
-                    PROGRAM_FULL_NAMES[badge.program] ?? badge.program;
+                  const criterion = AUTOMATED_BADGE_CRITERIA.find(
+                    (c) => c.name === badge.program,
+                  );
+                  const fullName = criterion
+                    ? `${criterion.icon} ${criterion.name}: ${criterion.description}`
+                    : (PROGRAM_FULL_NAMES[badge.program] ?? badge.program);
+                  const displayName = criterion
+                    ? `${criterion.icon} ${badge.program}`
+                    : badge.program;
                   return (
                     <Tooltip.Root key={badge.program}>
                       <Tooltip.Trigger asChild>
@@ -1674,7 +1695,7 @@ export function ProfileView({
                           aria-label={fullName}
                           program={progVariant}
                         >
-                          <span>{badge.program}</span>
+                          <span>{displayName}</span>
                           <span
                             className="bg-white/25 px-1.5 py-0.5 rounded-full text-[11px] font-medium"
                           >
@@ -2642,6 +2663,9 @@ export function ProfileView({
 
       {/* Multi-Platform Integrations */}
       <ProviderIntegrations username={user.login} isOwner={isOwner} />
+
+      {/* Similar profiles — "You might also like..." */}
+      <SimilarProfiles username={user.login} currentUserScore={score} />
 
       {/* Contribution heatmap with year navigation */}
       <HeatmapWithYearNav

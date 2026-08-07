@@ -6,6 +6,8 @@ import {
   createErrorResponse,
 } from "@/lib/validators/api";
 import { computeETag, isNotModified } from "@/lib/http-cache";
+import { extractApiKey, validateApiKey } from "@/lib/api-keys";
+import { checkApiKeyRateLimit } from "@/lib/rate-limit";
 
 // Runtime managed by @opennextjs/cloudflare
 
@@ -131,15 +133,53 @@ export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ username: string }> },
 ) {
-  const { limited, retryAfter } = checkRateLimit(getClientIp(request));
-  if (limited) {
-    const res = withCors(
-      createErrorResponse("Rate limit exceeded. Please slow down.", 429, {
-        retryAfterSeconds: retryAfter,
-      }),
-    );
-    res.headers.set("Retry-After", String(retryAfter));
-    return res;
+  // ── Optional API key authentication ───────────────────────────────────────
+  // If an `Authorization: Bearer osk_...` header is present, validate it and
+  // use the higher per-key rate limit (1 000 req/min). An invalid or revoked
+  // key returns 401; absent keys fall through to the anonymous IP limit.
+  const rawApiKey = extractApiKey(request.headers.get("authorization"));
+  let authenticatedKeyId: string | null = null;
+
+  if (rawApiKey !== null) {
+    const validated = await validateApiKey(rawApiKey);
+    if (!validated) {
+      return withCors(
+        createErrorResponse(
+          "Invalid or revoked API key. Check your Authorization header.",
+          401,
+        ),
+      );
+    }
+    authenticatedKeyId = validated.keyId;
+  }
+
+  // ── Rate limiting ─────────────────────────────────────────────────────────
+  if (authenticatedKeyId) {
+    // Authenticated path — per-key limit (1 000 req/min, globally consistent).
+    const { allowed, retryAfterSeconds } =
+      await checkApiKeyRateLimit(authenticatedKeyId);
+    if (!allowed) {
+      const res = withCors(
+        createErrorResponse("Rate limit exceeded. Please slow down.", 429, {
+          retryAfterSeconds,
+        }),
+      );
+      res.headers.set("Retry-After", String(retryAfterSeconds));
+      res.headers.set("X-RateLimit-Limit", "1000");
+      return res;
+    }
+  } else {
+    // Anonymous path — per-IP limit (60 req/min, isolate-local).
+    const { limited, retryAfter } = checkRateLimit(getClientIp(request));
+    if (limited) {
+      const res = withCors(
+        createErrorResponse("Rate limit exceeded. Please slow down.", 429, {
+          retryAfterSeconds: retryAfter,
+        }),
+      );
+      res.headers.set("Retry-After", String(retryAfter));
+      return res;
+    }
   }
 
   const { username: rawUsername } = await params;
@@ -211,6 +251,10 @@ export async function GET(
   const cacheHeaders: Record<string, string> = {
     "Cache-Control": "public, s-maxage=300, stale-while-revalidate=600",
     ETag: etag,
+    // Expose rate-limit headers so clients can self-regulate.
+    ...(authenticatedKeyId
+      ? { "X-RateLimit-Limit": "1000", "X-Auth-Type": "api-key" }
+      : { "X-RateLimit-Limit": "60", "X-Auth-Type": "anonymous" }),
   };
 
   // The caller already holds this exact representation, so send no payload.

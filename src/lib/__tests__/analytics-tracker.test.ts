@@ -70,10 +70,14 @@ describe("analytics-tracker helpers", () => {
   });
 
   describe("hashVisitorIp", () => {
-    it("should produce a consistent, non-empty hash string for an IP address", () => {
-      const hash1 = hashVisitorIp("192.168.1.1");
-      const hash2 = hashVisitorIp("192.168.1.1");
-      const hash3 = hashVisitorIp("10.0.0.1");
+    // hashVisitorIp is async — it awaits crypto.subtle.digest. Without these
+    // awaits the assertions compared two distinct Promise objects, which are
+    // never `toBe`-equal regardless of what they resolve to, so the test failed
+    // while reporting nothing about the hashing itself.
+    it("should produce a consistent, non-empty hash string for an IP address", async () => {
+      const hash1 = await hashVisitorIp("192.168.1.1");
+      const hash2 = await hashVisitorIp("192.168.1.1");
+      const hash3 = await hashVisitorIp("10.0.0.1");
 
       expect(hash1).toBe(hash2);
       expect(hash1).not.toBe(hash3);

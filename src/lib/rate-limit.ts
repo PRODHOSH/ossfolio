@@ -321,3 +321,104 @@ export function checkDeveloperInsightsRateLimit(
 ): Promise<RateLimitResult> {
   return checkNamedRateLimit(request, "developer-insights");
 }
+
+/**
+ * Per-API-key rate limiter for authenticated v1 API requests.
+ *
+ * Authenticated callers get a much higher quota (1 000 req/min) than the
+ * anonymous per-IP limit (60 req/min) because they are identified and
+ * accountable — a misbehaving key can be revoked without affecting other users.
+ *
+ * The identifier is the `keyId` UUID (not an IP), so the bucket is globally
+ * consistent across edge isolates that share the same Redis instance.
+ */
+
+const API_KEY_WINDOW_SECONDS = 60; // sliding 1-minute window
+const API_KEY_MAX_REQUESTS = 1000;  // per key per window
+
+export async function checkApiKeyRateLimit(
+  keyId: string,
+): Promise<RateLimitResult> {
+  const key = await keyFor(keyId, "api-key");
+  const now = Date.now();
+
+  // Honour the same exponential backoff / circuit-breaker state the rest of
+  // the limiters use, so a Redis outage degrades identically everywhere.
+  const backoffMs = calculateBackoffMs(consecutiveFailures);
+  const inBackoffWindow =
+    consecutiveFailures > 0 && now < lastFailureTime + backoffMs;
+
+  if (inBackoffWindow) {
+    const memoryResult = checkMemoryBuffer(key, now);
+    logFailoverTelemetry(
+      "Redis call bypassed due to active exponential backoff window (api-key)",
+      key,
+      memoryResult,
+      true,
+    );
+    return memoryResult;
+  }
+
+  try {
+    // Sliding-window counter: INCR + EXPIRE on first hit within the window.
+    // Falls back to the atomic SET NX EX pattern if `incr` isn't available on
+    // the stub (local dev / CI), which means every request is allowed — the
+    // same graceful degradation as the rest of the rate limiters.
+    const countKey = `${key}:count`;
+    let currentCount: number;
+
+    try {
+      // Use INCR for a sliding counter.
+      const incr = await (redis as unknown as { incr?: (k: string) => Promise<number> }).incr?.(countKey);
+      if (incr === undefined) throw new Error("incr not available");
+      currentCount = incr;
+      if (currentCount === 1) {
+        // First request in this window: set the expiry.
+        await redis.set(countKey, currentCount, { ex: API_KEY_WINDOW_SECONDS });
+      }
+    } catch {
+      // Stub / old client: fall back to the SET NX EX slot approach.
+      const slotKey = `${key}:slot`;
+      const acquired = await redis.set(slotKey, now + API_KEY_WINDOW_SECONDS * 1000, {
+        nx: true,
+        ex: API_KEY_WINDOW_SECONDS,
+      });
+      if (acquired === "OK") {
+        consecutiveFailures = 0;
+        lastFailureTime = 0;
+        return { allowed: true, retryAfterSeconds: 0 };
+      }
+      // Slot already held: reject (conservative fallback — can't count precisely).
+      const storedResetAt = await redis.get<number>(slotKey);
+      const remainingMs =
+        typeof storedResetAt === "number"
+          ? storedResetAt - now
+          : API_KEY_WINDOW_SECONDS * 1000;
+      consecutiveFailures = 0;
+      lastFailureTime = 0;
+      return {
+        allowed: false,
+        retryAfterSeconds: Math.max(1, Math.ceil(remainingMs / 1000)),
+      };
+    }
+
+    consecutiveFailures = 0;
+    lastFailureTime = 0;
+
+    if (currentCount <= API_KEY_MAX_REQUESTS) {
+      return { allowed: true, retryAfterSeconds: 0 };
+    }
+
+    return {
+      allowed: false,
+      retryAfterSeconds: API_KEY_WINDOW_SECONDS,
+    };
+  } catch (error) {
+    consecutiveFailures += 1;
+    lastFailureTime = now;
+    const reason = error instanceof Error ? error.message : String(error);
+    const memoryResult = checkMemoryBuffer(key, now);
+    logFailoverTelemetry(reason, key, memoryResult, false);
+    return memoryResult;
+  }
+}

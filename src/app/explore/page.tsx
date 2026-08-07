@@ -16,6 +16,7 @@ import {
   normalizeScoreTier,
   buildExploreQuery,
   hasActiveFilters,
+  describeFilters,
   type ExploreFilters,
 } from "@/lib/explore-filters";
 import { fetchTrendingProjects } from "@/lib/trending-projects";

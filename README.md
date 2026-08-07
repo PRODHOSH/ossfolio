@@ -101,7 +101,7 @@ src/lib/score.ts
 
 | Layer    | Tech                                                            |
 | -------- | --------------------------------------------------------------- |
-| Frontend | Next.js · TypeScript · Tailwind CSS · shadcn/ui · Framer Motion |
+| Frontend | Next.js · TypeScript · Tailwind CSS · Radix UI + CVA · Framer Motion |
 | Backend  | Supabase · PostgreSQL                                           |
 | Data     | GitHub GraphQL API                                              |
 | Hosting  | Cloudflare Pages                                                |
@@ -112,7 +112,7 @@ src/lib/score.ts
 
 **What you need before starting:**
 
-- Node.js 20+
+- Node.js 22+
 - A free [Supabase](https://supabase.com) account
 - Git
 

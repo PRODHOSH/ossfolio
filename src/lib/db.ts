@@ -237,3 +237,41 @@ export async function fetchExploreOrganizations(opts: {
     return { data: null, error: err as PostgrestError };
   }
 }
+
+/**
+ * A single row returned by the `find_similar_profiles` Postgres RPC.
+ * Fields mirror the RETURNS TABLE definition in the migration.
+ */
+export interface SimilarProfile {
+  username: string;
+  name: string | null;
+  avatar_url: string | null;
+  score: number;
+  top_languages: string[];
+  shared_language_count: number;
+  shared_org_count: number;
+  similarity_score: number;
+}
+
+/**
+ * Call the `find_similar_profiles` Postgres RPC.
+ *
+ * Returns up to 6 public profiles whose top languages or GitHub orgs overlap
+ * with the target's, ordered by weighted similarity score (languages +2,
+ * orgs +3) then by OSSfolio score descending.
+ *
+ * Returns `{ data, error }` so callers keep their existing fail-closed /
+ * graceful-degradation checks — the same convention as `searchProfiles`.
+ */
+export async function findSimilarProfiles(
+  username: string,
+): Promise<QueryResult<SimilarProfile[]>> {
+  try {
+    const { data, error } = await supabase.rpc("find_similar_profiles", {
+      p_username: username.toLowerCase(),
+    });
+    return { data: (data as SimilarProfile[]) ?? null, error };
+  } catch (err) {
+    return { data: null, error: err as PostgrestError };
+  }
+}
