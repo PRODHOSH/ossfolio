@@ -228,6 +228,7 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
     updated_at?: string | null;
     badges?: Array<{ program?: string; years?: Array<string | number> }> | null;
     headline?: string | null;
+    readme?: string | null;
     pinned_repos?: string[] | null;
     custom_links?: Array<{ label: string; url: string }> | null;
     visibility?: string | null;
@@ -243,7 +244,7 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
   try {
     const { data, error } = await getProfileByUsername(
       username,
-      "id, score, updated_at, badges, headline, pinned_repos, custom_links, visibility",
+      "id, score, updated_at, badges, headline, readme, pinned_repos, custom_links, visibility",
     );
     customizationFetchSettled = true;
 
@@ -318,6 +319,8 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
     ? {
         headline:
           typeof profileRow.headline === "string" ? profileRow.headline : null,
+        readme:
+          typeof profileRow.readme === "string" ? profileRow.readme : null,
         pinnedRepos: Array.isArray(profileRow.pinned_repos)
           ? (profileRow.pinned_repos as string[])
           : [],
@@ -364,6 +367,7 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
           customLinks={customization?.customLinks ?? []}
           pinnedRepos={customization?.pinnedRepos ?? []}
           customizationLoaded={customizationFetchSettled}
+          readme={customization?.readme ?? undefined}
         />
       </main>
       <Footer />
