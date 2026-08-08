@@ -8,6 +8,7 @@ import {
 } from "@/lib/validators/api";
 
 import { sanitizeFundingLinks, sanitizeSponsors } from "@/lib/sponsors";
+import { sanitizeMarkdownContent } from "@/lib/readme";
 
 // Runtime managed by @opennextjs/cloudflare
 
@@ -47,7 +48,7 @@ export async function GET(request: NextRequest) {
 
   const { data, error } = await supabase
     .from("profiles")
-    .select("headline, pinned_repos, custom_links, badges, visibility, funding_links, sponsors")
+    .select("headline, pinned_repos, custom_links, badges, visibility, funding_links, sponsors, readme")
     .eq("id", user.id)
     .single();
 
@@ -87,6 +88,10 @@ export async function PUT(request: NextRequest) {
   if (body.headline !== undefined) {
     const sanitized = sanitizeString(body.headline, 160);
     if (sanitized) updates.headline = sanitized;
+  }
+
+  if (body.readme !== undefined) {
+    updates.readme = sanitizeMarkdownContent(body.readme);
   }
 
   if (Array.isArray(body.pinned_repos)) {

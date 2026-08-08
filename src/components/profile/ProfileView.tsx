@@ -184,6 +184,7 @@ interface ProfileExtras {
   mergedPRs: MergedPR[];
   coContributors?: CoContributor[];
   sponsorshipData?: SponsorshipData;
+  readme?: string;
 }
 
 function formatCount(n: number): string {
@@ -738,6 +739,7 @@ export function ProfileView({
   customizationLoaded = false,
   repoSectionTitle,
   sponsorshipData: initialSponsorshipData,
+  readme,
 }: {
   user: GitHubUser;
   repos: GitHubRepo[];
@@ -1586,6 +1588,9 @@ export function ProfileView({
           })),
         }}
       />
+
+      {/* Profile README */}
+      {readme && <ProfileReadme readme={readme} />}
 
       {/* Badges section */}
       {(badgesList.length > 0 || isOwner) && (
