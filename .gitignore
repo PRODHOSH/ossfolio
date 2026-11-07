@@ -31,4 +31,7 @@ next-env.d.ts
 /playwright-report/
 /test-results/
 /blob-report/
-config.bat
+
+# env files
+.env*
+!.env.example
